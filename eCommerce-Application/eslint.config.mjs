@@ -39,4 +39,9 @@ export default defineConfig([
   tseslint.configs.recommended,
   eslintConfigPrettier,
   eslintPluginUnicorn.configs.recommended,
+  {
+    rules: {
+      "unicorn/prefer-top-level-await": "off",
+    },
+  },
 ]);
