@@ -1,85 +1,88 @@
-<form
-  [formGroup]="profileForm"
-  class="registration__form"
-  (submit)="submitHandler($event)"
->
-  <h2 class="registration__title">Create your account</h2>
-  @for (field of inputFields; track field.label) {
-    <div class="registration__field-input">
-      <div class="registration__input-container">
-        <input
-          [type]="field.type"
-          [class]="field.class"
-          [placeholder]="field.label"
-          [attr.autocomplete]="'off'"
-          [formControlName]="field.controlName"
-          [ngClass]="{ input_error: hasError(profileForm, field.controlName) }"
-        />
-        <div
-          class="error-messages"
-          *ngIf="hasError(profileForm, field.controlName)"
-        >
-          <span
-            *ngIf="
-              field.controlName === 'firstName' &&
-              profileForm.get('firstName')?.hasError('pattern')
-            "
+<div class="form-wrapper">
+  <form
+    [formGroup]="profileForm"
+    class="registration__form"
+    (submit)="submitHandler($event)"
+  >
+    <h2 class="registration__title">Create your account</h2>
+    @for (field of inputFields; track field.label) {
+      <div class="registration__field-input">
+        <div class="registration__input-container">
+          <input
+            [type]="field.type"
+            [class]="field.class"
+            [placeholder]="field.label"
+            [attr.autocomplete]="'off'"
+            [formControlName]="field.controlName"
+            [ngClass]="{
+              input_error: hasError(profileForm, field.controlName),
+            }"
+          />
+          <div
+            class="error-messages"
+            *ngIf="hasError(profileForm, field.controlName)"
           >
-            Letters only, no digits or symbols
-          </span>
-          <span
-            *ngIf="
-              field.controlName === 'lastName' &&
-              profileForm.get('lastName')?.hasError('pattern')
-            "
-          >
-            Letters only, no digits or symbols
-          </span>
-          <span
-            *ngIf="
-              (field.controlName === 'firstName' ||
-                field.controlName === 'lastName') &&
-              profileForm.get(field.controlName)?.hasError('maxlength')
-            "
-          >
-            Must be at most 12 characters
-          </span>
-          <span
-            *ngIf="profileForm.get(field.controlName)?.hasError('required')"
-          >
-            {{ field.label }} is required.
-          </span>
-          <span
-            *ngIf="
-              field.controlName === 'email' &&
-              (profileForm.get('email')?.hasError('email') ||
-                profileForm.get('email')?.hasError('customEmailValidator'))
-            "
-          >
-            Please enter a valid email.
-          </span>
-          <span
-            *ngIf="
-              field.controlName === 'password' &&
-              profileForm.get('password')?.hasError('minlength')
-            "
-          >
-            Must be at least 6 characters.
-          </span>
+            <span
+              *ngIf="
+                field.controlName === 'firstName' &&
+                profileForm.get('firstName')?.hasError('pattern')
+              "
+            >
+              Letters only, no digits or symbols
+            </span>
+            <span
+              *ngIf="
+                field.controlName === 'lastName' &&
+                profileForm.get('lastName')?.hasError('pattern')
+              "
+            >
+              Letters only, no digits or symbols
+            </span>
+            <span
+              *ngIf="
+                (field.controlName === 'firstName' ||
+                  field.controlName === 'lastName') &&
+                profileForm.get(field.controlName)?.hasError('maxlength')
+              "
+            >
+              Must be at most 12 characters
+            </span>
+            <span
+              *ngIf="profileForm.get(field.controlName)?.hasError('required')"
+            >
+              {{ field.label }} is required.
+            </span>
+            <span
+              *ngIf="
+                field.controlName === 'email' &&
+                (profileForm.get('email')?.hasError('email') ||
+                  profileForm.get('email')?.hasError('customEmailValidator'))
+              "
+            >
+              Please enter a valid email.
+            </span>
+            <span
+              *ngIf="
+                field.controlName === 'password' &&
+                profileForm.get('password')?.hasError('minlength')
+              "
+            >
+              Must be at least 6 characters.
+            </span>
 
-          <span
-            *ngIf="
-              field.controlName === 'password' &&
-              profileForm.get('password')?.errors?.['passwordStrength']
-            "
-          >
-            Mix upper, lower case and digit.
-          </span>
+            <span
+              *ngIf="
+                field.controlName === 'password' &&
+                profileForm.get('password')?.errors?.['passwordStrength']
+              "
+            >
+              Mix upper, lower case and digit.
+            </span>
+          </div>
         </div>
       </div>
-    </div>
-  }
-  <!-- <div>
+    }
+    <!-- <div>
     <select class="input__country" id="country" formControlName="country">
       <option value="">Select a country</option>
       @for (country of countries; track country.code) {
@@ -87,19 +90,20 @@
       }
     </select>
   </div> -->
-  <div class="registration__buttons">
-    <button class="button registration__button" (click)="goToMainPage()">
-      Back
-    </button>
-    <button
-      type="submit"
-      class="button registration__button registration_submit"
-    >
-      Registration
-    </button>
-  </div>
-  <p class="registration__login">
-    Do you already have an account?
-    <a class="registration__link" href="/login">Login</a>
-  </p>
-</form>
+    <div class="registration__buttons">
+      <button class="button registration__button" (click)="goToMainPage()">
+        Back
+      </button>
+      <button
+        type="submit"
+        class="button registration__button registration_submit"
+      >
+        Registration
+      </button>
+    </div>
+    <p class="registration__login">
+      Do you already have an account?
+      <a class="registration__link" [routerLink]="'/login'">Login</a>
+    </p>
+  </form>
+</div>

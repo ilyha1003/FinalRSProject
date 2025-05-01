@@ -1,5 +1,16 @@
+body {
+  margin: 0;
+}
+
 input {
   padding: 4px;
+}
+
+.form-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
 
 .button {

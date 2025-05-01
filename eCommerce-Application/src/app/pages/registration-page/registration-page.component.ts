@@ -9,10 +9,11 @@ import { Router } from '@angular/router';
 import { hasError } from '../../utils/has-error';
 import { strengthPasswordValidator } from '../../utils/strength-password-validator';
 import { customEmailValidator } from '../../utils/email-custom-validator';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-registration-page',
-  imports: [ReactiveFormsModule, NgIf, NgClass],
+  imports: [ReactiveFormsModule, NgIf, NgClass, RouterModule],
   templateUrl: './registration-page.component.html',
   styleUrl: './registration-page.component.scss',
 })

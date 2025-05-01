@@ -1,1 +1,70 @@
-<p>login-page works!</p>
+<div class="form-wrapper">
+  <form
+    [formGroup]="profileForm"
+    class="login__form"
+    (submit)="submitHandler($event)"
+  >
+    <h2 class="login__title">Login</h2>
+    @for (field of inputFieldsLogin; track field.label) {
+      <div class="login__field-input">
+        <div class="login__input-container">
+          <input
+            [type]="field.type"
+            [class]="field.class"
+            [placeholder]="field.label"
+            [attr.autocomplete]="'off'"
+            [formControlName]="field.controlName"
+            [ngClass]="{
+              input_error: hasError(profileForm, field.controlName),
+            }"
+          />
+          <div
+            class="error-messages"
+            *ngIf="hasError(profileForm, field.controlName)"
+          >
+            <span
+              *ngIf="profileForm.get(field.controlName)?.hasError('required')"
+            >
+              {{ field.label }} is required.
+            </span>
+            <span
+              *ngIf="
+                field.controlName === 'email' &&
+                (profileForm.get('email')?.hasError('email') ||
+                  profileForm.get('email')?.hasError('customEmailValidator'))
+              "
+            >
+              Please enter a valid email.
+            </span>
+            <span
+              *ngIf="
+                field.controlName === 'password' &&
+                profileForm.get('password')?.hasError('minlength')
+              "
+            >
+              Must be at least 6 characters.
+            </span>
+
+            <span
+              *ngIf="
+                field.controlName === 'password' &&
+                profileForm.get('password')?.errors?.['passwordStrength']
+              "
+            >
+              Mix upper, lower case and digit.
+            </span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="login__buttons">
+      <button class="button login__button login_back" (click)="goToMainPage()">
+        Back
+      </button>
+      <button type="submit" class="button login__button login_submit">
+        Login
+      </button>
+    </div>
+  </form>
+</div>
