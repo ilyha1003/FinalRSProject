@@ -1,10 +1,10 @@
 export const inputFields = [
-  {
-    label: 'Username',
-    type: 'text',
-    controlName: 'nickName',
-    class: 'input__username',
-  },
+  // {
+  //   label: 'Username',
+  //   type: 'text',
+  //   controlName: 'nickName',
+  //   class: 'input__username',
+  // },
   {
     label: 'Email address',
     type: 'email',
@@ -29,10 +29,10 @@ export const inputFields = [
     controlName: 'lastName',
     class: 'input__last-name',
   },
-  {
-    label: 'Date of birth',
-    type: 'date',
-    class: 'input__birth-date',
-    controlName: 'birthDate',
-  },
+  // {
+  //   label: 'date of birth',
+  //   type: 'date',
+  //   class: 'input__birth-date',
+  //   controlName: 'birthDate',
+  // },
 ];

@@ -13,8 +13,16 @@ export class HeaderComponent {
 
   constructor(private router: Router) {}
 
-  public goToRegistrationPage(): void {
-    this.router.navigate(['/registration']);
+  public buttonsHeaderHandler(event: Event): void {
+    const target = event.target;
+
+    if (!(target instanceof HTMLButtonElement)) return;
+
+    if (target.classList.contains('header__button_login')) {
+      this.router.navigate(['/login']);
+    } else if (target.classList.contains('header__button_registration')) {
+      this.router.navigate(['/registration']);
+    }
   }
 
   public logout(): void {

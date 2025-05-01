@@ -21,15 +21,24 @@
         >
           <span
             *ngIf="
-              field.controlName === 'nickName' &&
-              profileForm.get(field.controlName)?.hasError('minlength')
+              field.controlName === 'firstName' &&
+              profileForm.get('firstName')?.hasError('pattern')
             "
           >
-            Must be at least 4 characters
+            Letters only, no digits or symbols
           </span>
           <span
             *ngIf="
-              field.controlName === 'nickName' &&
+              field.controlName === 'lastName' &&
+              profileForm.get('lastName')?.hasError('pattern')
+            "
+          >
+            Letters only, no digits or symbols
+          </span>
+          <span
+            *ngIf="
+              (field.controlName === 'firstName' ||
+                field.controlName === 'lastName') &&
               profileForm.get(field.controlName)?.hasError('maxlength')
             "
           >
@@ -43,7 +52,8 @@
           <span
             *ngIf="
               field.controlName === 'email' &&
-              profileForm.get('email')?.hasError('email')
+              (profileForm.get('email')?.hasError('email') ||
+                profileForm.get('email')?.hasError('customEmailValidator'))
             "
           >
             Please enter a valid email.
@@ -69,14 +79,14 @@
       </div>
     </div>
   }
-  <div>
+  <!-- <div>
     <select class="input__country" id="country" formControlName="country">
       <option value="">Select a country</option>
       @for (country of countries; track country.code) {
         <option [value]="country.name">{{ country.name }}</option>
       }
     </select>
-  </div>
+  </div> -->
   <div class="registration__buttons">
     <button class="button registration__button" (click)="goToMainPage()">
       Back

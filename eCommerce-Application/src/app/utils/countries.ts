@@ -1,3 +1,13 @@
+/*Можешь дописать и использовать, либо удалить комментарий сделать свое*/
+// <div>
+// <select class="input__country" id="country" formControlName="country">
+//   <option value="">Select a country</option>
+//   @for (country of countries; track country.code) {
+//     <option [value]="country.name">{{ country.name }}</option>
+//   }
+// </select>
+// </div>
+
 export const countries = [
   { name: 'Afghanistan', code: 'AF' },
   { name: 'Albania', code: 'AL' },
@@ -37,7 +47,8 @@ export const countries = [
   { name: 'China', code: 'CN' },
   { name: 'Colombia', code: 'CO' },
   { name: 'Comoros', code: 'KM' },
-  { name: 'Congo', code: 'CG' },
+  { name: 'Congo (Congo-Brazzaville)', code: 'CG' },
+  { name: 'Congo (Democratic Republic)', code: 'CD' },
   { name: 'Costa Rica', code: 'CR' },
   { name: 'Croatia', code: 'HR' },
   { name: 'Cuba', code: 'CU' },
@@ -143,6 +154,7 @@ export const countries = [
   { name: 'Rwanda', code: 'RW' },
   { name: 'Saint Kitts and Nevis', code: 'KN' },
   { name: 'Saint Lucia', code: 'LC' },
+  { name: 'Saint Vincent and the Grenadines', code: 'VC' },
   { name: 'Samoa', code: 'WS' },
   { name: 'San Marino', code: 'SM' },
   { name: 'Sao Tome and Principe', code: 'ST' },

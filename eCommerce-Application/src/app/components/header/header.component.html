@@ -1,12 +1,23 @@
 <header class="header">
   <div class="header__wrapper">
-    <div class="header__buttons" *ngIf="!isLogin">
-      <button>Login</button>
-      <button (click)="goToRegistrationPage()">Registration</button>
+    <div
+      class="header__buttons"
+      (click)="buttonsHeaderHandler($event)"
+      *ngIf="!isLogin"
+    >
+      <button class="button header__button header__button_login">Login</button>
+      <button class="button header__button header__button_registration">
+        Registration
+      </button>
     </div>
 
     <div *ngIf="isLogin">
-      <button (click)="logout()">Logout</button>
+      <button
+        class="button header__button header__button_logout"
+        (click)="logout()"
+      >
+        Logout
+      </button>
     </div>
   </div>
 </header>

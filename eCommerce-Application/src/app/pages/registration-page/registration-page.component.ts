@@ -1,13 +1,14 @@
 import { Component } from '@angular/core';
-import { countries } from './countries';
+import { countries } from '../../utils/countries';
 import { ReactiveFormsModule, FormControl, FormGroup } from '@angular/forms';
 import { inputFields } from './input-fields';
 import { Validators } from '@angular/forms';
 import { NgIf } from '@angular/common';
 import { NgClass } from '@angular/common';
 import { Router } from '@angular/router';
-import { AbstractControl, ValidationErrors } from '@angular/forms';
 import { hasError } from '../../utils/has-error';
+import { strengthPasswordValidator } from '../../utils/strength-password-validator';
+import { customEmailValidator } from '../../utils/email-custom-validator';
 
 @Component({
   selector: 'app-registration-page',
@@ -17,21 +18,33 @@ import { hasError } from '../../utils/has-error';
 })
 export class RegistrationPageComponent {
   public profileForm = new FormGroup({
-    nickName: new FormControl('', [
-      Validators.required,
-      Validators.minLength(4),
-      Validators.maxLength(12),
-    ]),
+    // nickName: new FormControl('', [
+    //   Validators.required,
+    //   Validators.minLength(4),
+    //   Validators.maxLength(12),
+    // ]),
     password: new FormControl('', [
       Validators.required,
       Validators.minLength(8),
-      RegistrationPageComponent.strengthPasswordValidator,
+      strengthPasswordValidator,
     ]),
-    email: new FormControl('', [Validators.required, Validators.email]),
-    firstName: new FormControl('', [Validators.required]),
-    lastName: new FormControl('', [Validators.required]),
-    birthDate: new FormControl('', [Validators.required]),
-    country: new FormControl('', [Validators.required]),
+    email: new FormControl('', [
+      Validators.required,
+      Validators.email,
+      customEmailValidator,
+    ]),
+    firstName: new FormControl('', [
+      Validators.required,
+      Validators.pattern(/^[A-Za-zА-Яа-яЁё]{1,}$/),
+      Validators.maxLength(12),
+    ]),
+    lastName: new FormControl('', [
+      Validators.required,
+      Validators.pattern(/^[A-Za-zА-Яа-яЁё]{1,}$/),
+      Validators.maxLength(12),
+    ]),
+    // birthDate: new FormControl('', [Validators.required]),
+    // country: new FormControl('', [Validators.required]),
   });
 
   public countries = countries;
@@ -39,20 +52,6 @@ export class RegistrationPageComponent {
   public hasError = hasError;
 
   constructor(private router: Router) {}
-
-  private static strengthPasswordValidator(
-    control: AbstractControl,
-  ): ValidationErrors | null {
-    const value = control.value;
-    if (!value) return null;
-
-    const isUpperCase = /[A-Z]/.test(value);
-    const isLowerCase = /[a-z]/.test(value);
-
-    const isValid = isUpperCase && isLowerCase;
-
-    return isValid ? null : { passwordStrength: true };
-  }
 
   public submitHandler(event: Event): void {
     event.preventDefault();
