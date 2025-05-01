@@ -1,1 +1,12 @@
-<p>header works!</p>
+<header class="header">
+  <div class="header__wrapper">
+    <div class="header__buttons" *ngIf="!isLogin">
+      <button>Login</button>
+      <button (click)="goToRegistrationPage()">Registration</button>
+    </div>
+
+    <div *ngIf="isLogin">
+      <button (click)="logout()">Logout</button>
+    </div>
+  </div>
+</header>

@@ -1,1 +1,12 @@
-/* You can add global styles to this file, and also import other style files */
+input {
+  padding: 4px;
+}
+
+.button {
+  transition: all 0.3s ease-in;
+  cursor: pointer;
+
+  &:hover {
+    background-color: gray;
+  }
+}
