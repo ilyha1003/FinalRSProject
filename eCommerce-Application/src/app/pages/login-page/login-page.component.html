@@ -5,59 +5,57 @@
     (submit)="submitHandler($event)"
   >
     <h2 class="login__title">Login</h2>
-    @for (field of inputFieldsLogin; track field.label) {
-      <div class="login__field-input">
-        <div class="login__input-container">
-          <input
-            [type]="field.type"
-            [class]="field.class"
-            [placeholder]="field.label"
-            [attr.autocomplete]="'off'"
-            [formControlName]="field.controlName"
-            [ngClass]="{
-              input_error: hasError(profileForm, field.controlName),
-            }"
-          />
-          <div
-            class="error-messages"
-            *ngIf="hasError(profileForm, field.controlName)"
+    <div class="login__field-inputs">
+      <div class="login__input-container">
+        <input
+          type="email"
+          class="login__input"
+          placeholder="Email address"
+          [attr.autocomplete]="'off'"
+          formControlName="email"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'email'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              profileForm.get('email')?.hasError('email') ||
+              profileForm.get('email')?.hasError('customEmailValidator')
+            "
           >
-            <span
-              *ngIf="profileForm.get(field.controlName)?.hasError('required')"
-            >
-              {{ field.label }} is required.
-            </span>
-            <span
-              *ngIf="
-                field.controlName === 'email' &&
-                (profileForm.get('email')?.hasError('email') ||
-                  profileForm.get('email')?.hasError('customEmailValidator'))
-              "
-            >
-              Please enter a valid email.
-            </span>
-            <span
-              *ngIf="
-                field.controlName === 'password' &&
-                profileForm.get('password')?.hasError('minlength')
-              "
-            >
-              Must be at least 6 characters.
-            </span>
-
-            <span
-              *ngIf="
-                field.controlName === 'password' &&
-                profileForm.get('password')?.errors?.['passwordStrength']
-              "
-            >
-              Mix upper, lower case and digit.
-            </span>
-          </div>
+            Please enter a valid email.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'email') &&
+              profileForm.get('email')?.hasError('required')
+            "
+          >
+            Email is required.
+          </span>
         </div>
       </div>
-    }
-
+      <div class="login__input-container">
+        <input
+          [type]="isPasswordOpen ? 'text' : 'password'"
+          type="password"
+          class="login__password"
+          placeholder="Password"
+          formControlName="password"
+          [attr.autocomplete]="'off'"
+        />
+        <span
+          class="login__password-view password-view_close"
+          [ngClass]="{
+            'password-view_close': !isPasswordOpen,
+            'password-view_open': isPasswordOpen,
+          }"
+          (click)="togglePasswordVisibility()"
+        >
+        </span>
+      </div>
+    </div>
     <div class="login__buttons">
       <button class="button login__button login_back" (click)="goToMainPage()">
         Back

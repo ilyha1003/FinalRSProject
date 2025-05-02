@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { NgIf } from '@angular/common';
-import { NgClass } from '@angular/common';
+import { NgClass, NgIf } from '@angular/common';
+
 import {
   ReactiveFormsModule,
   FormControl,
@@ -8,10 +8,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { customEmailValidator } from '../../utils/email-custom-validator';
-import { strengthPasswordValidator } from '../../utils/strength-password-validator';
 import { Router } from '@angular/router';
 import { hasError } from '../../utils/has-error';
-import { inputFieldsLogin } from './input-fields-login';
 
 @Component({
   selector: 'app-login-page',
@@ -26,15 +24,11 @@ export class LoginPageComponent {
       Validators.email,
       customEmailValidator,
     ]),
-    password: new FormControl('', [
-      Validators.required,
-      Validators.minLength(8),
-      strengthPasswordValidator,
-    ]),
+    password: new FormControl('', [Validators.required]),
   });
 
-  public inputFieldsLogin = inputFieldsLogin;
   public hasError = hasError;
+  public isPasswordOpen = false;
 
   constructor(private router: Router) {}
 
@@ -54,6 +48,10 @@ export class LoginPageComponent {
     console.log(this.profileForm.reset());
 
     this.goToMainPage();
+  }
+
+  public togglePasswordVisibility(): void {
+    this.isPasswordOpen = !this.isPasswordOpen;
   }
 
   public goToMainPage(): void {
