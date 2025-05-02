@@ -3,11 +3,11 @@
     <h2 class="registration__title">Create your account</h2>
     @for (field of inputFields; track field.label) {
       <div class="registration__field-input">
+        <p class="registration__input-name">{{ field.label }}:</p>
         <div class="registration__input-container">
           <input
             [type]="field.type"
             [class]="field.class"
-            [placeholder]="field.label"
             [attr.autocomplete]="'off'"
             [formControlName]="field.controlName"
             [ngClass]="{
@@ -85,13 +85,94 @@
         </div>
       </div>
     }
-    <div>
+    <div class="registration__countries">
+      <p class="registration__input-name">Country:</p>
       <select class="input__country" id="country" formControlName="country">
         <option value="">Select a country</option>
         @for (country of countries; track country.code) {
           <option [value]="country.name">{{ country.name }}</option>
         }
       </select>
+    </div>
+    <div class="registration__field-input">
+      <p class="registration__input-name">City:</p>
+      <div class="registration__input-container">
+        <input
+          type="text"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="city"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'city'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              hasError(profileForm, 'city') &&
+              profileForm.get('city')?.hasError('required')
+            "
+          >
+            City is required.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'city') &&
+              profileForm.get('city')?.hasError('pattern')
+            "
+          >
+            City must contain only letters.
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="registration__field-input">
+      <p class="registration__input-name">Postal code:</p>
+      <div class="registration__input-container">
+        <input
+          type="text"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="postalCode"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'postalCode'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              hasError(profileForm, 'postalCode') &&
+              profileForm.get('postalCode')?.hasError('required')
+            "
+          >
+            Postal code is required.
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="registration__field-input">
+      <p class="registration__input-name">Address:</p>
+      <div class="registration__input-container">
+        <input
+          type="text"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="address"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'address'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              hasError(profileForm, 'address') &&
+              profileForm.get('address')?.hasError('required')
+            "
+          >
+            Address is required.
+          </span>
+        </div>
+      </div>
     </div>
     <div class="registration__buttons">
       <button class="button registration__button" (click)="goToMainPage()">

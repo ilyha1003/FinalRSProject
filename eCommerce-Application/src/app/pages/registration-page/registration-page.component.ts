@@ -42,6 +42,12 @@ export class RegistrationPageComponent {
     ]),
     birthDate: new FormControl('', [Validators.required, birthDateValidator]),
     country: new FormControl('', [Validators.required]),
+    city: new FormControl('', [
+      Validators.required,
+      Validators.pattern('^[A-Za-zА-Яа-яЁё]+$'),
+    ]),
+    postalCode: new FormControl('', [Validators.required]),
+    address: new FormControl('', [Validators.required]),
   });
 
   public countries = countries;

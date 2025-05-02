@@ -1,14 +1,13 @@
 .registration__form {
   display: inline-flex;
   flex-direction: column;
-  align-items: center;
   padding: 10px;
   background-color: #ededed;
   border-radius: 5px;
 }
 
-.registration__title,
-.registration__name-paragraph {
+.registration__title {
+  text-align: center;
   margin: 0;
 }
 
@@ -17,10 +16,28 @@
 }
 
 .registration__field-input {
+  display: flex;
+  flex-direction: column;
   margin-bottom: 15px;
   &:last-of-type {
     margin-bottom: 0;
   }
+}
+
+.registration__input-container {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.registration__input-name {
+  margin: 0 10px 0 0;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.registration__countries {
+  margin: 0 auto;
 }
 
 .input__country {
@@ -33,6 +50,7 @@
   display: flex;
   width: 100%;
   justify-content: space-evenly;
+  margin-bottom: 10px;
 }
 
 .registration__button {
@@ -76,4 +94,5 @@
 
 .registration__login {
   font-size: 0.9rem;
+  margin: 0 auto;
 }
