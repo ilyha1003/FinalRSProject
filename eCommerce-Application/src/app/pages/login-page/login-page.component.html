@@ -68,8 +68,8 @@
           </span>
           <span
             *ngIf="
-              profileForm.get('password')?.hasError('required') &&
-              profileForm.get('password')?.dirty
+              hasError(profileForm, 'password') &&
+              profileForm.get('password')?.hasError('required')
             "
           >
             Password is required.

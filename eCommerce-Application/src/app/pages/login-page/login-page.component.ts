@@ -45,6 +45,7 @@ export class LoginPageComponent {
 
     if (this.profileForm.invalid) {
       console.log('false');
+      console.log(this.profileForm);
       this.profileForm.markAllAsTouched();
       return;
     }
