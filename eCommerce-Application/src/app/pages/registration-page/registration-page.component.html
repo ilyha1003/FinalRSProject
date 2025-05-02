@@ -73,18 +73,26 @@
             >
               Mix upper, lower case and digit.
             </span>
+            <span
+              *ngIf="
+                field.controlName === 'birthDate' &&
+                profileForm.get('birthDate')?.errors?.['birthDateValidator']
+              "
+            >
+              You must be at least 16 years old.
+            </span>
           </div>
         </div>
       </div>
     }
-    <!-- <div>
-    <select class="input__country" id="country" formControlName="country">
-      <option value="">Select a country</option>
-      @for (country of countries; track country.code) {
-        <option [value]="country.name">{{ country.name }}</option>
-      }
-    </select>
-  </div> -->
+    <div>
+      <select class="input__country" id="country" formControlName="country">
+        <option value="">Select a country</option>
+        @for (country of countries; track country.code) {
+          <option [value]="country.name">{{ country.name }}</option>
+        }
+      </select>
+    </div>
     <div class="registration__buttons">
       <button class="button registration__button" (click)="goToMainPage()">
         Back

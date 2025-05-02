@@ -10,6 +10,7 @@ import { hasError } from '../../utils/validations/has-error';
 import { strengthPasswordValidator } from '../../utils/validations/strength-password-validator';
 import { customEmailValidator } from '../../utils/validations/email-custom-validator';
 import { RouterModule } from '@angular/router';
+import { birthDateValidator } from '../../utils/validations/birth-date-validator';
 
 @Component({
   selector: 'app-registration-page',
@@ -19,11 +20,6 @@ import { RouterModule } from '@angular/router';
 })
 export class RegistrationPageComponent {
   public profileForm = new FormGroup({
-    // nickName: new FormControl('', [
-    //   Validators.required,
-    //   Validators.minLength(4),
-    //   Validators.maxLength(12),
-    // ]),
     password: new FormControl('', [
       Validators.required,
       Validators.minLength(8),
@@ -44,8 +40,8 @@ export class RegistrationPageComponent {
       Validators.pattern(/^[A-Za-zА-Яа-яЁё]{1,}$/),
       Validators.maxLength(12),
     ]),
-    // birthDate: new FormControl('', [Validators.required]),
-    // country: new FormControl('', [Validators.required]),
+    birthDate: new FormControl('', [Validators.required, birthDateValidator]),
+    country: new FormControl('', [Validators.required]),
   });
 
   public countries = countries;
