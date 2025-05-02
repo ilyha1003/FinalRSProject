@@ -26,22 +26,22 @@
 .login__password-view {
   position: absolute;
   display: inline-block;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
   right: 10px;
-  top: 4px;
+  top: 5px;
   cursor: pointer;
 }
 
 .password-view_close {
-  background-image: url(../../../../public/assets/password/password-visible.svg);
+  background-image: url(../../../../public/assets/password/password-not-visible.svg);
 }
 
 .password-view_open {
-  background-image: url(../../../../public/assets/password/password-not-visible.svg);
+  background-image: url(../../../../public/assets/password/password-visible.svg);
 }
 
 .login__buttons {

@@ -44,6 +44,9 @@
           placeholder="Password"
           formControlName="password"
           [attr.autocomplete]="'off'"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'password'),
+          }"
         />
         <span
           class="login__password-view password-view_close"
@@ -54,6 +57,29 @@
           (click)="togglePasswordVisibility()"
         >
         </span>
+        <div class="error-messages">
+          <span
+            *ngIf="profileForm.get('password')?.errors?.['noTrimmedSpaces']"
+          >
+            No spaces at start or end.
+          </span>
+          <span *ngIf="profileForm.get('password')?.hasError('minlength')">
+            Must be at least 8 characters.
+          </span>
+          <span
+            *ngIf="
+              profileForm.get('password')?.hasError('required') &&
+              profileForm.get('password')?.dirty
+            "
+          >
+            Password is required.
+          </span>
+          <span
+            *ngIf="profileForm.get('password')?.errors?.['passwordStrength']"
+          >
+            Mix upper, lower case and digit.
+          </span>
+        </div>
       </div>
     </div>
     <div class="login__buttons">

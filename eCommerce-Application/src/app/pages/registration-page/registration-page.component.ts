@@ -6,9 +6,9 @@ import { Validators } from '@angular/forms';
 import { NgIf } from '@angular/common';
 import { NgClass } from '@angular/common';
 import { Router } from '@angular/router';
-import { hasError } from '../../utils/has-error';
-import { strengthPasswordValidator } from '../../utils/strength-password-validator';
-import { customEmailValidator } from '../../utils/email-custom-validator';
+import { hasError } from '../../utils/validations/has-error';
+import { strengthPasswordValidator } from '../../utils/validations/strength-password-validator';
+import { customEmailValidator } from '../../utils/validations/email-custom-validator';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -54,7 +54,7 @@ export class RegistrationPageComponent {
 
   constructor(private router: Router) {}
 
-  public submitHandler(event: Event): void {
+  public submitButtonHandler(event: Event): void {
     event.preventDefault();
 
     if (this.profileForm.invalid) {

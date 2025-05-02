@@ -7,9 +7,11 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { customEmailValidator } from '../../utils/email-custom-validator';
+import { customEmailValidator } from '../../utils/validations/email-custom-validator';
 import { Router } from '@angular/router';
-import { hasError } from '../../utils/has-error';
+import { hasError } from '../../utils/validations/has-error';
+import { noSpacesValidator } from '../../utils/validations/no-spaces-validator';
+import { strengthPasswordValidator } from '../../utils/validations/strength-password-validator';
 
 @Component({
   selector: 'app-login-page',
@@ -23,8 +25,14 @@ export class LoginPageComponent {
       Validators.required,
       Validators.email,
       customEmailValidator,
+      noSpacesValidator,
     ]),
-    password: new FormControl('', [Validators.required]),
+    password: new FormControl('', [
+      Validators.required,
+      noSpacesValidator,
+      strengthPasswordValidator,
+      Validators.minLength(8),
+    ]),
   });
 
   public hasError = hasError;

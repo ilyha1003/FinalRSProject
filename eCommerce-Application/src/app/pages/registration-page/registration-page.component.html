@@ -1,9 +1,5 @@
 <div class="form-wrapper">
-  <form
-    [formGroup]="profileForm"
-    class="registration__form"
-    (submit)="submitHandler($event)"
-  >
+  <form [formGroup]="profileForm" class="registration__form">
     <h2 class="registration__title">Create your account</h2>
     @for (field of inputFields; track field.label) {
       <div class="registration__field-input">
@@ -67,7 +63,7 @@
                 profileForm.get('password')?.hasError('minlength')
               "
             >
-              Must be at least 6 characters.
+              Must be at least 8 characters.
             </span>
             <span
               *ngIf="
@@ -96,6 +92,7 @@
       <button
         type="submit"
         class="button registration__button registration_submit"
+        (click)="submitButtonHandler($event)"
       >
         Registration
       </button>
