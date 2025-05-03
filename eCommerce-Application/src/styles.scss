@@ -1,1 +1,23 @@
-/* You can add global styles to this file, and also import other style files */
+body {
+  margin: 0;
+}
+
+input {
+  padding: 4px;
+}
+
+.form-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.button {
+  transition: all 0.3s ease-in;
+  cursor: pointer;
+
+  &:hover {
+    background-color: gray;
+  }
+}

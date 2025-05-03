@@ -1,0 +1,98 @@
+.registration__form {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 10px;
+  background-color: #ededed;
+  border-radius: 5px;
+}
+
+.registration__title {
+  text-align: center;
+  margin: 0;
+}
+
+.registration__title {
+  margin-bottom: 10px;
+}
+
+.registration__field-input {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+}
+
+.registration__input-container {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.registration__input-name {
+  margin: 0 10px 0 0;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.registration__countries {
+  margin: 0 auto;
+}
+
+.input__country {
+  cursor: pointer;
+  padding: 2px;
+  margin-bottom: 10px;
+}
+
+.registration__buttons {
+  display: flex;
+  width: 100%;
+  justify-content: space-evenly;
+  margin-bottom: 10px;
+}
+
+.registration__button {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1.5px solid gray;
+}
+
+.registration_submit {
+  background-color: rgb(213, 255, 151);
+
+  &:hover {
+    background-color: rgb(126, 209, 126);
+  }
+}
+
+.error-messages {
+  display: flex;
+  flex-direction: column;
+  color: red;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.input_error {
+  outline: none;
+  border: 1px solid red;
+}
+
+.input__birth-date {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.registration__login {
+  font-size: 0.9rem;
+  margin: 0 auto;
+}

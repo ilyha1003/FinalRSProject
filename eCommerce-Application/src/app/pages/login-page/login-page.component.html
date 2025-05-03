@@ -1,1 +1,94 @@
-<p>login-page works!</p>
+<div class="form-wrapper">
+  <form
+    [formGroup]="profileForm"
+    class="login__form"
+    (submit)="submitHandler($event)"
+  >
+    <h2 class="login__title">Login</h2>
+    <div class="login__field-inputs">
+      <div class="login__input-container">
+        <input
+          type="email"
+          class="login__input"
+          placeholder="Email address"
+          [attr.autocomplete]="'off'"
+          formControlName="email"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'email'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              profileForm.get('email')?.hasError('email') ||
+              profileForm.get('email')?.hasError('customEmailValidator')
+            "
+          >
+            Please enter a valid email.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'email') &&
+              profileForm.get('email')?.hasError('required')
+            "
+          >
+            Email is required.
+          </span>
+        </div>
+      </div>
+      <div class="login__input-container">
+        <input
+          [type]="isPasswordOpen ? 'text' : 'password'"
+          type="password"
+          class="login__password"
+          placeholder="Password"
+          formControlName="password"
+          [attr.autocomplete]="'off'"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'password'),
+          }"
+        />
+        <span
+          class="login__password-view password-view_close"
+          [ngClass]="{
+            'password-view_close': !isPasswordOpen,
+            'password-view_open': isPasswordOpen,
+          }"
+          (click)="togglePasswordVisibility()"
+        >
+        </span>
+        <div class="error-messages">
+          <span
+            *ngIf="profileForm.get('password')?.errors?.['noTrimmedSpaces']"
+          >
+            No spaces at start or end.
+          </span>
+          <span *ngIf="profileForm.get('password')?.hasError('minlength')">
+            Must be at least 8 characters.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'password') &&
+              profileForm.get('password')?.hasError('required')
+            "
+          >
+            Password is required.
+          </span>
+          <span
+            *ngIf="profileForm.get('password')?.errors?.['passwordStrength']"
+          >
+            Mix upper, lower case and digit.
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="login__buttons">
+      <button class="button login__button login_back" (click)="goToMainPage()">
+        Back
+      </button>
+      <button type="submit" class="button login__button login_submit">
+        Login
+      </button>
+    </div>
+  </form>
+</div>

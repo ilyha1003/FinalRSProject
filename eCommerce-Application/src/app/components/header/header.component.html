@@ -1,1 +1,27 @@
-<p>header works!</p>
+<header *ngIf="showHeader" class="header">
+  <div class="header__wrapper">
+    <div class="header__buttons" *ngIf="!isLogin">
+      <button
+        class="button header__button header__button_login"
+        (click)="buttonLoginHandler()"
+      >
+        Login
+      </button>
+      <button
+        class="button header__button header__button_registration"
+        (click)="buttonRegistrationHandler()"
+      >
+        Registration
+      </button>
+    </div>
+
+    <div *ngIf="isLogin">
+      <button
+        class="button header__button header__button_logout"
+        (click)="logout()"
+      >
+        Logout
+      </button>
+    </div>
+  </div>
+</header>

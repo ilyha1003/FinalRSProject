@@ -21,7 +21,6 @@ export default defineConfig([
         "error",
         { assertionStyle: "never" },
       ],
-      "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/explicit-function-return-type": "error",
       "@typescript-eslint/explicit-member-accessibility": [
         "error",
@@ -34,7 +33,14 @@ export default defineConfig([
     },
   },
   {
-    ignores: ["*.spec.ts", "dist/"],
+    ignores: [
+      "*.spec.ts",
+      "dist/",
+      "*.config.js",
+      "**/*.config.js",
+      "jest.config.js",
+      ".angular",
+    ],
   },
   tseslint.configs.recommended,
   eslintConfigPrettier,
@@ -42,6 +48,8 @@ export default defineConfig([
   {
     rules: {
       "unicorn/prefer-top-level-await": "off",
+      "unicorn/no-null": "off",
+      "unicorn/empty-brace-spaces": "off",
     },
   },
 ]);
