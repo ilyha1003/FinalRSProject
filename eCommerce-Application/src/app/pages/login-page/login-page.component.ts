@@ -40,6 +40,11 @@ export class LoginPageComponent {
 
   constructor(private router: Router) {}
 
+  public get passwordErrorCount(): number {
+    const errors = this.profileForm.get('password')?.errors;
+    return errors ? Object.keys(errors).length : 0;
+  }
+
   public submitHandler(event: Event): void {
     event.preventDefault();
 

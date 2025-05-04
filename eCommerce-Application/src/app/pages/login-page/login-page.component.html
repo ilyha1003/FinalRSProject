@@ -40,7 +40,7 @@
         <input
           [type]="isPasswordOpen ? 'text' : 'password'"
           type="password"
-          class="login__password"
+          class="login__input"
           placeholder="Password"
           formControlName="password"
           [attr.autocomplete]="'off'"
@@ -57,7 +57,13 @@
           (click)="togglePasswordVisibility()"
         >
         </span>
-        <div class="error-messages">
+        <div
+          class="error-messages"
+          [ngClass]="{
+            'error-messages_shifted': passwordErrorCount === 2,
+            'error-messages_shifted-2': passwordErrorCount === 3,
+          }"
+        >
           <span
             *ngIf="profileForm.get('password')?.errors?.['noTrimmedSpaces']"
           >

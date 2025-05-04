@@ -7,7 +7,7 @@
         <div class="registration__input-container">
           <input
             [type]="field.type"
-            [class]="field.class"
+            class="registration__input"
             [attr.autocomplete]="'off'"
             [formControlName]="field.controlName"
             [ngClass]="{
@@ -17,6 +17,10 @@
           <div
             class="error-messages"
             *ngIf="hasError(profileForm, field.controlName)"
+            [ngClass]="{
+              'error-messages_shifted': passwordErrorCount === 2,
+              'error-messages_shifted-2': passwordErrorCount === 3,
+            }"
           >
             <span
               *ngIf="
@@ -73,26 +77,61 @@
             >
               Mix upper, lower case and digit.
             </span>
-            <span
-              *ngIf="
-                field.controlName === 'birthDate' &&
-                profileForm.get('birthDate')?.errors?.['birthDateValidator']
-              "
-            >
-              You must be at least 16 years old.
-            </span>
           </div>
         </div>
       </div>
     }
+
+    <div class="registration__field-input">
+      <p class="registration__input-name">Date of birth:</p>
+      <div class="registration__input-container">
+        <input
+          type="date"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="birthDate"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'birthDate'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              hasError(profileForm, 'birthDate') &&
+              profileForm.get('birthDate')?.hasError('required')
+            "
+          >
+            Date of birth is required.
+          </span>
+          <span
+            *ngIf="profileForm.get('birthDate')?.errors?.['birthDateValidator']"
+          >
+            You must be at least 16 years old.
+          </span>
+        </div>
+      </div>
+    </div>
+
     <div class="registration__countries">
       <p class="registration__input-name">Country:</p>
-      <select class="input__country" id="country" formControlName="country">
-        <option value="">Select a country</option>
-        @for (country of countries; track country.code) {
-          <option [value]="country.name">{{ country.name }}</option>
-        }
-      </select>
+      <div class="registration__select-container">
+        <select class="input__country" id="country" formControlName="country">
+          <option value="">Select a country</option>
+          @for (country of countries; track country.code) {
+            <option [value]="country.code">{{ country.name }}</option>
+          }
+        </select>
+        <div class="error-messages">
+          <span
+            *ngIf="
+              profileForm.get('country')?.touched &&
+              profileForm.get('country')?.hasError('required')
+            "
+          >
+            Country is required.
+          </span>
+        </div>
+      </div>
     </div>
     <div class="registration__field-input">
       <p class="registration__input-name">City:</p>
@@ -146,6 +185,15 @@
             "
           >
             Postal code is required.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'postalCode') &&
+              profileForm.get('postalCode')?.errors?.['invalidPostalCode']
+            "
+          >
+            Postal code must match the format:
+            {{ profileForm.get("postalCode")?.errors?.["invalidPostalCode"] }}
           </span>
         </div>
       </div>
