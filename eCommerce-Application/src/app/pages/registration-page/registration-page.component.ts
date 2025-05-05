@@ -11,6 +11,7 @@ import { strengthPasswordValidator } from '../../utils/validations/strength-pass
 import { customEmailValidator } from '../../utils/validations/email-custom-validator';
 import { RouterModule } from '@angular/router';
 import { birthDateValidator } from '../../utils/validations/birth-date-validator';
+import { postalCodeValidator } from '../../utils/validations/postal-code-validator';
 
 @Component({
   selector: 'app-registration-page',
@@ -46,7 +47,7 @@ export class RegistrationPageComponent {
       Validators.required,
       Validators.pattern('^[A-Za-zА-Яа-яЁё]+$'),
     ]),
-    postalCode: new FormControl('', [Validators.required]),
+    postalCode: new FormControl('', [Validators.required, postalCodeValidator]),
     address: new FormControl('', [Validators.required]),
   });
 
@@ -55,6 +56,11 @@ export class RegistrationPageComponent {
   public hasError = hasError;
 
   constructor(private router: Router) {}
+
+  public get passwordErrorCount(): number {
+    const errors = this.profileForm.get('password')?.errors;
+    return errors ? Object.keys(errors).length : 0;
+  }
 
   public submitButtonHandler(event: Event): void {
     event.preventDefault();

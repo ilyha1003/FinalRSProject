@@ -1,9 +1,10 @@
 .login__form {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   padding: 10px;
-  background-color: #ededed;
+  background-color: #494949;
+  color: white;
   border-radius: 5px;
 }
 
@@ -23,6 +24,11 @@
   }
 }
 
+.login__input {
+  border: 1px solid black;
+  border-radius: 5px;
+}
+
 .login__password-view {
   position: absolute;
   display: inline-block;
@@ -32,7 +38,8 @@
   background-position: center;
   background-size: contain;
   right: 10px;
-  top: 5px;
+  top: 50%;
+  transform: translateY(-50%);
   cursor: pointer;
 }
 
@@ -58,13 +65,46 @@
 
 .error-messages {
   display: flex;
+  position: absolute;
   flex-direction: column;
-  color: red;
+  left: 100%;
+  top: 0;
+  white-space: nowrap;
+  padding: 4px;
+  margin: 0;
+  margin-left: 8px;
+  color: white;
+  background-color: red;
   font-size: 0.8rem;
-  margin-top: 2px;
+  min-width: 125px;
+  border-radius: 5px;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.error-messages::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-right: 4px solid red;
+}
+
+.error-messages_shifted::before {
+  top: 36%;
+}
+
+.error-messages_shifted-2::before {
+  top: 30%;
 }
 
 .input_error {
-  outline: none;
   border: 1px solid red;
 }
