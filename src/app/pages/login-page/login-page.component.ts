@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { NgClass, NgIf } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 import {
   ReactiveFormsModule,
@@ -15,7 +16,7 @@ import { strengthPasswordValidator } from '../../utils/validations/strength-pass
 
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, NgIf, NgClass],
+  imports: [ReactiveFormsModule, NgIf, NgClass, RouterLink],
   templateUrl: './login-page.component.html',
   styleUrl: './login-page.component.scss',
 })
