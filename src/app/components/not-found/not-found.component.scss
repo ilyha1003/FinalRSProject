@@ -1,0 +1,32 @@
+:host {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  background-image: url(../../../../public/assets/not-found/6546546546546.png);
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.not-found__title {
+  color: #4a7ebd;
+}
+
+.not-found__button-container {
+  display: flex;
+  justify-content: center;
+}
+
+.not-found__button {
+  padding: 10px 35px;
+  border: 1px solid #4a7ebd;
+  border-radius: 15px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #edc569;
+  background-color: #4a7ebd;
+
+  &:hover {
+    background-color: #97c5e4;
+    color: grey;
+  }
+}
