@@ -1,5 +1,26 @@
 <header *ngIf="showHeader" class="header">
   <div class="header__wrapper">
+
+    <div>
+      <a class="header__logo-link" routerLink="/">
+        <img class="header__logo-img" src="/assets/images/header-logo.webp" alt="Kupika Logo">
+      </a>
+    </div>
+
+    <nav class="header__nav">
+      <a class="header__link" routerLink="/">Main</a>
+      <a class="header__link" routerLink="/about">About us</a>
+      <a class="header__link" routerLink="/catalog">Catalog</a>
+    </nav>
+    <form class="header__form" action="">
+      <div class="header__search">
+        <input class="header__search-input" type="text" placeholder="Search..." />
+        <button class="button header__search-button" type="submit">
+          <svg class="header__search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="ag100-b2"><path fill="currentColor" d="M17.892 15.064a8 8 0 1 0-2.828 2.828l2.522 2.522a2 2 0 1 0 2.828-2.828zM11 16a5 5 0 1 1 0-10 5 5 0 0 1 0 10"></path></svg>
+        </button>
+      </div>
+    </form>
+
     <div class="header__buttons" *ngIf="!isLogin">
       <button
         class="button header__button header__button_login"
@@ -16,12 +37,28 @@
     </div>
 
     <div *ngIf="isLogin">
+      <a routerLink="/prolile">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-user" data-sentry-element="IconUser" data-sentry-source-file="profile-button.tsx"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"></path><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
+        </svg>
+      </a>
+    </div>
+
+    <div *ngIf="isLogin">
       <button
         class="button header__button header__button_logout"
         (click)="logout()"
       >
         Logout
       </button>
+    </div>
+
+    <div>
+      <a class="header__basket" routerLink="/basket">
+        <svg class="header__basket-svg" width="28" height="24" viewBox="0 0 28 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.05928 8.05327L4.45214 21.0533C4.47936 21.3073 4.69377 21.5 4.94929 21.5H23.0507C23.3062 21.5 23.5206 21.3073 23.5479 21.0533L24.9407 8.05327C24.9724 7.75774 24.7408 7.5 24.4436 7.5H3.55643C3.25921 7.5 3.02761 7.75773 3.05928 8.05327Z" stroke="white" stroke-width="2"></path> <path d="M10 10V5.96291C10 5.32681 10.1084 4.6824 10.4975 4.17917C11.0609 3.45035 12.1503 2.5 14 2.5C15.8497 2.5 16.9391 3.45035 17.5025 4.17917C17.8916 4.6824 18 5.32681 18 5.96291V10" stroke="white" stroke-width="2" stroke-linecap="round"></path></svg>
+
+        <!-- <svg class="header__basket-svg" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" viewBox="0 0 24 24" width="20" height="20" fill="white" stroke="none" stroke-width="0"><path d="M12 .15c-2.985 0-5.416 2.28-5.416 5.077v.144l-.145.036H3.443L0 23.849h24L20.557 5.42h-3.129v-.18c0-2.81-2.43-5.09-5.428-5.09M7.727 5.264c0-2.21 1.914-3.974 4.273-3.974s4.273 1.766 4.273 3.95v.144l-.145.036h-8.4v-.144zm11.88 1.284L22.628 22.7H1.372L4.393 6.56h2.191v2.746h1.143V6.56h8.558v2.747h1.143V6.56h2.19z"></path></svg> -->
+        <span class="header__basket-badge" *ngIf="basketItemCount > 0">{{ basketItemCount }}</span>
+      </a>
     </div>
   </div>
 </header>
