@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { api_url, auth_url, credentials, project_key} from './confidential-data';
+import { LoginCustomer, NewCustomer } from '../utils/interfaces';
+
 
 @Injectable({
   providedIn: 'root'
@@ -43,8 +45,9 @@ export class ApiService {
   //
   // creation new customer
   //
-  public static async createNewCustomer(userEmail: string, userFirstName: string, userLastName: string, userPassword: string): Promise<string> {
+  public static async createNewCustomer(userEmail: string , userFirstName: string, userLastName: string, userPassword: string): Promise<NewCustomer> {
     let new_customer_id: string = '';
+    let request_error_message: string = '';
     const actual_admin_access_token: string = await ApiService.getAdminAccessToken();
 
     const userData: object = {
@@ -65,7 +68,8 @@ export class ApiService {
       });
 
       if(!response.ok) {
-        throw new Error(`HTTP Error: ${response.status}`);
+        const error_data = await response.json();
+        request_error_message = error_data.message;
       }
   
       const data = await response.json();
@@ -75,7 +79,116 @@ export class ApiService {
       console.log(error);      
     }
 
-    return new_customer_id;
+    return { new_customer_id, request_error_message };
+  }
+
+  //
+  // add addresses to customer
+  //
+  public static async setAddressesToCustomer(user_id: string, user_first_name: string, user_last_name: string, country: string, city: string, postal_code: string, address: string): Promise<void> {
+    const actual_admin_access_token: string = await ApiService.getAdminAccessToken();
+    const actual_customer_version: number = await ApiService.getCustomerVersion(user_id);    
+
+    const userAddresses = {
+      "version": actual_customer_version,
+      "actions": [
+        {
+          "action" : "addAddress",
+          "address" : {
+            "firstName" : `${user_first_name}`,
+            "lastName" : `${user_last_name}`,
+            "streetName" : `${address}`,
+            "postalCode" : `${postal_code}`,
+            "city" : `${city}`,
+            "country" : `${country}`
+          }
+        }
+      ]
+    };  
+
+    try {
+      const response = await fetch(`${api_url}/${project_key}/customers/${user_id}`, {
+        method: 'POST',
+        body: JSON.stringify(userAddresses),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${actual_admin_access_token}`,
+        },
+      });
+
+      if(!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+    } catch (error) {
+      console.log(error);      
+    }
+  }
+
+  //
+  // add birth day to customer
+  //
+  public static async setBirthDayToCustomer(user_id: string, birth_day: string): Promise<void> {
+    const actual_admin_access_token: string = await ApiService.getAdminAccessToken();
+    const actual_customer_version: number = await ApiService.getCustomerVersion(user_id);
+
+    const userAddresses = {
+      "version": actual_customer_version,
+      "actions": [
+        {
+          "action" : "setDateOfBirth",
+          "dateOfBirth" : `${birth_day}`
+        }
+      ]
+    }
+
+    try {
+      const response = await fetch(`${api_url}/${project_key}/customers/${user_id}`, {
+        method: 'POST',
+        body: JSON.stringify(userAddresses),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${actual_admin_access_token}`,
+        },
+      });
+
+      if(!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+    } catch (error) {
+      console.log(error);      
+    }
+  }
+
+  //
+  // get customer version
+  //
+  public static async getCustomerVersion(user_id: string): Promise<number> {
+    const actual_admin_access_token: string = await ApiService.getAdminAccessToken();
+    let user_version: number = 0;
+
+    try {
+      const response = await fetch(`${api_url}/${project_key}/customers/${user_id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${actual_admin_access_token}`,
+        },
+      });
+
+      if(!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      user_version = data.version;
+
+    } catch (error) {
+      console.log(error);      
+    }
+
+    return user_version;
   }
 
   //
@@ -191,7 +304,7 @@ export class ApiService {
       "actions": [
         {
             "action" : "setCustomerId",
-            "email" : user_id
+            "customerId" : user_id
           }
       ]
     }
@@ -220,8 +333,10 @@ export class ApiService {
   //
   // login customer
   //
-  public static async loginCustomer(user_login: string, user_password: string): Promise<void> {
+  public static async loginCustomer(user_login: string, user_password: string): Promise<LoginCustomer> {
     const actual_admin_access_token: string = await ApiService.getAdminAccessToken();
+    let request_error_message: string = '';
+
     const request_body: object = {
       "email" : user_login,
       "password" : user_password,
@@ -238,12 +353,15 @@ export class ApiService {
       });
 
       if(!response.ok) {
-        throw new Error(`HTTP Error: ${response.status}`);
+        const error_data = await response.json();
+        request_error_message = error_data.message;
       }
 
     } catch (error) {
       console.log(error);      
     }
+
+    return { request_error_message };
   }
 
   //
