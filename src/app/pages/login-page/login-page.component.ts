@@ -13,6 +13,7 @@ import { Router } from '@angular/router';
 import { hasError } from '../../utils/validations/has-error';
 import { noSpacesValidator } from '../../utils/validations/no-spaces-validator';
 import { strengthPasswordValidator } from '../../utils/validations/strength-password-validator';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-login-page',
@@ -46,7 +47,7 @@ export class LoginPageComponent {
     return errors ? Object.keys(errors).length : 0;
   }
 
-  public submitHandler(event: Event): void {
+  public async submitHandler(event: Event): Promise<void> {
     event.preventDefault();
 
     if (this.profileForm.invalid) {
@@ -60,6 +61,17 @@ export class LoginPageComponent {
     console.log(valueForm);
 
     console.log(this.profileForm.reset());
+
+    // requests for ecommerce tools
+    if(valueForm.email && valueForm.password) {
+      const { request_error_message } = await ApiService.loginCustomer(valueForm.email, valueForm.password);
+      if(request_error_message === '') {
+        const customer_access_token = await ApiService.createUserAccessToken(valueForm.email, valueForm.password);
+        console.log('Customer access token - ' + customer_access_token);
+      } else {
+        // add message "Incorrect email or password."
+      }
+    }
 
     this.goToMainPage();
   }

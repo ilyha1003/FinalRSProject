@@ -12,6 +12,7 @@ import { customEmailValidator } from '../../utils/validations/email-custom-valid
 import { RouterModule } from '@angular/router';
 import { birthDateValidator } from '../../utils/validations/birth-date-validator';
 import { postalCodeValidator } from '../../utils/validations/postal-code-validator';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-registration-page',
@@ -62,7 +63,7 @@ export class RegistrationPageComponent {
     return errors ? Object.keys(errors).length : 0;
   }
 
-  public submitButtonHandler(event: Event): void {
+  public async submitButtonHandler(event: Event): Promise<void> {
     event.preventDefault();
 
     if (this.profileForm.invalid) {
@@ -73,10 +74,24 @@ export class RegistrationPageComponent {
 
     const valueForm = this.profileForm.value;
 
-    console.log(valueForm);
+    // requests for ecommerce tools
+    if(valueForm.address && valueForm.birthDate && valueForm.city && valueForm.country && valueForm.email && valueForm.firstName && valueForm.lastName && valueForm.password && valueForm.postalCode) {
+      const { new_customer_id, request_error_message } = await ApiService.createNewCustomer(valueForm.email, valueForm.firstName, valueForm.lastName, valueForm.password);
 
-    console.log(this.profileForm.reset());
+      if(request_error_message === '') {
+        await ApiService.setAddressesToCustomer(new_customer_id, valueForm.firstName, valueForm.lastName, valueForm.country, valueForm.city, valueForm.postalCode, valueForm.address);
+        await ApiService.setBirthDayToCustomer(new_customer_id, valueForm.birthDate);
+        const new_customer_cart_id: string = await ApiService.createNewCart();
+        await ApiService.setUserIdToCart(new_customer_cart_id, new_customer_id);
+        await ApiService.setUserEmailToCart(new_customer_cart_id, valueForm.email);
+      } else {
+        // add message "There is already an existing customer with the provided email."
+      }
+    }
 
+    // add mesage for success registration (modal window with button "ok")
+
+    this.profileForm.reset();
     this.goToMainPage();
   }
 
