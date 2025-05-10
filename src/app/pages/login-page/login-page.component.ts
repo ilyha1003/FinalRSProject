@@ -14,10 +14,11 @@ import { hasError } from '../../utils/validations/has-error';
 import { noSpacesValidator } from '../../utils/validations/no-spaces-validator';
 import { strengthPasswordValidator } from '../../utils/validations/strength-password-validator';
 import { ApiService } from '../../services/api.service';
+import { ErrorModalComponent } from '../../components/error-modal/error-modal.component';
 
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, NgIf, NgClass, RouterLink],
+  imports: [ReactiveFormsModule, NgIf, NgClass, RouterLink, ErrorModalComponent],
   templateUrl: './login-page.component.html',
   styleUrl: './login-page.component.scss',
 })
@@ -39,12 +40,27 @@ export class LoginPageComponent {
 
   public hasError = hasError;
   public isPasswordOpen = false;
+  public isModalShow: boolean = false;
+  public errorMessage: string = '';
 
   constructor(private router: Router) {}
 
   public get passwordErrorCount(): number {
     const errors = this.profileForm.get('password')?.errors;
     return errors ? Object.keys(errors).length : 0;
+  }
+
+  public static lockScroll(): void {
+    document.body.classList.add('scroll-lock');
+  }
+
+  public openModal(message: string): void {
+    this.errorMessage = message;
+    this.isModalShow = true;
+  }
+
+  public closeModal(): void {
+    this.isModalShow = false;
   }
 
   public async submitHandler(event: Event): Promise<void> {
@@ -60,20 +76,19 @@ export class LoginPageComponent {
 
     console.log(valueForm);
 
-    console.log(this.profileForm.reset());
-
     // requests for ecommerce tools
     if(valueForm.email && valueForm.password) {
       const { request_error_message } = await ApiService.loginCustomer(valueForm.email, valueForm.password);
       if(request_error_message === '') {
         const customer_access_token = await ApiService.createUserAccessToken(valueForm.email, valueForm.password);
         console.log('Customer access token - ' + customer_access_token);
+        this.profileForm.reset();
+        this.goToMainPage();
       } else {
-        // add message "Incorrect email or password."
+        LoginPageComponent.lockScroll();
+        this.openModal(request_error_message);
       }
     }
-
-    this.goToMainPage();
   }
 
   public togglePasswordVisibility(): void {
