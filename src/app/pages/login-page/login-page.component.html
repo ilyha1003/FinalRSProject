@@ -102,3 +102,9 @@
     </p>
   </form>
 </div>
+
+<app-error-modal
+  *ngIf='isModalShow'
+  [message]="errorMessage"
+  (closeModalEvent)="closeModal()"
+></app-error-modal>

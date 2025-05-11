@@ -13,10 +13,11 @@ import { RouterModule } from '@angular/router';
 import { birthDateValidator } from '../../utils/validations/birth-date-validator';
 import { postalCodeValidator } from '../../utils/validations/postal-code-validator';
 import { ApiService } from '../../services/api.service';
+import { ErrorModalComponent } from '../../components/error-modal/error-modal.component';
 
 @Component({
   selector: 'app-registration-page',
-  imports: [ReactiveFormsModule, NgIf, NgClass, RouterModule],
+  imports: [ReactiveFormsModule, NgIf, NgClass, RouterModule, ErrorModalComponent],
   templateUrl: './registration-page.component.html',
   styleUrl: './registration-page.component.scss',
 })
@@ -55,12 +56,27 @@ export class RegistrationPageComponent {
   public countries = countries;
   public inputFields = inputFields;
   public hasError = hasError;
+  public isModalShow: boolean = false;
+  public errorMessage: string = '';
 
   constructor(private router: Router) {}
 
   public get passwordErrorCount(): number {
     const errors = this.profileForm.get('password')?.errors;
     return errors ? Object.keys(errors).length : 0;
+  }
+
+  public static lockScroll(): void {
+    document.body.classList.add('scroll-lock');
+  }
+
+  public openModal(message: string): void {
+    this.errorMessage = message;
+    this.isModalShow = true;
+  }
+
+  public closeModal(): void {
+    this.isModalShow = false;
   }
 
   public async submitButtonHandler(event: Event): Promise<void> {
@@ -84,15 +100,16 @@ export class RegistrationPageComponent {
         const new_customer_cart_id: string = await ApiService.createNewCart();
         await ApiService.setUserIdToCart(new_customer_cart_id, new_customer_id);
         await ApiService.setUserEmailToCart(new_customer_cart_id, valueForm.email);
+        this.profileForm.reset();
+        this.goToMainPage();
       } else {
-        // add message "There is already an existing customer with the provided email."
+        RegistrationPageComponent.lockScroll();
+        this.openModal(request_error_message);
       }
     }
 
     // add mesage for success registration (modal window with button "ok")
 
-    this.profileForm.reset();
-    this.goToMainPage();
   }
 
   public goToMainPage(): void {
