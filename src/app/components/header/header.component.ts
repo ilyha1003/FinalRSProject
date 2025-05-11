@@ -12,7 +12,7 @@ import { filter } from 'rxjs/operators';
 export class HeaderComponent implements OnInit {
   public isLogin = false;
   public showHeader = true;
-  public basketItemCount = 1;
+  public basketItemCount = 0;
 
   constructor(private router: Router) {}
 

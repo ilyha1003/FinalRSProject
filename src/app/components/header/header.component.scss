@@ -1,17 +1,16 @@
 .header {
   background-color: var(--color-bg);
-  color: var(--color-text);
-  padding: 0.5rem 0;
 }
 
 .header__wrapper {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 1rem 1.5rem;
 }
 
 .header__logo-link {
@@ -26,7 +25,8 @@
 
 .header__form {
   flex: 1;
-  max-width: 330px;
+  max-width: 550px;
+  min-width: 200px;
 }
 
 .header__search {
@@ -34,7 +34,7 @@
 }
 
 .header__search-input {
-  max-width: 300px;
+  max-width: 550px;
   width: 100%;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
   border-radius: 10px 0 0 10px;
@@ -98,12 +98,30 @@
   border: none;
   border-radius: 15px;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--color-black);
   background-color: var(--color-primary);
   transition: all 0.4s ease-in-out;
 
   &:hover {
     background-color: grey;
+  }
+}
+
+.header__profile-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header__link-profile {
+  cursor: pointer;
+
+  svg {
+    transition: all 0.4s ease-in-out;
+  }
+
+  &:hover svg {
+    stroke: var(--color-primary);
   }
 }
 
@@ -117,3 +135,4 @@
     stroke: var(--color-primary);
   }
 }
+
