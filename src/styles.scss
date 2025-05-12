@@ -40,6 +40,10 @@ input {
   padding: 4px;
 }
 
+.scroll-lock {
+  overflow-y: hidden;
+}
+
 .form-wrapper {
   display: flex;
   justify-content: center;

@@ -96,5 +96,15 @@
         Login
       </button>
     </div>
+    <p class="login__question-paragraph">
+      You don't have an account?
+      <a class="login__link" [routerLink]="'/registration'">Registration</a>
+    </p>
   </form>
 </div>
+
+<app-error-modal
+  *ngIf='isModalShow'
+  [message]="errorMessage"
+  (closeModalEvent)="closeModal()"
+></app-error-modal>

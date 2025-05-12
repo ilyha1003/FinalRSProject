@@ -234,9 +234,15 @@
         Registration
       </button>
     </div>
-    <p class="registration__login">
+    <p class="registration__question-paragraph">
       Do you already have an account?
       <a class="registration__link" [routerLink]="'/login'">Login</a>
     </p>
   </form>
 </div>
+
+<app-error-modal
+  *ngIf='isModalShow'
+  [message]="errorMessage"
+  (closeModalEvent)="closeModal()"
+></app-error-modal>
