@@ -41,7 +41,8 @@ export class LoginPageComponent {
   public hasError = hasError;
   public isPasswordOpen = false;
   public isModalShow: boolean = false;
-  public errorMessage: string = '';
+  public modalErrorMessage: string = '';
+  public modalHeader: string = '';
 
   constructor(private router: Router) {}
 
@@ -54,8 +55,9 @@ export class LoginPageComponent {
     document.body.classList.add('scroll-lock');
   }
 
-  public openModal(message: string): void {
-    this.errorMessage = message;
+  public openModal(message: string, header: string): void {
+    this.modalErrorMessage = message;
+    this.modalHeader = header;
     this.isModalShow = true;
   }
 
@@ -86,7 +88,7 @@ export class LoginPageComponent {
         this.goToMainPage();
       } else {
         LoginPageComponent.lockScroll();
-        this.openModal(request_error_message);
+        this.openModal(request_error_message, '❗ Error ❗');
       }
     }
   }

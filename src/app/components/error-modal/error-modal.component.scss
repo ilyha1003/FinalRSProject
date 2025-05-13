@@ -11,7 +11,7 @@ p {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background: rgba($color: #5a5a5a, $alpha: 0.6);
+	background: rgba($color: #000000, $alpha: 0.6);
 }
 
 .error__field {
@@ -20,10 +20,12 @@ p {
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	gap: 6px;
+	gap: 20px;
 	padding: 10px;
-	background: aqua;
+	background: rgb(39, 39, 39);
 	border-radius: 6px;
+	min-width: 300px;
+	color: #FFFFFF;
 }
 
 .error__message {

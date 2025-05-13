@@ -243,6 +243,7 @@
 
 <app-error-modal
   *ngIf='isModalShow'
-  [message]="errorMessage"
+  [message]="modalErrorMessage"
+  [header]="modalHeader"
   (closeModalEvent)="closeModal()"
 ></app-error-modal>

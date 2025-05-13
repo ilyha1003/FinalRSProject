@@ -57,7 +57,8 @@ export class RegistrationPageComponent {
   public inputFields = inputFields;
   public hasError = hasError;
   public isModalShow: boolean = false;
-  public errorMessage: string = '';
+  public modalErrorMessage: string = '';
+  public modalHeader: string = '';
 
   constructor(private router: Router) {}
 
@@ -70,13 +71,18 @@ export class RegistrationPageComponent {
     document.body.classList.add('scroll-lock');
   }
 
-  public openModal(message: string): void {
-    this.errorMessage = message;
+  public openModal(message: string, header: string): void {
+    this.modalErrorMessage = message;
+    this.modalHeader = header;
     this.isModalShow = true;
   }
 
   public closeModal(): void {
     this.isModalShow = false;
+    if(this.modalErrorMessage === 'Registration success') {
+      this.profileForm.reset();
+      this.goToMainPage();
+    }
   }
 
   public async submitButtonHandler(event: Event): Promise<void> {
@@ -100,16 +106,12 @@ export class RegistrationPageComponent {
         const new_customer_cart_id: string = await ApiService.createNewCart();
         await ApiService.setUserIdToCart(new_customer_cart_id, new_customer_id);
         await ApiService.setUserEmailToCart(new_customer_cart_id, valueForm.email);
-        this.profileForm.reset();
-        this.goToMainPage();
+        this.openModal('Registration success', 'Success ✅');
       } else {
         RegistrationPageComponent.lockScroll();
-        this.openModal(request_error_message);
+        this.openModal(request_error_message, '❗ Error ❗');
       }
     }
-
-    // add mesage for success registration (modal window with button "ok")
-
   }
 
   public goToMainPage(): void {
