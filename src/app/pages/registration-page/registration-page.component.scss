@@ -41,6 +41,10 @@
 .registration__input {
   border: 1px solid black;
   border-radius: 5px;
+
+  &:disabled {
+    color: white;
+  }
 }
 
 .registration__countries {
@@ -144,4 +148,54 @@
 
 .registration__link {
   color: cornflowerblue;
+}
+
+.registration__checkbox {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.checkbox__shipping-address,
+.checkbox__billing-address {
+  position: relative;
+  display: inline-block;
+  width: 25px;
+  height: 15px;
+  margin: 0;
+  vertical-align: top;
+  background: #ffffff;
+  border: 1px solid #bbc1e1;
+  border-radius: 30px;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  &::after {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    left: 1px;
+    top: 1.5px;
+    width: 10px;
+    height: 10px;
+    background-color: #494949;
+    border-radius: 50%;
+    transform: translateX(0);
+  }
+}
+
+.checkbox__shipping-address:checked::after,
+.checkbox__billing-address:checked::after {
+  transform: translateX(calc(100%));
+}
+.checkbox__shipping-address:checked,
+.checkbox__billing-address:checked {
+  background-color: var(--color-checked);
+}
+
+.checkbox__text {
+  font-size: 0.8rem;
 }

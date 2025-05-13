@@ -11,14 +11,14 @@ import {
 import { customEmailValidator } from '../../utils/validations/email-custom-validator';
 import { Router } from '@angular/router';
 import { hasError } from '../../utils/validations/has-error';
-import { noSpacesValidator } from '../../utils/validations/no-spaces-validator';
+import { noTrimmedSpacesValidator } from '../../utils/validations/no-trimmed-spaces-validator';
 import { strengthPasswordValidator } from '../../utils/validations/strength-password-validator';
 import { ApiService } from '../../services/api.service';
-import { ErrorModalComponent } from '../../components/error-modal/error-modal.component';
+import { FormModalComponent } from '../../components/form-modal/form-modal.component';
 
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, NgIf, NgClass, RouterLink, ErrorModalComponent],
+  imports: [ReactiveFormsModule, NgIf, NgClass, RouterLink, FormModalComponent],
   templateUrl: './login-page.component.html',
   styleUrl: './login-page.component.scss',
 })
@@ -28,11 +28,11 @@ export class LoginPageComponent {
       Validators.required,
       Validators.email,
       customEmailValidator,
-      noSpacesValidator,
+      noTrimmedSpacesValidator,
     ]),
     password: new FormControl('', [
       Validators.required,
-      noSpacesValidator,
+      noTrimmedSpacesValidator,
       strengthPasswordValidator,
       Validators.minLength(8),
     ]),
@@ -76,13 +76,17 @@ export class LoginPageComponent {
 
     const valueForm = this.profileForm.value;
 
-    console.log(valueForm);
-
     // requests for ecommerce tools
-    if(valueForm.email && valueForm.password) {
-      const { request_error_message } = await ApiService.loginCustomer(valueForm.email, valueForm.password);
-      if(request_error_message === '') {
-        const customer_access_token = await ApiService.createUserAccessToken(valueForm.email, valueForm.password);
+    if (valueForm.email && valueForm.password) {
+      const { request_error_message } = await ApiService.loginCustomer(
+        valueForm.email,
+        valueForm.password,
+      );
+      if (request_error_message === '') {
+        const customer_access_token = await ApiService.createUserAccessToken(
+          valueForm.email,
+          valueForm.password,
+        );
         console.log('Customer access token - ' + customer_access_token);
         this.profileForm.reset();
         this.goToMainPage();
