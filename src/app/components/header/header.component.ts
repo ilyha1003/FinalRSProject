@@ -84,7 +84,7 @@ export class HeaderComponent implements OnInit {
     if (!this.showProfileMenu || !this.dropdown) return;
 
     const dropdownElement: HTMLElement = this.dropdown.nativeElement;
-    const rect: DOMRect = dropdownEl.getBoundingClientRect();
+    const rect: DOMRect = dropdownElement.getBoundingClientRect();
 
     if (rect.right > window.innerWidth - 20) {
       dropdownElement.style.left = 'auto';
