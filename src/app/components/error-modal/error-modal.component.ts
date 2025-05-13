@@ -10,6 +10,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 export class ErrorModalComponent {
   @Input() public message: string = '';
+  @Input() public header: string = '';
   @Output() public closeModalEvent = new EventEmitter<void>();
   public isBodyScrolling: boolean = true;
 
