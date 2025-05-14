@@ -113,18 +113,64 @@ export class RegistrationPageComponent {
   private static async setCustomerAddress(
     customerId: string,
     formData: RegistrationFormValues,
-  ): Promise<void> {
-    const address = formData.address.replaceAll(/\s+/g, ' ');
+    mode: string
+  ): Promise<string> {
+    let address: string = '';
 
-    await ApiService.setAddressesToCustomer(
-      customerId,
-      formData.firstName,
-      formData.lastName,
-      formData.country,
-      formData.city,
-      formData.postalCode,
-      address,
-    );
+    switch (mode) {
+      case "base": {
+        address = formData.address.replaceAll(/\s+/g, ' ');
+        break;
+      }
+      case 'shipping': {
+        address = formData.shippingAddress.replaceAll(/\s+/g, ' ');
+        break;
+      }
+      case 'billing': {
+        address = formData.billingAddress.replaceAll(/\s+/g, ' ');
+        break;
+      }
+    }
+
+    const address_id = await ApiService.setAddressesToCustomer(
+          customerId,
+          formData.firstName,
+          formData.lastName,
+          formData.country,
+          formData.city,
+          formData.postalCode,
+          address,
+        );
+    
+    return address_id;
+  }
+
+  private static async setCustomerAddressesFields(
+    new_customer_id: string, 
+    valueForm: RegistrationFormValues
+  ): Promise<void> {
+    const default_address_id = await RegistrationPageComponent.setCustomerAddress(new_customer_id, valueForm, 'base');
+
+    if(valueForm.isDefaultAddress === false) {
+      const shipping_address_id = await RegistrationPageComponent.setCustomerAddress(new_customer_id, valueForm, 'shipping');
+      await ApiService.setDefaultShippingAddress(new_customer_id, shipping_address_id);
+
+      if(valueForm.isSameAddress === false) {
+        const billing_address_id = await RegistrationPageComponent.setCustomerAddress(new_customer_id, valueForm, 'billing');
+        await ApiService.setDefaultBillingAddress(new_customer_id, billing_address_id);
+      } else {
+        await ApiService.setDefaultBillingAddress(new_customer_id, shipping_address_id);
+      }
+    } else {
+      await ApiService.setDefaultShippingAddress(new_customer_id, default_address_id);
+      
+      if(valueForm.isSameAddress === false) {
+        const billing_address_id = await RegistrationPageComponent.setCustomerAddress(new_customer_id, valueForm, 'billing');
+        await ApiService.setDefaultBillingAddress(new_customer_id, billing_address_id);
+      } else {
+        await ApiService.setDefaultBillingAddress(new_customer_id, default_address_id);
+      }
+    }
   }
 
   public openModal(message: string, header: string): void {
@@ -147,25 +193,20 @@ export class RegistrationPageComponent {
     trimFormValues(this.profileForm);
 
     if (this.profileForm.invalid) {
-      console.log('false');
       this.profileForm.markAllAsTouched();
       return;
     }
 
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const valueForm = this.profileForm.value as RegistrationFormValues;
-    console.log(valueForm);
     
-
     // requests for ecommerce tools
     const { new_customer_id, request_error_message } =
       await RegistrationPageComponent.createCustomer(valueForm);
 
     if (request_error_message === '') {
-      await RegistrationPageComponent.setCustomerAddress(
-        new_customer_id,
-        valueForm,
-      );
+      await RegistrationPageComponent.setCustomerAddressesFields(new_customer_id, valueForm);
+
       await ApiService.setBirthDayToCustomer(
         new_customer_id,
         valueForm.birthDate,

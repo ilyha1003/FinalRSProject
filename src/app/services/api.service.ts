@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { api_url, auth_url, credentials, project_key} from './confidential-data';
-import { LoginCustomer, NewCustomer } from '../utils/interfaces';
+import { CustomerAddress, LoginCustomer, NewCustomer } from '../utils/interfaces';
 
 
 @Injectable({
@@ -85,9 +85,10 @@ export class ApiService {
   //
   // add addresses to customer
   //
-  public static async setAddressesToCustomer(user_id: string, user_first_name: string, user_last_name: string, country: string, city: string, postal_code: string, address: string): Promise<void> {
+  public static async setAddressesToCustomer(user_id: string, user_first_name: string, user_last_name: string, country: string, city: string, postal_code: string, address: string): Promise<string> {
     const actual_admin_access_token: string = await ApiService.getAdminAccessToken();
-    const actual_customer_version: number = await ApiService.getCustomerVersion(user_id);    
+    const actual_customer_version: number = await ApiService.getCustomerVersion(user_id);
+    let address_id: string = '';  
 
     const userAddresses = {
       "version": actual_customer_version,
@@ -120,9 +121,130 @@ export class ApiService {
         throw new Error(`HTTP Error: ${response.status}`);
       }
 
+      const customerAddresses = await this.getCustomerAddresses(user_id);
+      address_id = await this.getAddressIdByAddressValue(customerAddresses, address);
+
     } catch (error) {
       console.log(error);      
     }
+
+    return address_id;
+  }
+
+  //
+  // set default shipping address
+  //
+  public static async setDefaultShippingAddress(user_id: string, address_id: string): Promise<void> {
+    const actual_admin_access_token: string = await ApiService.getAdminAccessToken();
+    const actual_customer_version: number = await ApiService.getCustomerVersion(user_id);
+
+    const shipping_address = {
+      "version": actual_customer_version,
+      "actions": [
+        {
+          "action" : "setDefaultShippingAddress",
+          "addressId" : `${address_id}`
+        }
+      ]
+    }
+
+    try {
+      const response = await fetch(`${api_url}/${project_key}/customers/${user_id}`, {
+        method: 'POST',
+        body: JSON.stringify(shipping_address),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${actual_admin_access_token}`,
+        },
+      });
+
+      if(!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+    } catch (error) {
+      console.log(error);      
+    }
+  }
+
+  //
+  // set default billing address
+  //
+  public static async setDefaultBillingAddress(user_id: string, address_id: string): Promise<void> {
+    const actual_admin_access_token: string = await ApiService.getAdminAccessToken();
+    const actual_customer_version: number = await ApiService.getCustomerVersion(user_id);
+
+    const shipping_address = {
+      "version": actual_customer_version,
+      "actions": [
+        {
+          "action" : "setDefaultBillingAddress",
+          "addressId" : `${address_id}`
+        }
+      ]
+    }
+
+    try {
+      const response = await fetch(`${api_url}/${project_key}/customers/${user_id}`, {
+        method: 'POST',
+        body: JSON.stringify(shipping_address),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${actual_admin_access_token}`,
+        },
+      });
+
+      if(!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+    } catch (error) {
+      console.log(error);      
+    }
+  }
+
+  //
+  // get customer addresses by customer ID
+  //
+  public static async getCustomerAddresses(user_id: string): Promise<CustomerAddress[]> {
+    const actual_admin_access_token: string = await ApiService.getAdminAccessToken();
+    let user_addresses: CustomerAddress[] = [];
+
+    try {
+      const response = await fetch(`${api_url}/${project_key}/customers/${user_id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${actual_admin_access_token}`,
+        },
+      });
+
+      if(!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      user_addresses = data.addresses;
+
+    } catch (error) {
+      console.log(error);      
+    }
+
+    return user_addresses;
+  }
+
+  //
+  // get address id by address value
+  //
+  public static async getAddressIdByAddressValue(addresses: CustomerAddress[], address_value: string): Promise<string> {
+    let address_id: string = '';
+    for (const element of addresses) {
+      if(element.streetName === address_value) {
+        return address_id = element.id;
+      }
+    }
+
+    return address_id;
   }
 
   //
