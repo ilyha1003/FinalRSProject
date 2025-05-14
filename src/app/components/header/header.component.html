@@ -9,9 +9,9 @@
 
     <nav class="header__nav">
       <a class="header__link" routerLink="/catalog">Catalog</a>
-      <a class="header__link" routerLink="/catalog">About Us</a>
+      <a class="header__link" routerLink="/about">About Us</a>
     </nav>
-    <form class="header__form" action="">
+    <form class="header__form" action="" *ngIf="!isMobile">
       <div class="header__search">
         <input class="header__search-input" type="text" placeholder="Search..." />
         <button class="button header__search-button" type="submit">
@@ -36,16 +36,20 @@
     </div>
 
     <div class="header__profile-wrapper" *ngIf="isLogin">
-      <a class="header__link-profile" routerLink="/prolile">
+      <a
+        class="header__link-profile"
+        (click)="toggleProfileMenu($event)"
+        (mouseenter)="onMouseEnter()"
+        (mouseleave)="onMouseLeave()"
+      >
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-user" data-sentry-element="IconUser" data-sentry-source-file="profile-button.tsx"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"></path><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
         </svg>
+
+        <div #dropdown class="header__profile-dropdown-block" [class.active]="showProfileMenu" >
+          <a class="header__profile-dropdown-link" routerLink="/profile">Profile</a>
+          <button class="button header__button header__button_logout" (click)="logout()">Logout</button>
+        </div>
       </a>
-      <button
-        class="button header__button header__button_logout"
-        (click)="logout()"
-      >
-        Logout
-      </button>
     </div>
 
     <div>

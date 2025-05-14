@@ -65,6 +65,12 @@
     &:hover {
       color: var(--color-gray);
     }
+
+    @media (hover: none) {
+      &:hover {
+        color: var(--color-primary);
+      }
+    }
   }
 }
 

@@ -7,7 +7,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 1rem;
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem 1.5rem;
@@ -25,32 +25,32 @@
 
 .header__form {
   flex: 1;
-  max-width: 550px;
+  max-width: 700px;
   min-width: 200px;
-}
 
-.header__search {
-  display: flex;
-}
+  .header__search {
+    display: flex;
+  }
 
-.header__search-input {
-  max-width: 550px;
-  width: 100%;
-  padding: 0.5rem 0.5rem 0.5rem 1rem;
-  border-radius: 10px 0 0 10px;
-  border: none;
-}
+  .header__search-input {
+    max-width: 650px;
+    width: 100%;
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    border-radius: 10px 0 0 10px;
+    border: none;
+  }
 
-.header__search-button {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0 10px 10px 0;
-  color: var(--color-text);
-  background-color: var(--color-primary);
-  transition: all 0.4s ease-in-out;
+  .header__search-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0 10px 10px 0;
+    color: var(--color-text);
+    background-color: var(--color-primary);
+    transition: all 0.4s ease-in-out;
 
-  &:hover {
-    background-color: grey;
+    &:hover {
+      background-color: grey;
+    }
   }
 }
 
@@ -68,7 +68,13 @@
   transition: all 0.4s ease-in-out;
 
   &:hover {
-    color: var(--color-primary)
+    color: var(--color-primary);
+  }
+
+  @media (hover: none) {
+    &:hover {
+      color: var(--color-text);
+    }
   }
 }
 
@@ -115,6 +121,7 @@
 
 .header__link-profile {
   cursor: pointer;
+  position: relative;
 
   svg {
     transition: all 0.4s ease-in-out;
@@ -122,6 +129,49 @@
 
   &:hover svg {
     stroke: var(--color-primary);
+  }
+
+  @media (hover: none) {
+    &:hover svg {
+      stroke: var(--color-white);
+    }
+  }
+
+  .header__profile-dropdown-block {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 1.5rem;
+    position: absolute;
+    top: 100%;
+    left: -40px;
+    z-index: 5;
+    background-color: #2c3e50;
+    border-radius: 4px;
+    min-width: 80px;
+    max-width: 10vw;
+    padding: 1.5rem 1rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease-in-out;
+    transform: translateY(5px);
+  }
+
+  .header__profile-dropdown-block.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .header__profile-dropdown-link {
+    color: var(--color-text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.4s ease-in-out;
+
+    &:hover {
+      color: var(--color-primary);
+    }
   }
 }
 
@@ -133,6 +183,12 @@
 
   &:hover .header__basket-svg path{
     stroke: var(--color-primary);
+  }
+
+  @media (hover: none) {
+    &:hover .header__basket-svg path{
+      stroke: var(--color-white);
+    }
   }
 }
 
