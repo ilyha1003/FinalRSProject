@@ -177,7 +177,13 @@
             input_error: hasError(profileForm, 'postalCode'),
           }"
         />
-        <div class="error-messages">
+        <div
+          class="error-messages"
+          [ngClass]="{
+            'error-messages_shifted': postalCodeErrorCount === 2,
+            'error-messages_shifted-2': postalCodeErrorCount === 3,
+          }"
+        >
           <span
             *ngIf="
               hasError(profileForm, 'postalCode') &&
@@ -194,6 +200,14 @@
           >
             Postal code must match the format:
             {{ profileForm.get("postalCode")?.errors?.["invalidPostalCode"] }}
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'postalCode') &&
+              profileForm.get('postalCode')?.errors?.['noSpacesOnly']
+            "
+          >
+            Cannot be only spaces
           </span>
         </div>
       </div>
@@ -219,9 +233,108 @@
           >
             Address is required.
           </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'address') &&
+              profileForm.get('address')?.errors?.['noSpacesOnly']
+            "
+          >
+            Cannot be only spaces
+          </span>
         </div>
       </div>
     </div>
+
+    <div class="registration__field-input">
+      <p class="registration__input-name">Shipping address:</p>
+      <div class="registration__input-container">
+        <input
+          type="text"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="shippingAddress"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'shippingAddress'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              hasError(profileForm, 'shippingAddress') &&
+              profileForm.get('shippingAddress')?.hasError('required')
+            "
+          >
+            Address is required.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'shippingAddress') &&
+              profileForm.get('shippingAddress')?.errors?.['noSpacesOnly']
+            "
+          >
+            Cannot be only spaces
+          </span>
+        </div>
+        <div class="registration__checkbox">
+          <input
+            type="checkbox"
+            id="checkbox__shipping-address"
+            class="checkbox__shipping-address"
+            formControlName="isDefaultAddress"
+            (change)="checkboxShippingHandler()"
+          />
+          <label for="checkbox__shipping-address" class="checkbox__text"
+            >Set as default address</label
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="registration__field-input">
+      <p class="registration__input-name">Billing address:</p>
+      <div class="registration__input-container">
+        <input
+          type="text"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="billingAddress"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'billingAddress'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              hasError(profileForm, 'billingAddress') &&
+              profileForm.get('billingAddress')?.hasError('required')
+            "
+          >
+            Address is required.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'billingAddress') &&
+              profileForm.get('billingAddress')?.errors?.['noSpacesOnly']
+            "
+          >
+            Cannot be only spaces
+          </span>
+        </div>
+        <div class="registration__checkbox">
+          <input
+            type="checkbox"
+            id="checkbox__billing-address"
+            class="checkbox__billing-address"
+            formControlName="isSameAddress"
+            (change)="checkboxBillingHandler()"
+          />
+          <label for="checkbox__billing-address" class="checkbox__text"
+            >Same as shipping address</label
+          >
+        </div>
+      </div>
+    </div>
+
     <div class="registration__buttons">
       <button class="button registration__button" (click)="goToMainPage()">
         Back
@@ -242,7 +355,7 @@
 </div>
 
 <app-error-modal
-  *ngIf='isModalShow'
+  *ngIf="isModalShow"
   [message]="modalErrorMessage"
   [header]="modalHeader"
   (closeModalEvent)="closeModal()"

@@ -13,11 +13,20 @@ import { RouterModule } from '@angular/router';
 import { birthDateValidator } from '../../utils/validations/birth-date-validator';
 import { postalCodeValidator } from '../../utils/validations/postal-code-validator';
 import { ApiService } from '../../services/api.service';
-import { ErrorModalComponent } from '../../components/error-modal/error-modal.component';
+import { FormModalComponent } from '../../components/form-modal/form-modal.component';
+import { RegistrationFormValues } from '../../data/interfaces/form-interfaces';
+import { trimFormValues } from '../../utils/trim-form-values';
+import { noSpacesValidator } from '../../utils/validations/no-spaces-validator';
 
 @Component({
   selector: 'app-registration-page',
-  imports: [ReactiveFormsModule, NgIf, NgClass, RouterModule, ErrorModalComponent],
+  imports: [
+    ReactiveFormsModule,
+    NgIf,
+    NgClass,
+    RouterModule,
+    FormModalComponent,
+  ],
   templateUrl: './registration-page.component.html',
   styleUrl: './registration-page.component.scss',
 })
@@ -49,8 +58,22 @@ export class RegistrationPageComponent {
       Validators.required,
       Validators.pattern('^[A-Za-zА-Яа-яЁё]+$'),
     ]),
-    postalCode: new FormControl('', [Validators.required, postalCodeValidator]),
-    address: new FormControl('', [Validators.required]),
+    postalCode: new FormControl('', [
+      Validators.required,
+      postalCodeValidator,
+      noSpacesValidator,
+    ]),
+    address: new FormControl('', [Validators.required, noSpacesValidator]),
+    shippingAddress: new FormControl('', [
+      Validators.required,
+      noSpacesValidator,
+    ]),
+    isDefaultAddress: new FormControl(false),
+    billingAddress: new FormControl('', [
+      Validators.required,
+      noSpacesValidator,
+    ]),
+    isSameAddress: new FormControl(false),
   });
 
   public countries = countries;
@@ -67,8 +90,41 @@ export class RegistrationPageComponent {
     return errors ? Object.keys(errors).length : 0;
   }
 
+  public get postalCodeErrorCount(): number {
+    const errors = this.profileForm.get('postalCode')?.errors;
+    return errors ? Object.keys(errors).length : 0;
+  }
+
   public static lockScroll(): void {
     document.body.classList.add('scroll-lock');
+  }
+
+  private static async createCustomer(
+    formData: RegistrationFormValues,
+  ): Promise<{ new_customer_id: string; request_error_message: string }> {
+    return ApiService.createNewCustomer(
+      formData.email,
+      formData.firstName,
+      formData.lastName,
+      formData.password,
+    );
+  }
+
+  private static async setCustomerAddress(
+    customerId: string,
+    formData: RegistrationFormValues,
+  ): Promise<void> {
+    const address = formData.address.replaceAll(/\s+/g, ' ');
+
+    await ApiService.setAddressesToCustomer(
+      customerId,
+      formData.firstName,
+      formData.lastName,
+      formData.country,
+      formData.city,
+      formData.postalCode,
+      address,
+    );
   }
 
   public openModal(message: string, header: string): void {
@@ -79,7 +135,7 @@ export class RegistrationPageComponent {
 
   public closeModal(): void {
     this.isModalShow = false;
-    if(this.modalErrorMessage === 'Registration success') {
+    if (this.modalErrorMessage === 'Registration success') {
       this.profileForm.reset();
       this.goToMainPage();
     }
@@ -88,33 +144,109 @@ export class RegistrationPageComponent {
   public async submitButtonHandler(event: Event): Promise<void> {
     event.preventDefault();
 
+    trimFormValues(this.profileForm);
+
     if (this.profileForm.invalid) {
       console.log('false');
       this.profileForm.markAllAsTouched();
       return;
     }
 
-    const valueForm = this.profileForm.value;
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const valueForm = this.profileForm.value as RegistrationFormValues;
 
     // requests for ecommerce tools
-    if(valueForm.address && valueForm.birthDate && valueForm.city && valueForm.country && valueForm.email && valueForm.firstName && valueForm.lastName && valueForm.password && valueForm.postalCode) {
-      const { new_customer_id, request_error_message } = await ApiService.createNewCustomer(valueForm.email, valueForm.firstName, valueForm.lastName, valueForm.password);
+    const { new_customer_id, request_error_message } =
+      await RegistrationPageComponent.createCustomer(valueForm);
 
-      if(request_error_message === '') {
-        await ApiService.setAddressesToCustomer(new_customer_id, valueForm.firstName, valueForm.lastName, valueForm.country, valueForm.city, valueForm.postalCode, valueForm.address);
-        await ApiService.setBirthDayToCustomer(new_customer_id, valueForm.birthDate);
-        const new_customer_cart_id: string = await ApiService.createNewCart();
-        await ApiService.setUserIdToCart(new_customer_cart_id, new_customer_id);
-        await ApiService.setUserEmailToCart(new_customer_cart_id, valueForm.email);
-        this.openModal('Registration success', 'Success ✅');
-      } else {
-        RegistrationPageComponent.lockScroll();
-        this.openModal(request_error_message, '❗ Error ❗');
-      }
+    if (request_error_message === '') {
+      await RegistrationPageComponent.setCustomerAddress(
+        new_customer_id,
+        valueForm,
+      );
+      await ApiService.setBirthDayToCustomer(
+        new_customer_id,
+        valueForm.birthDate,
+      );
+      const new_customer_cart_id: string = await ApiService.createNewCart();
+      await ApiService.setUserIdToCart(new_customer_cart_id, new_customer_id);
+      await ApiService.setUserEmailToCart(
+        new_customer_cart_id,
+        valueForm.email,
+      );
+
+      this.openModal('Registration success', 'Success ✅');
+    } else {
+      RegistrationPageComponent.lockScroll();
+      this.openModal(request_error_message, '❗ Error ❗');
+    }
+  }
+
+  public checkboxShippingHandler(): void {
+    const isDefault = this.profileForm.get('isDefaultAddress')?.value;
+
+    if (isDefault) {
+      this.profileForm.get('shippingAddress')?.disable();
+    } else {
+      this.profileForm.get('shippingAddress')?.enable();
+      this.profileForm.get('shippingAddress')?.setValue('');
+    }
+  }
+
+  public checkboxBillingHandler(): void {
+    const isSame = this.profileForm.get('isSameAddress')?.value;
+
+    if (isSame) {
+      this.profileForm.get('billingAddress')?.disable();
+    } else {
+      this.profileForm.get('billingAddress')?.enable();
+      this.profileForm.get('billingAddress')?.setValue('');
     }
   }
 
   public goToMainPage(): void {
     this.router.navigate(['/']);
+  }
+
+  private ngOnInit(): void {
+    this.profileForm.get('address')?.valueChanges.subscribe((addressValue) => {
+      const isDefault = this.profileForm.get('isDefaultAddress')?.value;
+      const isSame = this.profileForm.get('isSameAddress')?.value;
+
+      if (isDefault) {
+        this.profileForm
+          .get('shippingAddress')
+          ?.setValue(addressValue || '', { emitEvent: false });
+      }
+
+      if (isSame) {
+        this.profileForm
+          .get('billingAddress')
+          ?.setValue(addressValue || '', { emitEvent: false });
+      }
+    });
+
+    this.profileForm
+      .get('isDefaultAddress')
+      ?.valueChanges.subscribe((isDefault) => {
+        const addressValue = this.profileForm.get('address')?.value;
+
+        if (isDefault) {
+          this.profileForm
+            .get('shippingAddress')
+            ?.setValue(addressValue || '', { emitEvent: false });
+        }
+      });
+
+    this.profileForm.get('isSameAddress')?.valueChanges.subscribe((isSame) => {
+      const shippingAddressValue =
+        this.profileForm.get('shippingAddress')?.value;
+
+      if (isSame) {
+        this.profileForm
+          .get('billingAddress')
+          ?.setValue(shippingAddressValue || '', { emitEvent: false });
+      }
+    });
   }
 }

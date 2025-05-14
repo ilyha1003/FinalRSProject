@@ -3,12 +3,10 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 @Component({
   selector: 'app-error-modal',
   imports: [],
-  templateUrl: './error-modal.component.html',
-  styleUrl: './error-modal.component.scss'
+  templateUrl: './form-modal.component.html',
+  styleUrl: './form-modal.component.scss',
 })
-
-
-export class ErrorModalComponent {
+export class FormModalComponent {
   @Input() public message: string = '';
   @Input() public header: string = '';
   @Output() public closeModalEvent = new EventEmitter<void>();
@@ -19,7 +17,7 @@ export class ErrorModalComponent {
   }
 
   public closeModal(): void {
-    ErrorModalComponent.unlockScroll();
+    FormModalComponent.unlockScroll();
     this.closeModalEvent.emit();
   }
 }

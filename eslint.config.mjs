@@ -29,7 +29,7 @@ export default defineConfig([
       "@typescript-eslint/member-ordering": "error",
       "class-methods-use-this": "error",
       "@typescript-eslint/no-explicit-any": "error",
-      "max-lines-per-function": ["error", 40],
+      "max-lines-per-function": ["error", 50],
     },
   },
   {

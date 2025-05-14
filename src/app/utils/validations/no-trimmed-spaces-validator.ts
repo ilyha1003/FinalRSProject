@@ -1,12 +1,10 @@
 import { AbstractControl, ValidationErrors } from '@angular/forms';
 
-export const noSpacesValidator = (
+export const noTrimmedSpacesValidator = (
   control: AbstractControl,
 ): ValidationErrors | null => {
   const value = control.value;
   if (typeof value !== 'string') return null;
 
-  return value.trim().length === 0 && value.length > 0
-    ? { noSpacesOnly: true }
-    : null;
+  return value === value.trim() ? null : { noTrimmedSpaces: true };
 };
