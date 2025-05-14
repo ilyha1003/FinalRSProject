@@ -154,6 +154,8 @@ export class RegistrationPageComponent {
 
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const valueForm = this.profileForm.value as RegistrationFormValues;
+    console.log(valueForm);
+    
 
     // requests for ecommerce tools
     const { new_customer_id, request_error_message } =

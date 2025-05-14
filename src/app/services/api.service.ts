@@ -336,6 +336,7 @@ export class ApiService {
   public static async loginCustomer(user_login: string, user_password: string): Promise<LoginCustomer> {
     const actual_admin_access_token: string = await ApiService.getAdminAccessToken();
     let request_error_message: string = '';
+    let customer_id: string = '';
 
     const request_body: object = {
       "email" : user_login,
@@ -357,11 +358,14 @@ export class ApiService {
         request_error_message = error_data.message;
       }
 
+      const data = await response.json();
+      customer_id = data.customer.id;
+
     } catch (error) {
       console.log(error);      
     }
 
-    return { request_error_message };
+    return { customer_id, request_error_message };
   }
 
   //
