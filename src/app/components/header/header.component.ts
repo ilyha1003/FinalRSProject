@@ -2,6 +2,9 @@ import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular
 import { Router, NavigationEnd, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { filter } from 'rxjs/operators';
+// import { LocalStorageService } from '../../services/local-storage.service';
+import { Subscription } from 'rxjs';
+import { SignInService } from '../../services/sign-in.service';
 
 @Component({
   selector: 'app-header',
@@ -17,7 +20,9 @@ export class HeaderComponent implements OnInit {
   public isMobile = false;
   public basketItemCount = 0;
 
-  constructor(private router: Router) {}
+  private subscription!: Subscription;
+
+  constructor(private router: Router, private signInService: SignInService) {}
 
   @HostListener('window:resize')
   public onWindowResize(): void {
@@ -36,7 +41,11 @@ export class HeaderComponent implements OnInit {
             ? false
             : true;
       });
-
+    
+    this.subscription = this.signInService.isLogin$.subscribe((isLoggedIn) => {
+      this.isLogin = isLoggedIn;
+    })
+    
     this.isMobile = window.innerWidth <= 768;
   }
 
@@ -77,7 +86,8 @@ export class HeaderComponent implements OnInit {
   }
 
   public logout(): void {
-    console.log(this.isLogin);
+    this.signInService.logout();
+    this.router.navigate(['/']);
   }
 
   private adjustDropdownPosition(): void {

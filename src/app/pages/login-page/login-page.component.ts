@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { NgClass, NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { SignInService } from '../../services/sign-in.service';
 
 import {
   ReactiveFormsModule,
@@ -44,7 +45,7 @@ export class LoginPageComponent {
   public modalErrorMessage: string = '';
   public modalHeader: string = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private signInService: SignInService) {}
 
   public get passwordErrorCount(): number {
     const errors = this.profileForm.get('password')?.errors;
@@ -78,7 +79,7 @@ export class LoginPageComponent {
 
     // requests for ecommerce tools
     if (valueForm.email && valueForm.password) {
-      const { request_error_message } = await ApiService.loginCustomer(
+      const {customer_id, request_error_message } = await ApiService.loginCustomer(
         valueForm.email,
         valueForm.password,
       );
@@ -87,7 +88,9 @@ export class LoginPageComponent {
           valueForm.email,
           valueForm.password,
         );
-        console.log('Customer access token - ' + customer_access_token);
+
+        this.signInService.login(customer_id, customer_access_token);
+
         this.profileForm.reset();
         this.goToMainPage();
       } else {
