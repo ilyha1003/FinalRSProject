@@ -106,7 +106,6 @@
   font-weight: 700;
   color: var(--color-black);
   background-color: var(--color-primary);
-  transition: all 0.4s ease-in-out;
 
   &:hover {
     background-color: grey;
@@ -117,11 +116,16 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    margin-left: auto;
+  }
 }
 
 .header__link-profile {
   cursor: pointer;
   position: relative;
+  margin-top: 5px;
 
   svg {
     transition: all 0.4s ease-in-out;
@@ -164,31 +168,34 @@
   }
 
   .header__profile-dropdown-link {
-    color: var(--color-text);
     text-decoration: none;
     font-size: 0.9rem;
     transition: all 0.4s ease-in-out;
+    padding: 0.45rem 1rem;
+    border: none;
+    border-radius: 15px;
+    font-weight: 450;
+    color: var(--color-black);
+    background-color: var(--color-primary);
 
     &:hover {
-      color: var(--color-primary);
+      background-color: grey;
     }
   }
 }
 
 .header__basket {
-
-  .header__basket-svg path{
+  .header__basket-svg path {
     transition: all 0.4s ease-in-out;
   }
 
-  &:hover .header__basket-svg path{
+  &:hover .header__basket-svg path {
     stroke: var(--color-primary);
   }
 
   @media (hover: none) {
-    &:hover .header__basket-svg path{
+    &:hover .header__basket-svg path {
       stroke: var(--color-white);
     }
   }
 }
-

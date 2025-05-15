@@ -9,6 +9,13 @@ export const trimFormValues = (form: FormGroup): void => {
       typeof control.value === 'string' &&
       key !== 'password'
     ) {
+      if (key === 'firstName' || key === 'lastName') {
+        const name =
+          control.value.slice(0, 1).toUpperCase() + control.value.slice(1);
+
+        control.setValue(name, { emitEvent: false });
+      }
+
       control.setValue(control.value.trim(), { emitEvent: false });
     }
   }
