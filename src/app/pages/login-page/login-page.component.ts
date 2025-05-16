@@ -9,13 +9,14 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { customEmailValidator } from '../../utils/validations/email-custom-validator';
 import { Router } from '@angular/router';
 import { hasError } from '../../utils/validations/has-error';
 import { noTrimmedSpacesValidator } from '../../utils/validations/no-trimmed-spaces-validator';
 import { strengthPasswordValidator } from '../../utils/validations/strength-password-validator';
 import { ApiService } from '../../services/api.service';
 import { FormModalComponent } from '../../components/form-modal/form-modal.component';
+import { LoaderService } from '../../services/loader.service';
+import { customEmailValidator } from '../../utils/validations/email-custom-validator';
 
 @Component({
   selector: 'app-login-page',
@@ -27,7 +28,6 @@ export class LoginPageComponent {
   public profileForm = new FormGroup({
     email: new FormControl('', [
       Validators.required,
-      Validators.email,
       customEmailValidator,
       noTrimmedSpacesValidator,
     ]),
@@ -45,10 +45,19 @@ export class LoginPageComponent {
   public modalErrorMessage: string = '';
   public modalHeader: string = '';
 
-  constructor(private router: Router, private signInService: SignInService) {}
+  constructor(
+    private router: Router,
+    private signInService: SignInService,
+    private loaderService: LoaderService,
+  ) {}
 
   public get passwordErrorCount(): number {
     const errors = this.profileForm.get('password')?.errors;
+    return errors ? Object.keys(errors).length : 0;
+  }
+
+  public get emailErrorCount(): number {
+    const errors = this.profileForm.get('email')?.errors;
     return errors ? Object.keys(errors).length : 0;
   }
 
@@ -70,33 +79,38 @@ export class LoginPageComponent {
     event.preventDefault();
 
     if (this.profileForm.invalid) {
-      console.log('false');
       this.profileForm.markAllAsTouched();
       return;
     }
 
     const valueForm = this.profileForm.value;
 
-    // requests for ecommerce tools
-    if (valueForm.email && valueForm.password) {
-      const {customer_id, request_error_message } = await ApiService.loginCustomer(
-        valueForm.email,
-        valueForm.password,
-      );
-      if (request_error_message === '') {
-        const customer_access_token = await ApiService.createUserAccessToken(
-          valueForm.email,
-          valueForm.password,
-        );
+    this.loaderService.show();
 
-        this.signInService.login(customer_id, customer_access_token);
+    try {
+      // requests for ecommerce tools
+      if (valueForm.email && valueForm.password) {
+        const { customer_id, request_error_message } =
+          await ApiService.loginCustomer(valueForm.email, valueForm.password);
+        if (request_error_message === '') {
+          const customer_access_token = await ApiService.createUserAccessToken(
+            valueForm.email,
+            valueForm.password,
+          );
 
-        this.profileForm.reset();
-        this.goToMainPage();
-      } else {
-        LoginPageComponent.lockScroll();
-        this.openModal(request_error_message, '❗ Error ❗');
+          this.signInService.login(customer_id, customer_access_token);
+
+          this.profileForm.reset();
+          this.goToMainPage();
+        } else {
+          LoginPageComponent.lockScroll();
+          this.openModal(request_error_message, '❗ Error ❗');
+        }
       }
+    } catch {
+      this.openModal('A login error has occurred', '❗ Error ❗');
+    } finally {
+      this.loaderService.hide();
     }
   }
 
