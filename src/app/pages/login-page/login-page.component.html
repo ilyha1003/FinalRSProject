@@ -8,7 +8,7 @@
     <div class="login__field-inputs">
       <div class="login__input-container">
         <input
-          type="email"
+          type="text"
           class="login__input"
           placeholder="Email address"
           [attr.autocomplete]="'off'"
@@ -17,14 +17,20 @@
             input_error: hasError(profileForm, 'email'),
           }"
         />
-        <div class="error-messages">
+        <div
+          class="error-messages"
+          [ngClass]="{
+            'error-messages_shifted': emailErrorCount === 2,
+            'error-messages_shifted-2': emailErrorCount === 3,
+          }"
+        >
+          <span *ngIf="profileForm.get('email')?.errors?.['noTrimmedSpaces']">
+            No spaces at start or end.
+          </span>
           <span
-            *ngIf="
-              profileForm.get('email')?.hasError('email') ||
-              profileForm.get('email')?.hasError('customEmailValidator')
-            "
+            *ngIf="profileForm.get('email')?.errors?.['customEmailValidator']"
           >
-            Please enter a valid email.
+            Please enter a valid user&#64;example.com
           </span>
           <span
             *ngIf="
@@ -104,7 +110,7 @@
 </div>
 
 <app-error-modal
-  *ngIf='isModalShow'
+  *ngIf="isModalShow"
   [header]="modalHeader"
   [message]="modalErrorMessage"
   (closeModalEvent)="closeModal()"

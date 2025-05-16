@@ -9,7 +9,6 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { customEmailValidator } from '../../utils/validations/email-custom-validator';
 import { Router } from '@angular/router';
 import { hasError } from '../../utils/validations/has-error';
 import { noTrimmedSpacesValidator } from '../../utils/validations/no-trimmed-spaces-validator';
@@ -17,6 +16,7 @@ import { strengthPasswordValidator } from '../../utils/validations/strength-pass
 import { ApiService } from '../../services/api.service';
 import { FormModalComponent } from '../../components/form-modal/form-modal.component';
 import { LoaderService } from '../../services/loader.service';
+import { customEmailValidator } from '../../utils/validations/email-custom-validator';
 
 @Component({
   selector: 'app-login-page',
@@ -28,7 +28,6 @@ export class LoginPageComponent {
   public profileForm = new FormGroup({
     email: new FormControl('', [
       Validators.required,
-      Validators.email,
       customEmailValidator,
       noTrimmedSpacesValidator,
     ]),
@@ -54,6 +53,11 @@ export class LoginPageComponent {
 
   public get passwordErrorCount(): number {
     const errors = this.profileForm.get('password')?.errors;
+    return errors ? Object.keys(errors).length : 0;
+  }
+
+  public get emailErrorCount(): number {
+    const errors = this.profileForm.get('email')?.errors;
     return errors ? Object.keys(errors).length : 0;
   }
 

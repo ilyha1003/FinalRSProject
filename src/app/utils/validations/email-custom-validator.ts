@@ -6,7 +6,7 @@ export const customEmailValidator = (
   const value = control.value;
   if (!value) return null;
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
   return emailRegex.test(value) ? null : { customEmailValidator: true };
 };
