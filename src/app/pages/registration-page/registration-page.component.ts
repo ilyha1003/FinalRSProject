@@ -14,7 +14,7 @@ import { birthDateValidator } from '../../utils/validations/birth-date-validator
 import { postalCodeValidator } from '../../utils/validations/postal-code-validator';
 import { ApiService } from '../../services/api.service';
 import { FormModalComponent } from '../../components/form-modal/form-modal.component';
-import { RegistrationFormValues } from '../../data/interfaces/form-interfaces';
+import { RegistrationFormValues } from '../../utils/interfaces';
 import { trimFormValues } from '../../utils/trim-form-values';
 import { noSpacesValidator } from '../../utils/validations/no-spaces-validator';
 
@@ -113,12 +113,12 @@ export class RegistrationPageComponent {
   private static async setCustomerAddress(
     customerId: string,
     formData: RegistrationFormValues,
-    mode: string
+    mode: string,
   ): Promise<string> {
     let address: string = '';
 
     switch (mode) {
-      case "base": {
+      case 'base': {
         address = formData.address.replaceAll(/\s+/g, ' ');
         break;
       }
@@ -133,44 +133,56 @@ export class RegistrationPageComponent {
     }
 
     const address_id = await ApiService.setAddressesToCustomer(
-          customerId,
-          formData.firstName,
-          formData.lastName,
-          formData.country,
-          formData.city,
-          formData.postalCode,
-          address,
-        );
-    
+      customerId,
+      formData.firstName,
+      formData.lastName,
+      formData.country,
+      formData.city,
+      formData.postalCode,
+      address,
+    );
+
     return address_id;
   }
 
   private static async setCustomerAddressesFields(
-    new_customer_id: string, 
-    valueForm: RegistrationFormValues
+    new_customer_id: string,
+    valueForm: RegistrationFormValues,
   ): Promise<void> {
-    const default_address_id = await RegistrationPageComponent.setCustomerAddress(new_customer_id, valueForm, 'base');
+    const baseAddressId = await RegistrationPageComponent.setCustomerAddress(
+      new_customer_id,
+      valueForm,
+      'base',
+    );
 
-    if(valueForm.isDefaultAddress === false) {
-      const shipping_address_id = await RegistrationPageComponent.setCustomerAddress(new_customer_id, valueForm, 'shipping');
-      await ApiService.setDefaultShippingAddress(new_customer_id, shipping_address_id);
+    const useBaseAsDefault = valueForm.isDefaultAddress === true;
+    const useSameAddress = valueForm.isSameAddress === true;
 
-      if(valueForm.isSameAddress === false) {
-        const billing_address_id = await RegistrationPageComponent.setCustomerAddress(new_customer_id, valueForm, 'billing');
-        await ApiService.setDefaultBillingAddress(new_customer_id, billing_address_id);
-      } else {
-        await ApiService.setDefaultBillingAddress(new_customer_id, shipping_address_id);
-      }
-    } else {
-      await ApiService.setDefaultShippingAddress(new_customer_id, default_address_id);
-      
-      if(valueForm.isSameAddress === false) {
-        const billing_address_id = await RegistrationPageComponent.setCustomerAddress(new_customer_id, valueForm, 'billing');
-        await ApiService.setDefaultBillingAddress(new_customer_id, billing_address_id);
-      } else {
-        await ApiService.setDefaultBillingAddress(new_customer_id, default_address_id);
-      }
-    }
+    const shippingAddressId = useBaseAsDefault
+      ? baseAddressId
+      : await RegistrationPageComponent.setCustomerAddress(
+          new_customer_id,
+          valueForm,
+          'shipping',
+        );
+
+    await ApiService.setDefaultShippingAddress(
+      new_customer_id,
+      shippingAddressId,
+    );
+
+    const billingAddressId = useSameAddress
+      ? shippingAddressId
+      : await RegistrationPageComponent.setCustomerAddress(
+          new_customer_id,
+          valueForm,
+          'billing',
+        );
+
+    await ApiService.setDefaultBillingAddress(
+      new_customer_id,
+      billingAddressId,
+    );
   }
 
   public openModal(message: string, header: string): void {
@@ -190,22 +202,25 @@ export class RegistrationPageComponent {
   public async submitButtonHandler(event: Event): Promise<void> {
     event.preventDefault();
 
-    trimFormValues(this.profileForm);
-
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
       return;
     }
 
+    trimFormValues(this.profileForm);
+
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const valueForm = this.profileForm.value as RegistrationFormValues;
-    
+
     // requests for ecommerce tools
     const { new_customer_id, request_error_message } =
       await RegistrationPageComponent.createCustomer(valueForm);
 
     if (request_error_message === '') {
-      await RegistrationPageComponent.setCustomerAddressesFields(new_customer_id, valueForm);
+      await RegistrationPageComponent.setCustomerAddressesFields(
+        new_customer_id,
+        valueForm,
+      );
 
       await ApiService.setBirthDayToCustomer(
         new_customer_id,
@@ -252,23 +267,13 @@ export class RegistrationPageComponent {
   }
 
   private ngOnInit(): void {
-    this.profileForm.get('address')?.valueChanges.subscribe((addressValue) => {
-      const isDefault = this.profileForm.get('isDefaultAddress')?.value;
-      const isSame = this.profileForm.get('isSameAddress')?.value;
+    this.subscribeOnAddress();
+    this.subscribeOnShippingAddress();
+    this.subscribeOnisDefaultCheck();
+    this.subscribeOnSameCheck();
+  }
 
-      if (isDefault) {
-        this.profileForm
-          .get('shippingAddress')
-          ?.setValue(addressValue || '', { emitEvent: false });
-      }
-
-      if (isSame) {
-        this.profileForm
-          .get('billingAddress')
-          ?.setValue(addressValue || '', { emitEvent: false });
-      }
-    });
-
+  private subscribeOnisDefaultCheck(): void {
     this.profileForm
       .get('isDefaultAddress')
       ?.valueChanges.subscribe((isDefault) => {
@@ -280,7 +285,9 @@ export class RegistrationPageComponent {
             ?.setValue(addressValue || '', { emitEvent: false });
         }
       });
+  }
 
+  private subscribeOnSameCheck(): void {
     this.profileForm.get('isSameAddress')?.valueChanges.subscribe((isSame) => {
       const shippingAddressValue =
         this.profileForm.get('shippingAddress')?.value;
@@ -289,6 +296,37 @@ export class RegistrationPageComponent {
         this.profileForm
           .get('billingAddress')
           ?.setValue(shippingAddressValue || '', { emitEvent: false });
+      }
+    });
+  }
+
+  private subscribeOnShippingAddress(): void {
+    this.profileForm
+      .get('shippingAddress')
+      ?.valueChanges.subscribe((addressValue) => {
+        const isSame = this.profileForm.get('isSameAddress')?.value;
+
+        if (isSame) {
+          this.profileForm
+            .get('billingAddress')
+            ?.setValue(addressValue || '', { emitEvent: false });
+        }
+      });
+  }
+
+  private subscribeOnAddress(): void {
+    this.profileForm.get('address')?.valueChanges.subscribe((addressValue) => {
+      const isDefault = this.profileForm.get('isDefaultAddress')?.value;
+      const isSame = this.profileForm.get('isSameAddress')?.value;
+      if (isDefault) {
+        this.profileForm
+          .get('shippingAddress')
+          ?.setValue(addressValue || '', { emitEvent: false });
+      }
+      if (isSame && isDefault) {
+        this.profileForm
+          .get('billingAddress')
+          ?.setValue(addressValue || '', { emitEvent: false });
       }
     });
   }
