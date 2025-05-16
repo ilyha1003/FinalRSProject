@@ -16,6 +16,7 @@ import { noTrimmedSpacesValidator } from '../../utils/validations/no-trimmed-spa
 import { strengthPasswordValidator } from '../../utils/validations/strength-password-validator';
 import { ApiService } from '../../services/api.service';
 import { FormModalComponent } from '../../components/form-modal/form-modal.component';
+import { LoaderService } from '../../services/loader.service';
 
 @Component({
   selector: 'app-login-page',
@@ -45,7 +46,11 @@ export class LoginPageComponent {
   public modalErrorMessage: string = '';
   public modalHeader: string = '';
 
-  constructor(private router: Router, private signInService: SignInService) {}
+  constructor(
+    private router: Router,
+    private signInService: SignInService,
+    private loaderService: LoaderService,
+  ) {}
 
   public get passwordErrorCount(): number {
     const errors = this.profileForm.get('password')?.errors;
@@ -70,33 +75,38 @@ export class LoginPageComponent {
     event.preventDefault();
 
     if (this.profileForm.invalid) {
-      console.log('false');
       this.profileForm.markAllAsTouched();
       return;
     }
 
     const valueForm = this.profileForm.value;
 
-    // requests for ecommerce tools
-    if (valueForm.email && valueForm.password) {
-      const {customer_id, request_error_message } = await ApiService.loginCustomer(
-        valueForm.email,
-        valueForm.password,
-      );
-      if (request_error_message === '') {
-        const customer_access_token = await ApiService.createUserAccessToken(
-          valueForm.email,
-          valueForm.password,
-        );
+    this.loaderService.show();
 
-        this.signInService.login(customer_id, customer_access_token);
+    try {
+      // requests for ecommerce tools
+      if (valueForm.email && valueForm.password) {
+        const { customer_id, request_error_message } =
+          await ApiService.loginCustomer(valueForm.email, valueForm.password);
+        if (request_error_message === '') {
+          const customer_access_token = await ApiService.createUserAccessToken(
+            valueForm.email,
+            valueForm.password,
+          );
 
-        this.profileForm.reset();
-        this.goToMainPage();
-      } else {
-        LoginPageComponent.lockScroll();
-        this.openModal(request_error_message, '❗ Error ❗');
+          this.signInService.login(customer_id, customer_access_token);
+
+          this.profileForm.reset();
+          this.goToMainPage();
+        } else {
+          LoginPageComponent.lockScroll();
+          this.openModal(request_error_message, '❗ Error ❗');
+        }
       }
+    } catch {
+      this.openModal('A login error has occurred', '❗ Error ❗');
+    } finally {
+      this.loaderService.hide();
     }
   }
 

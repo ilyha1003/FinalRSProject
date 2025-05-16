@@ -17,6 +17,7 @@ import { FormModalComponent } from '../../components/form-modal/form-modal.compo
 import { RegistrationFormValues } from '../../utils/interfaces';
 import { trimFormValues } from '../../utils/trim-form-values';
 import { noSpacesValidator } from '../../utils/validations/no-spaces-validator';
+import { LoaderService } from '../../services/loader.service';
 
 @Component({
   selector: 'app-registration-page',
@@ -83,7 +84,10 @@ export class RegistrationPageComponent {
   public modalErrorMessage: string = '';
   public modalHeader: string = '';
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private loaderService: LoaderService,
+  ) {}
 
   public get passwordErrorCount(): number {
     const errors = this.profileForm.get('password')?.errors;
@@ -201,42 +205,52 @@ export class RegistrationPageComponent {
 
   public async submitButtonHandler(event: Event): Promise<void> {
     event.preventDefault();
-
+    this.profileForm.updateValueAndValidity({
+      onlySelf: false,
+      emitEvent: true,
+    });
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
       return;
     }
 
     trimFormValues(this.profileForm);
+    this.loaderService.show();
 
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const valueForm = this.profileForm.value as RegistrationFormValues;
+    try {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const valueForm = this.profileForm.value as RegistrationFormValues;
 
-    // requests for ecommerce tools
-    const { new_customer_id, request_error_message } =
-      await RegistrationPageComponent.createCustomer(valueForm);
+      // requests for ecommerce tools
+      const { new_customer_id, request_error_message } =
+        await RegistrationPageComponent.createCustomer(valueForm);
 
-    if (request_error_message === '') {
-      await RegistrationPageComponent.setCustomerAddressesFields(
-        new_customer_id,
-        valueForm,
-      );
+      if (request_error_message === '') {
+        await RegistrationPageComponent.setCustomerAddressesFields(
+          new_customer_id,
+          valueForm,
+        );
 
-      await ApiService.setBirthDayToCustomer(
-        new_customer_id,
-        valueForm.birthDate,
-      );
-      const new_customer_cart_id: string = await ApiService.createNewCart();
-      await ApiService.setUserIdToCart(new_customer_cart_id, new_customer_id);
-      await ApiService.setUserEmailToCart(
-        new_customer_cart_id,
-        valueForm.email,
-      );
+        await ApiService.setBirthDayToCustomer(
+          new_customer_id,
+          valueForm.birthDate,
+        );
+        const new_customer_cart_id: string = await ApiService.createNewCart();
+        await ApiService.setUserIdToCart(new_customer_cart_id, new_customer_id);
+        await ApiService.setUserEmailToCart(
+          new_customer_cart_id,
+          valueForm.email,
+        );
 
-      this.openModal('Registration success', 'Success ✅');
-    } else {
-      RegistrationPageComponent.lockScroll();
-      this.openModal(request_error_message, '❗ Error ❗');
+        this.openModal('Registration success', 'Success ✅');
+      } else {
+        RegistrationPageComponent.lockScroll();
+        this.openModal(request_error_message, '❗ Error ❗');
+      }
+    } catch {
+      this.openModal('A registration error has occurred', '❗ Error ❗');
+    } finally {
+      this.loaderService.hide();
     }
   }
 
@@ -267,10 +281,18 @@ export class RegistrationPageComponent {
   }
 
   private ngOnInit(): void {
+    this.subscribeOnCountry();
     this.subscribeOnAddress();
     this.subscribeOnShippingAddress();
     this.subscribeOnisDefaultCheck();
     this.subscribeOnSameCheck();
+  }
+
+  private subscribeOnCountry(): void {
+    this.profileForm.get('country')?.valueChanges.subscribe(() => {
+      const indexControl = this.profileForm.get('postalCode');
+      indexControl?.updateValueAndValidity();
+    });
   }
 
   private subscribeOnisDefaultCheck(): void {

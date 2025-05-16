@@ -16,6 +16,10 @@ export const trimFormValues = (form: FormGroup): void => {
         control.setValue(name, { emitEvent: false });
       }
 
+      if (key === 'postalCode') {
+        control.setValue(control.value.toUpperCase(), { emitEvent: false });
+      }
+
       control.setValue(control.value.trim(), { emitEvent: false });
     }
   }
