@@ -18,6 +18,7 @@ import { RegistrationFormValues } from '../../utils/interfaces';
 import { trimFormValues } from '../../utils/trim-form-values';
 import { noSpacesValidator } from '../../utils/validations/no-spaces-validator';
 import { LoaderService } from '../../services/loader.service';
+import { SignInService } from '../../services/sign-in.service';
 
 @Component({
   selector: 'app-registration-page',
@@ -87,6 +88,7 @@ export class RegistrationPageComponent {
   constructor(
     private router: Router,
     private loaderService: LoaderService,
+    private signInService: SignInService,
   ) {}
 
   public get passwordErrorCount(): number {
@@ -203,6 +205,18 @@ export class RegistrationPageComponent {
     }
   }
 
+  public async autoSignIn(valueForm: RegistrationFormValues): Promise<void> {
+    const { customer_id } = await ApiService.loginCustomer(
+      valueForm.email,
+      valueForm.password,
+    );
+    const customer_access_token = await ApiService.createUserAccessToken(
+      valueForm.email,
+      valueForm.password,
+    );
+    this.signInService.login(customer_id, customer_access_token);
+  }
+
   public async submitButtonHandler(event: Event): Promise<void> {
     event.preventDefault();
     this.profileForm.updateValueAndValidity({
@@ -230,7 +244,6 @@ export class RegistrationPageComponent {
           new_customer_id,
           valueForm,
         );
-
         await ApiService.setBirthDayToCustomer(
           new_customer_id,
           valueForm.birthDate,
@@ -241,6 +254,7 @@ export class RegistrationPageComponent {
           new_customer_cart_id,
           valueForm.email,
         );
+        await this.autoSignIn(valueForm);
 
         this.openModal('Registration success', 'Success ✅');
       } else {
