@@ -121,18 +121,12 @@ export class HeaderComponent implements OnInit {
     const rect: DOMRect = dropdownElement.getBoundingClientRect();
 
     if (rect.right > window.innerWidth - 20) {
-      dropdownElement.style.left = 'auto';
-      dropdownElement.style.right = '0';
       dropdownElement.style.transform = 'translateY(0)';
     }
     if (rect.left < 20) {
-      dropdownElement.style.left = '0';
-      dropdownElement.style.right = 'auto';
       dropdownElement.style.transform = 'translateY(0)';
     }
     if (window.innerWidth > 768) {
-      dropdownElement.style.left = '-40px';
-      dropdownElement.style.right = 'auto';
       dropdownElement.style.transform = 'translateY(0)';
     }
   }

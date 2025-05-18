@@ -11,6 +11,10 @@
   gap: 1rem;
   padding: 1rem 1.5rem;
 
+  @media (max-width: 494px) {
+    padding: 1rem;
+  }
+
   @media (max-width: 464px) {
     flex-direction: column;
     align-items: center;
