@@ -1,10 +1,17 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ElementRef,
+  HostListener,
+} from '@angular/core';
 import { Router, NavigationEnd, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { filter } from 'rxjs/operators';
-// import { LocalStorageService } from '../../services/local-storage.service';
+import { LocalStorageService } from '../../services/local-storage.service';
 import { Subscription } from 'rxjs';
 import { SignInService } from '../../services/sign-in.service';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-header',
@@ -19,10 +26,14 @@ export class HeaderComponent implements OnInit {
   public showProfileMenu = false;
   public isMobile = false;
   public basketItemCount = 0;
+  public firstName = '';
 
   private subscription!: Subscription;
 
-  constructor(private router: Router, private signInService: SignInService) {}
+  constructor(
+    private router: Router,
+    private signInService: SignInService,
+  ) {}
 
   @HostListener('window:resize')
   public onWindowResize(): void {
@@ -32,20 +43,32 @@ export class HeaderComponent implements OnInit {
     this.isMobile = window.innerWidth <= 768;
   }
 
-  public ngOnInit(): void {
+  public async ngOnInit(): Promise<void> {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
         this.showHeader =
-          this.router.url === '/login' || this.router.url === '/registration' || this.router.url === '/**'
+          this.router.url === '/login' ||
+          this.router.url === '/registration' ||
+          this.router.url === '/**'
             ? false
             : true;
       });
-    
-    this.subscription = this.signInService.isLogin$.subscribe((isLoggedIn) => {
-      this.isLogin = isLoggedIn;
-    })
-    
+
+    this.subscription = this.signInService.isLogin$.subscribe(
+      async (isLoggedIn) => {
+        this.isLogin = isLoggedIn;
+
+        if (!isLoggedIn) {
+          this.firstName = '';
+        }
+
+        if (isLoggedIn) {
+          await this.getUserName();
+        }
+      },
+    );
+
     this.isMobile = window.innerWidth <= 768;
   }
 
@@ -87,6 +110,7 @@ export class HeaderComponent implements OnInit {
 
   public logout(): void {
     this.signInService.logout();
+    this.showProfileMenu = false;
     this.router.navigate(['/']);
   }
 
@@ -111,5 +135,24 @@ export class HeaderComponent implements OnInit {
       dropdownElement.style.right = 'auto';
       dropdownElement.style.transform = 'translateY(0)';
     }
+  }
+
+  private async getUserName(): Promise<void> {
+    const localStorageName = LocalStorageService.getCustomerId();
+
+    const getfirstName = await ApiService.getCustomerById(localStorageName);
+
+    if (!getfirstName?.firstName) {
+      this.firstName = '';
+
+      return;
+    }
+
+    const nameSlice =
+      getfirstName?.firstName.length > 8
+        ? getfirstName?.firstName.slice(0, 8) + '...'
+        : getfirstName?.firstName;
+
+    this.firstName = nameSlice;
   }
 }
