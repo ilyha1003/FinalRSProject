@@ -199,7 +199,7 @@
             "
           >
             Postal code must match the format:
-            {{ profileForm.get("postalCode")?.errors?.["invalidPostalCode"] }}
+            {{ profileForm.get('postalCode')?.errors?.['invalidPostalCode'] }}
           </span>
           <span
             *ngIf="
@@ -336,7 +336,11 @@
     </div>
 
     <div class="registration__buttons">
-      <button class="button registration__button" (click)="goToMainPage()">
+      <button
+        type="button"
+        class="button registration__button"
+        (click)="goToMainPage()"
+      >
         Back
       </button>
       <button
