@@ -3,13 +3,14 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { LocalStorageService } from './local-storage.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-
 export class SignInService {
-  private _isLogin$ = new BehaviorSubject<boolean>(SignInService.getLoginStatusFromLocalStorage());
+  private _isLogin$ = new BehaviorSubject<boolean>(
+    SignInService.getLoginStatusFromLocalStorage(),
+  );
 
-  constructor() { }
+  constructor() {}
 
   public get isLogin$(): Observable<boolean> {
     return this._isLogin$.asObservable();
