@@ -1,0 +1,120 @@
+.login__form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  background-color: #494949;
+  color: white;
+  border-radius: 5px;
+}
+
+.login__title {
+  margin: 0 0 10px;
+}
+
+.login__field-inputs {
+  margin-bottom: 15px;
+}
+
+.login__input-container {
+  position: relative;
+  margin-bottom: 15px;
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+}
+
+.login__input {
+  border: 1px solid black;
+  border-radius: 5px;
+}
+
+.login__password-view {
+  position: absolute;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.password-view_close {
+  background-image: url(../../../../public/assets/password/password-not-visible.svg);
+}
+
+.password-view_open {
+  background-image: url(../../../../public/assets/password/password-visible.svg);
+}
+
+.login__buttons {
+  display: flex;
+  width: 100%;
+  justify-content: space-evenly;
+  margin-bottom: 10px;
+}
+
+.login__button {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1.5px solid gray;
+}
+
+.error-messages {
+  display: flex;
+  position: absolute;
+  flex-direction: column;
+  left: 100%;
+  top: 0;
+  white-space: nowrap;
+  padding: 4px;
+  margin: 0;
+  margin-left: 8px;
+  color: white;
+  background-color: red;
+  font-size: 0.8rem;
+  min-width: 125px;
+  border-radius: 5px;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.error-messages::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-right: 4px solid red;
+}
+
+.error-messages_shifted::before {
+  top: 36%;
+}
+
+.error-messages_shifted-2::before {
+  top: 30%;
+}
+
+.input_error {
+  border: 1px solid red;
+}
+
+.login__question-paragraph {
+  font-size: 0.8rem;
+  margin: 0 auto;
+}
+
+.login__link {
+  color: cornflowerblue;
+}

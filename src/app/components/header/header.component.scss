@@ -1,0 +1,259 @@
+.header {
+  background-color: var(--color-bg);
+}
+
+.header__wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+
+  @media (max-width: 494px) {
+    padding: 1rem;
+  }
+}
+
+.header__logo-link {
+  cursor: pointer;
+}
+
+.header__logo-img {
+  height: 60px;
+  width: 50px;
+  border-radius: 20%;
+
+  @media (max-width: 478px) {
+    height: 50px;
+    width: 40px;
+  }
+}
+
+.header__form {
+  flex: 1;
+  max-width: 700px;
+  min-width: 200px;
+
+  .header__search {
+    display: flex;
+  }
+
+  .header__search-input {
+    max-width: 650px;
+    width: 100%;
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    border-radius: 10px 0 0 10px;
+    border: none;
+  }
+
+  .header__search-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0 10px 10px 0;
+    color: var(--color-text);
+    background-color: var(--color-primary);
+    transition: all 0.4s ease-in-out;
+
+    &:hover {
+      background-color: grey;
+    }
+  }
+}
+
+.header__nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.header__link {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.4s ease-in-out;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+
+  @media (hover: none) {
+    &:hover {
+      color: var(--color-text);
+    }
+  }
+
+  @media (max-width: 508px) {
+    font-size: 0.9rem;
+  }
+}
+
+.header__basket {
+  position: relative;
+  cursor: pointer;
+}
+
+.header__basket-badge {
+  position: absolute;
+  top: -15px;
+  right: -20px;
+  background-color: var(--color-primary);
+  color: var(--color-black);
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+}
+
+.header__buttons {
+  display: flex;
+  gap: 0.5rem;
+
+  @media (max-width: 515px) {
+    flex-direction: column;
+  }
+}
+
+.header__button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 15px;
+  font-weight: 700;
+  color: var(--color-black);
+  background-color: var(--color-primary);
+
+  &:hover {
+    background-color: grey;
+  }
+
+  @media (max-width: 468px) {
+    flex-direction: column;
+    padding: 0.4rem 0.9rem;
+  }
+}
+
+.header__profile-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    margin-left: auto;
+  }
+}
+
+.header__link-wrapper {
+  margin-top: 3px;
+}
+
+.header__link-profile {
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+
+  svg {
+    transition: all 0.4s ease-in-out;
+  }
+
+  @media (any-hover: hover) {
+    &:hover {
+      svg {
+        stroke: var(--color-primary);
+      }
+
+      .header__name-paragraph {
+        color: var(--color-primary);
+      }
+    }
+  }
+
+  @media (hover: none) {
+    &:hover svg {
+      stroke: var(--color-white);
+    }
+  }
+
+  .header__profile-dropdown-block {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 1.5rem;
+    position: absolute;
+    top: 120%;
+    z-index: 5;
+    background-color: #2c3e50;
+    border-radius: 4px;
+    min-width: 80px;
+    max-width: 10vw;
+    padding: 1.5rem 1rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease-in-out;
+    transform: translateY(5px);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 8px solid #2c3e50;
+    }
+  }
+
+  .header__profile-dropdown-block.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .header__profile-dropdown-link {
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.4s ease-in-out;
+    padding: 0.45rem 1rem;
+    border: none;
+    border-radius: 15px;
+    font-weight: 450;
+    color: var(--color-black);
+    background-color: var(--color-primary);
+
+    &:hover {
+      background-color: grey;
+    }
+  }
+}
+
+.header__basket {
+  text-decoration: none;
+
+  .header__basket-svg path {
+    transition: all 0.4s ease-in-out;
+  }
+
+  @media (any-hover: hover) {
+    &:hover {
+      .header__basket-svg path {
+        stroke: var(--color-primary);
+      }
+
+      .header__cart-paragraph {
+        color: var(--color-primary);
+      }
+    }
+  }
+}
+
+.header__cart-paragraph,
+.header__name-paragraph {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-white);
+  transition: all 0.4s ease-in-out;
+}

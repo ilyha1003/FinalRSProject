@@ -1,0 +1,42 @@
+:host {
+  display: flex;
+  justify-content: center;
+  flex: auto;
+}
+
+.not-found__wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.not-found__title {
+  color: #000;
+  font-size: 10rem;
+  margin: 0;
+}
+
+.not-found__paragraph {
+  font-size: 2rem;
+  margin: 0 0 10px;
+}
+
+.not-found__button-container {
+  display: flex;
+  justify-content: center;
+}
+
+.not-found__button {
+  padding: 10px 35px;
+  border: 1px solid #4a7ebd;
+  border-radius: 15px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background-color: #000;
+
+  &:hover {
+    background-color: grey;
+  }
+}
