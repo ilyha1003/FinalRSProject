@@ -1,12 +1,159 @@
-<div
-  style="
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 15px;
-  "
->
-  <h2 style="font-size: 3rem">Profile-page</h2>
-  <img src="/assets/work.png" style="width: 30vw" alt="work-in-progress" />
+<div class="profile-page__wrapper">
+  <h1 class="greeting">Hi, Unknown Customer!</h1>
+
+  <div class="profile__wrapper">
+    <div class="main-buttons__wrapper">
+      <button
+        (click)="setActiveMainButton('general')"
+        [class.main__button-active]="activeMainButton === 'general'"
+        class="general__button main__button"
+      >
+        General
+      </button>
+      <button
+        (click)="setActiveMainButton('addresses')"
+        [class.main__button-active]="activeMainButton === 'addresses'"
+        class="general__button main__button"
+      >
+        Addresses
+      </button>
+      <button
+        (click)="setActiveMainButton('password')"
+        [class.main__button-active]="activeMainButton === 'password'"
+        class="general__button main__button"
+      >
+        Password
+      </button>
+    </div>
+
+    <!-- general inputs wrapper -->
+    <div class="customer-info__wrapper">
+      <form [formGroup]="generalProfileForm" class="profile__form">
+        @for (field of inputFields; track field.label) {
+          <div class="registration__field-input">
+            <p class="profile-form__input-name">{{ field.label }}:</p>
+            <div class="registration__input-container">
+              <input
+                [type]="field.type"
+                class="general__input"
+                [attr.autocomplete]="'off'"
+                [formControlName]="field.controlName"
+                [ngClass]="{
+                  input_error: hasError(generalProfileForm, field.controlName),
+                }"
+              />
+              <div
+                class="error-messages"
+                *ngIf="hasError(generalProfileForm, field.controlName)"
+                [ngClass]="{
+                  'error-messages_shifted': passwordErrorCount === 2,
+                  'error-messages_shifted-2': passwordErrorCount === 3,
+                }"
+              >
+                <span
+                  *ngIf="
+                    field.controlName === 'firstName' &&
+                    generalProfileForm.get('firstName')?.hasError('pattern')
+                  "
+                >
+                  Letters only, no digits or symbols
+                </span>
+                <span
+                  *ngIf="
+                    field.controlName === 'lastName' &&
+                    generalProfileForm.get('lastName')?.hasError('pattern')
+                  "
+                >
+                  Letters only, no digits or symbols
+                </span>
+                <span
+                  *ngIf="
+                    (field.controlName === 'firstName' ||
+                      field.controlName === 'lastName') &&
+                    generalProfileForm
+                      .get(field.controlName)
+                      ?.hasError('maxlength')
+                  "
+                >
+                  Must be at most 12 characters
+                </span>
+                <span
+                  *ngIf="
+                    generalProfileForm
+                      .get(field.controlName)
+                      ?.hasError('required')
+                  "
+                >
+                  {{ field.label }} is required.
+                </span>
+                <span
+                  *ngIf="
+                    field.controlName === 'email' &&
+                    (generalProfileForm.get('email')?.hasError('email') ||
+                      generalProfileForm
+                        .get('email')
+                        ?.hasError('customEmailValidator'))
+                  "
+                >
+                  Please enter a valid email.
+                </span>
+                <span
+                  *ngIf="
+                    field.controlName === 'password' &&
+                    generalProfileForm.get('password')?.hasError('minlength')
+                  "
+                >
+                  Must be at least 8 characters.
+                </span>
+                <span
+                  *ngIf="
+                    field.controlName === 'password' &&
+                    generalProfileForm.get('password')?.errors?.[
+                      'passwordStrength'
+                    ]
+                  "
+                >
+                  Mix upper, lower case and digit.
+                </span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="registration__field-input">
+          <p class="profile-form__input-name">Date of birth:</p>
+          <div class="registration__input-container">
+            <input
+              type="date"
+              class="general__input"
+              [attr.autocomplete]="'off'"
+              formControlName="birthDate"
+              [ngClass]="{
+                input_error: hasError(generalProfileForm, 'birthDate'),
+              }"
+            />
+            <div class="error-messages">
+              <span
+                *ngIf="
+                  hasError(generalProfileForm, 'birthDate') &&
+                  generalProfileForm.get('birthDate')?.hasError('required')
+                "
+              >
+                Date of birth is required.
+              </span>
+              <span
+                *ngIf="
+                  generalProfileForm.get('birthDate')?.errors?.[
+                    'birthDateValidator'
+                  ]
+                "
+              >
+                You must be at least 16 years old.
+              </span>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

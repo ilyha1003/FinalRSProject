@@ -1,6 +1,6 @@
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
-@use "@angular/material" as mat;
+@use '@angular/material' as mat;
 
 html {
   @include mat.theme(
@@ -70,5 +70,13 @@ body {
 }
 body {
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
+
+app-profile-page {
+  display: flex;
+  flex: 2000;
+  justify-content: center;
+  padding: 1rem 1.5rem;
+  margin: 0 auto;
 }
