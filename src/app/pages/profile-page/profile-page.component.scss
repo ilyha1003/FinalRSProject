@@ -4,6 +4,10 @@
   align-items: center;
 }
 
+.profile-description {
+  text-align: center;
+}
+
 .main-buttons__wrapper {
   display: flex;
   flex-direction: column;
@@ -15,27 +19,33 @@
 
 .main__button {
   padding: 10px 20px;
+  height: 50px;
   border-radius: 10px;
   border: none;
   background-color: var(--color-white);
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .main__button-active {
-  border: 1px solid var(--color-black);
+  border: 1px solid #565c5c;
+  background-color: var(--color-primary);
 }
 
 .profile__wrapper {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: 3rem;
   height: 100%;
 }
 
 .customer-info__wrapper {
   display: flex;
-  flex-grow: 2;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  min-width: 350px;
 }
 
 //-------------- general form --------
@@ -43,28 +53,20 @@
   display: flex;
   flex-direction: column;
   gap: 30px;
+  width: 100%;
 }
 
-.registration__field-input {
+.profile__field-input {
   display: flex;
   flex-direction: column;
   margin-bottom: 15px;
-  &:last-of-type {
-    margin-bottom: 0;
-  }
 }
 
-.registration__input-container {
+.profile__input-container {
   display: flex;
   width: 100%;
   position: relative;
   flex-direction: column;
-}
-
-.profile-form__input-name {
-  margin: 0 10px 0 0;
-  font-weight: 600;
-  font-size: 1rem;
 }
 
 .general__input {
@@ -72,6 +74,7 @@
   border-radius: 5px;
   padding: 8px;
   font-size: 20px;
+  font-weight: 100;
 
   &:disabled {
     color: white;
@@ -119,73 +122,179 @@
   border: 1px solid red;
 }
 
-.input__birth-date {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background: white;
-  border: 1px solid #ccc;
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.registration__question-paragraph {
-  font-size: 0.8rem;
-  margin: 0 auto;
-}
-
-.registration__link {
-  color: cornflowerblue;
-}
-
-.registration__checkbox {
+.actions-buttons__wrapper {
+  width: 100%;
   display: flex;
-  gap: 5px;
-  margin-top: 5px;
+  justify-content: space-around;
 }
 
-.checkbox__shipping-address,
-.checkbox__billing-address {
-  position: relative;
-  display: inline-block;
-  width: 25px;
-  height: 15px;
-  margin: 0;
-  vertical-align: top;
-  background: #ffffff;
-  border: 1px solid #bbc1e1;
-  border-radius: 30px;
-  outline: none;
+.action__button {
+  padding: 12px 24px;
   cursor: pointer;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  border: none;
+  border-radius: 8px;
+}
 
-  &::after {
-    content: '';
-    display: inline-block;
-    position: absolute;
-    left: 1px;
-    top: 1.5px;
-    width: 10px;
-    height: 10px;
-    background-color: #494949;
-    border-radius: 50%;
-    transform: translateX(0);
+.edit__button,
+.save__button {
+  background-color: var(--color-primary);
+}
+
+.action__button-disabled {
+  background-color: var(--color-gray);
+  cursor: default;
+  pointer-events: none;
+}
+
+// label
+.floating__input {
+  width: 100%;
+  padding: 24px 12px 8px 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  height: 54px;
+}
+
+.floating__input:focus {
+  border-color: #3b82f6;
+  border-bottom: 3px solid #3b82f6;
+}
+
+.floating__label {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #666666;
+  font-size: 16px;
+  transition: all 0.5s ease;
+  transform-origin: left;
+  background-color: white;
+  padding: 0 4px;
+}
+
+.floating__label.focused {
+  transform: translateY(0);
+  top: 2px;
+  left: 8px;
+  font-size: 12px;
+}
+// ----------
+
+// addresses
+.shipping-address__field {
+  width: 100%;
+}
+
+.customer-addresses {
+  width: 100%;
+  margin-bottom: 40px;
+  padding: 8px;
+  height: 40px;
+}
+
+.input__country {
+  cursor: pointer;
+  padding: 2px;
+}
+
+// checkbox
+.checkbox-container {
+  margin: 40px auto;
+  max-width: 300px;
+  font-family: Arial, sans-serif;
+}
+
+.custom-checkbox {
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding-left: 35px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.custom-checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 24px;
+  width: 24px;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.custom-checkbox:hover .checkmark {
+  background-color: #696969;
+}
+
+.checkmark.checked {
+  background-color: #c0c0c0;
+  box-shadow: none;
+}
+
+.checkmark.checked::after {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 4px;
+  width: 6px;
+  height: 12px;
+  border: solid rgb(0, 0, 0);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-label {
+  margin-left: 8px;
+  color: #333;
+}
+
+@media (hover: hover) {
+  .main__button:hover {
+    background-color: var(--color-primary);
   }
 }
 
-.checkbox__shipping-address:checked::after,
-.checkbox__billing-address:checked::after {
-  transform: translateX(calc(100%));
-}
-.checkbox__shipping-address:checked,
-.checkbox__billing-address:checked {
-  background-color: var(--color-checked);
-}
+@media screen and (max-width: 768px) {
+  .profile__wrapper {
+    flex-direction: column;
+    justify-content: flex-start;
+  }
 
-.checkbox__text {
-  font-size: 0.8rem;
+  .main-buttons__wrapper {
+    flex-direction: row;
+    padding-right: 0;
+    border: none;
+    width: auto;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .general__button {
+    width: auto;
+    max-width: 80px;
+    padding: 10px 5px;
+  }
+
+  .customer-info__wrapper {
+    min-width: 300px;
+  }
 }

@@ -1,6 +1,19 @@
 <div class="profile-page__wrapper">
   <h1 class="greeting">Hi, Unknown Customer!</h1>
 
+  <h3 *ngIf="activeMainButton === 'general'" class="profile-description">
+    Here you can change your main information
+  </h3>
+  <h3 *ngIf="activeMainButton === 'shipping'" class="profile-description">
+    Here you can edit your shipping address
+  </h3>
+  <h3 *ngIf="activeMainButton === 'billing'" class="profile-description">
+    Here you can edit your billing address
+  </h3>
+  <h3 *ngIf="activeMainButton === 'account'" class="profile-description">
+    Here you can change your account password and delete account
+  </h3>
+
   <div class="profile__wrapper">
     <div class="main-buttons__wrapper">
       <button
@@ -11,37 +24,54 @@
         General
       </button>
       <button
-        (click)="setActiveMainButton('addresses')"
-        [class.main__button-active]="activeMainButton === 'addresses'"
+        (click)="setActiveMainButton('shipping')"
+        [class.main__button-active]="activeMainButton === 'shipping'"
         class="general__button main__button"
       >
-        Addresses
+        Shipping Address
       </button>
       <button
-        (click)="setActiveMainButton('password')"
-        [class.main__button-active]="activeMainButton === 'password'"
+        (click)="setActiveMainButton('billing')"
+        [class.main__button-active]="activeMainButton === 'billing'"
         class="general__button main__button"
       >
-        Password
+        Billing Address
+      </button>
+      <button
+        (click)="setActiveMainButton('account')"
+        [class.main__button-active]="activeMainButton === 'account'"
+        class="general__button main__button"
+      >
+        Account
       </button>
     </div>
 
     <!-- general inputs wrapper -->
-    <div class="customer-info__wrapper">
+    <div *ngIf="activeMainButton === 'general'" class="customer-info__wrapper">
       <form [formGroup]="generalProfileForm" class="profile__form">
-        @for (field of inputFields; track field.label) {
-          <div class="registration__field-input">
-            <p class="profile-form__input-name">{{ field.label }}:</p>
-            <div class="registration__input-container">
+        @for (field of generalInputFields; track field.label) {
+          <div class="profile__field-input">
+            <div class="profile__input-container">
               <input
                 [type]="field.type"
-                class="general__input"
+                [(ngModel)]="field.value"
+                (focus)="isFocused[field.track] = true"
+                (blur)="isFocused[field.track] = field.value ? true : false"
+                [id]="field.id"
+                class="floating__input"
                 [attr.autocomplete]="'off'"
                 [formControlName]="field.controlName"
                 [ngClass]="{
                   input_error: hasError(generalProfileForm, field.controlName),
                 }"
               />
+              <label
+                for="{{ field.id }}"
+                class="floating__label"
+                [class.focused]="isFocused[field.track] || field.value"
+              >
+                {{ field.label }}
+              </label>
               <div
                 class="error-messages"
                 *ngIf="hasError(generalProfileForm, field.controlName)"
@@ -120,18 +150,21 @@
           </div>
         }
 
-        <div class="registration__field-input">
-          <p class="profile-form__input-name">Date of birth:</p>
-          <div class="registration__input-container">
+        <div class="profile__field-input">
+          <div class="profile__input-container">
             <input
               type="date"
-              class="general__input"
+              class="floating__input"
               [attr.autocomplete]="'off'"
+              id="birthDate"
               formControlName="birthDate"
               [ngClass]="{
                 input_error: hasError(generalProfileForm, 'birthDate'),
               }"
             />
+            <label for="birthDate" class="floating__label focused">
+              Birth date
+            </label>
             <div class="error-messages">
               <span
                 *ngIf="
@@ -154,6 +187,415 @@
           </div>
         </div>
       </form>
+
+      <div class="actions-buttons__wrapper">
+        <button
+          (click)="setActiveEditMode()"
+          [class.action__button-disabled]="isEditMode === true"
+          class="action__button edit__button"
+        >
+          Edit
+        </button>
+        <button
+          (click)="setInactiveEditMode()"
+          [class.action__button-disabled]="isEditMode === false"
+          class="action__button save__button"
+        >
+          Save
+        </button>
+      </div>
     </div>
+
+    <!-- Shipping address inputs wrapper -->
+    <div *ngIf="activeMainButton === 'shipping'" class="customer-info__wrapper">
+      <div class="shipping-address__field">
+        <!-- <select
+          class="floating__input customer-addresses"
+          name="shippingSelect"
+          id="shippingAddressList"
+        >
+          <option value="">Select shipping address</option>
+        </select> -->
+
+        <form [formGroup]="shippingProfileForm" class="profile__form">
+          <div class="profile__field-input">
+            <div class="profile__input-container">
+              <select
+                class="input__country floating__input"
+                id="country"
+                formControlName="shippingCountry"
+              >
+                <option value="">Select a country</option>
+                @for (country of countries; track country.code) {
+                  <option [value]="country.code">{{ country.name }}</option>
+                }
+              </select>
+              <div class="error-messages">
+                <span
+                  *ngIf="
+                    shippingProfileForm.get('shippingCountry')?.touched &&
+                    shippingProfileForm
+                      .get('shippingCountry')
+                      ?.hasError('required')
+                  "
+                >
+                  Country is required.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          @for (field of shippingAddress; track field.label) {
+            <div class="profile__field-input">
+              <div class="profile__input-container">
+                <input
+                  [type]="field.type"
+                  [(ngModel)]="field.value"
+                  (focus)="isFocused[field.track] = true"
+                  (blur)="isFocused[field.track] = field.value ? true : false"
+                  [id]="field.id"
+                  class="floating__input"
+                  [attr.autocomplete]="'off'"
+                  [formControlName]="field.controlName"
+                  [ngClass]="{
+                    input_error: hasError(
+                      shippingProfileForm,
+                      field.controlName
+                    ),
+                  }"
+                />
+
+                <label
+                  for="{{ field.id }}"
+                  class="floating__label"
+                  [class.focused]="isFocused[field.track] || field.value"
+                >
+                  {{ field.label }}
+                </label>
+
+                <div class="error-messages">
+                  <span
+                    *ngIf="
+                      field.controlName === 'shippingCity' &&
+                      hasError(shippingProfileForm, 'shippingCity') &&
+                      shippingProfileForm
+                        .get('shippingCity')
+                        ?.hasError('required')
+                    "
+                  >
+                    City is required.
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'shippingCity' &&
+                      hasError(shippingProfileForm, 'shippingCity') &&
+                      shippingProfileForm
+                        .get('shippingCity')
+                        ?.hasError('pattern')
+                    "
+                  >
+                    City must contain only letters.
+                  </span>
+
+                  <span
+                    *ngIf="
+                      field.controlName === 'shippingPostalCode' &&
+                      hasError(shippingProfileForm, 'shippingPostalCode') &&
+                      shippingProfileForm
+                        .get('shippingPostalCode')
+                        ?.hasError('required')
+                    "
+                  >
+                    Postal code is required.
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'shippingPostalCode' &&
+                      hasError(shippingProfileForm, 'shippingPostalCode') &&
+                      shippingProfileForm.get('shippingPostalCode')?.errors?.[
+                        'invalidPostalCode'
+                      ]
+                    "
+                  >
+                    Postal code must match the format:
+                    {{
+                      shippingProfileForm.get('shippingPostalCode')?.errors?.[
+                        'invalidPostalCode'
+                      ]
+                    }}
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'shippingPostalCode' &&
+                      hasError(shippingProfileForm, 'shippingPostalCode') &&
+                      shippingProfileForm.get('shippingPostalCode')?.errors?.[
+                        'noSpacesOnly'
+                      ]
+                    "
+                  >
+                    Cannot be only spaces
+                  </span>
+
+                  <span
+                    *ngIf="
+                      field.controlName === 'shippingAddress' &&
+                      hasError(shippingProfileForm, 'shippingAddress') &&
+                      shippingProfileForm
+                        .get('shippingAddress')
+                        ?.hasError('required')
+                    "
+                  >
+                    Address is required.
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'shippingAddress' &&
+                      hasError(shippingProfileForm, 'shippingAddress') &&
+                      shippingProfileForm.get('shippingAddress')?.errors?.[
+                        'noSpacesOnly'
+                      ]
+                    "
+                  >
+                    Cannot be only spaces
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- <div class="checkbox-field">
+            <label class="custom-checkbox">
+              <input
+                type="checkbox"
+                [checked]="isShippingDefaultChecked"
+                (change)="onCheckboxChange($event)"
+              />
+
+              <span
+                class="checkmark"
+                [class.checked]="isShippingDefaultChecked"
+              ></span>
+
+              <span class="checkbox-label">
+                Set as default Shipping address
+              </span>
+            </label>
+          </div> -->
+        </form>
+      </div>
+
+      <div class="actions-buttons__wrapper">
+        <button
+          (click)="setActiveEditMode()"
+          [class.action__button-disabled]="isEditMode === true"
+          class="action__button edit__button"
+        >
+          Edit
+        </button>
+        <button
+          (click)="setInactiveEditMode()"
+          [class.action__button-disabled]="isEditMode === false"
+          class="action__button save__button"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+
+    <!-- Billing address -->
+    <div *ngIf="activeMainButton === 'billing'" class="customer-info__wrapper">
+      <div class="shipping-address__field">
+        <!-- <select
+          class="floating__input customer-addresses"
+          name="shippingSelect"
+          id="shippingAddressList"
+        >
+          <option value="">Select shipping address</option>
+        </select> -->
+
+        <form [formGroup]="billingProfileForm" class="profile__form">
+          <div class="profile__field-input">
+            <div class="profile__input-container">
+              <select
+                class="input__country floating__input"
+                id="country"
+                formControlName="billingCountry"
+              >
+                <option value="">Select a country</option>
+                @for (country of countries; track country.code) {
+                  <option [value]="country.code">{{ country.name }}</option>
+                }
+              </select>
+              <div class="error-messages">
+                <span
+                  *ngIf="
+                    billingProfileForm.get('billingCountry')?.touched &&
+                    billingProfileForm
+                      .get('billingCountry')
+                      ?.hasError('required')
+                  "
+                >
+                  Country is required.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          @for (field of billingAddress; track field.label) {
+            <div class="profile__field-input">
+              <div class="profile__input-container">
+                <input
+                  [type]="field.type"
+                  [(ngModel)]="field.value"
+                  (focus)="isFocused[field.track] = true"
+                  (blur)="isFocused[field.track] = field.value ? true : false"
+                  [id]="field.id"
+                  class="floating__input"
+                  [attr.autocomplete]="'off'"
+                  [formControlName]="field.controlName"
+                  [ngClass]="{
+                    input_error: hasError(
+                      billingProfileForm,
+                      field.controlName
+                    ),
+                  }"
+                />
+
+                <label
+                  for="{{ field.id }}"
+                  class="floating__label"
+                  [class.focused]="isFocused[field.track] || field.value"
+                >
+                  {{ field.label }}
+                </label>
+
+                <div class="error-messages">
+                  <span
+                    *ngIf="
+                      field.controlName === 'billingCity' &&
+                      hasError(billingProfileForm, 'billingCity') &&
+                      billingProfileForm
+                        .get('billingCity')
+                        ?.hasError('required')
+                    "
+                  >
+                    City is required.
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'billingCity' &&
+                      hasError(billingProfileForm, 'billingCity') &&
+                      billingProfileForm.get('billingCity')?.hasError('pattern')
+                    "
+                  >
+                    City must contain only letters.
+                  </span>
+
+                  <span
+                    *ngIf="
+                      field.controlName === 'billingPostalCode' &&
+                      hasError(billingProfileForm, 'billingPostalCode') &&
+                      billingProfileForm
+                        .get('billingPostalCode')
+                        ?.hasError('required')
+                    "
+                  >
+                    Postal code is required.
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'billingPostalCode' &&
+                      hasError(billingProfileForm, 'billingPostalCode') &&
+                      billingProfileForm.get('billingPostalCode')?.errors?.[
+                        'invalidPostalCode'
+                      ]
+                    "
+                  >
+                    Postal code must match the format:
+                    {{
+                      billingProfileForm.get('billingPostalCode')?.errors?.[
+                        'invalidPostalCode'
+                      ]
+                    }}
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'billingPostalCode' &&
+                      hasError(billingProfileForm, 'billingPostalCode') &&
+                      billingProfileForm.get('billingPostalCode')?.errors?.[
+                        'noSpacesOnly'
+                      ]
+                    "
+                  >
+                    Cannot be only spaces
+                  </span>
+
+                  <span
+                    *ngIf="
+                      field.controlName === 'billingAddress' &&
+                      hasError(billingProfileForm, 'billingAddress') &&
+                      billingProfileForm
+                        .get('billingAddress')
+                        ?.hasError('required')
+                    "
+                  >
+                    Address is required.
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'billingAddress' &&
+                      hasError(billingProfileForm, 'billingAddress') &&
+                      billingProfileForm.get('billingAddress')?.errors?.[
+                        'noSpacesOnly'
+                      ]
+                    "
+                  >
+                    Cannot be only spaces
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- <div class="checkbox-field">
+            <label class="custom-checkbox">
+              <input
+                type="checkbox"
+                [checked]="isbillingDefaultChecked"
+                (change)="onCheckboxChange($event)"
+              />
+
+              <span
+                class="checkmark"
+                [class.checked]="isbillingDefaultChecked"
+              ></span>
+
+              <span class="checkbox-label">
+                Set as default billing address
+              </span>
+            </label>
+          </div> -->
+        </form>
+      </div>
+
+      <div class="actions-buttons__wrapper">
+        <button
+          (click)="setActiveEditMode()"
+          [class.action__button-disabled]="isEditMode === true"
+          class="action__button edit__button"
+        >
+          Edit
+        </button>
+        <button
+          (click)="setInactiveEditMode()"
+          [class.action__button-disabled]="isEditMode === false"
+          class="action__button save__button"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+
+    <!-- Account settings -->
   </div>
 </div>
