@@ -87,3 +87,31 @@ export const billingAddresses = [
     value: '',
   },
 ];
+
+export const passwords = [
+  {
+    label: 'Old password',
+    type: 'password',
+    id: 'oldPassword',
+    controlName: 'oldPassword',
+    track: 'oldPassword',
+    value: '',
+  },
+  {
+    label: 'New password',
+    type: 'password',
+    id: 'newPassword',
+    controlName: 'newPassword',
+    track: 'newPassword',
+    value: '',
+  },
+];
+
+export const passwordForDeleting = {
+  label: 'Password',
+  type: 'password',
+  id: 'actualPassword',
+  controlName: 'actualPassword',
+  track: 'actualPassword',
+  value: '',
+};

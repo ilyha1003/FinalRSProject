@@ -208,7 +208,7 @@
 
     <!-- Shipping address inputs wrapper -->
     <div *ngIf="activeMainButton === 'shipping'" class="customer-info__wrapper">
-      <div class="shipping-address__field">
+      <div class="customer-info">
         <!-- <select
           class="floating__input customer-addresses"
           name="shippingSelect"
@@ -404,7 +404,7 @@
 
     <!-- Billing address -->
     <div *ngIf="activeMainButton === 'billing'" class="customer-info__wrapper">
-      <div class="shipping-address__field">
+      <div class="customer-info">
         <!-- <select
           class="floating__input customer-addresses"
           name="shippingSelect"
@@ -597,5 +597,189 @@
     </div>
 
     <!-- Account settings -->
+    <div *ngIf="activeMainButton === 'account'" class="customer-info__wrapper">
+      <div class="customer-info">
+        <form [formGroup]="passwordsProfileForm" class="profile__form">
+          @for (field of passwords; track field.label) {
+            <div class="profile__field-input">
+              <div class="profile__input-container">
+                <input
+                  [type]="field.type"
+                  [(ngModel)]="field.value"
+                  (focus)="isFocused[field.track] = true"
+                  (blur)="isFocused[field.track] = field.value ? true : false"
+                  [id]="field.id"
+                  class="floating__input"
+                  [attr.autocomplete]="'off'"
+                  [formControlName]="field.controlName"
+                  [ngClass]="{
+                    input_error: hasError(
+                      passwordsProfileForm,
+                      field.controlName
+                    ),
+                  }"
+                />
+
+                <label
+                  for="{{ field.id }}"
+                  class="floating__label"
+                  [class.focused]="isFocused[field.track] || field.value"
+                >
+                  {{ field.label }}
+                </label>
+
+                <div
+                  class="error-messages"
+                  *ngIf="hasError(passwordsProfileForm, field.controlName)"
+                  [ngClass]="{
+                    'error-messages_shifted': passwordErrorCount === 2,
+                    'error-messages_shifted-2': passwordErrorCount === 3,
+                  }"
+                >
+                  <span
+                    *ngIf="
+                      passwordsProfileForm
+                        .get(field.controlName)
+                        ?.hasError('required')
+                    "
+                  >
+                    {{ field.label }} is required.
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'oldPassword' &&
+                      passwordsProfileForm
+                        .get('oldPassword')
+                        ?.hasError('minlength')
+                    "
+                  >
+                    Must be at least 8 characters.
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'oldPassword' &&
+                      passwordsProfileForm.get('oldPassword')?.errors?.[
+                        'passwordStrength'
+                      ]
+                    "
+                  >
+                    Mix upper, lower case and digit.
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'newPassword' &&
+                      passwordsProfileForm
+                        .get('newPassword')
+                        ?.hasError('minlength')
+                    "
+                  >
+                    Must be at least 8 characters.
+                  </span>
+                  <span
+                    *ngIf="
+                      field.controlName === 'newPassword' &&
+                      passwordsProfileForm.get('newPassword')?.errors?.[
+                        'passwordStrength'
+                      ]
+                    "
+                  >
+                    Mix upper, lower case and digit.
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        </form>
+        <div class="actions-buttons__wrapper">
+          <button class="action__button edit__button">Change password</button>
+        </div>
+      </div>
+
+      <div class="customer-info">
+        <form [formGroup]="deleteAccountProfileForm" class="profile__form">
+          <div class="profile__field-input">
+            <div class="profile__input-container">
+              <input
+                [type]="passwordForDeleting.type"
+                [(ngModel)]="passwordForDeleting.value"
+                (focus)="isFocused[passwordForDeleting.track] = true"
+                (blur)="
+                  isFocused[passwordForDeleting.track] =
+                    passwordForDeleting.value ? true : false
+                "
+                [id]="passwordForDeleting.id"
+                class="floating__input"
+                [attr.autocomplete]="'off'"
+                [formControlName]="passwordForDeleting.controlName"
+                [ngClass]="{
+                  input_error: hasError(
+                    deleteAccountProfileForm,
+                    passwordForDeleting.controlName
+                  ),
+                }"
+              />
+
+              <label
+                for="{{ passwordForDeleting.id }}"
+                class="floating__label"
+                [class.focused]="
+                  isFocused[passwordForDeleting.track] ||
+                  passwordForDeleting.value
+                "
+              >
+                {{ passwordForDeleting.label }}
+              </label>
+
+              <div
+                class="error-messages"
+                *ngIf="
+                  hasError(
+                    deleteAccountProfileForm,
+                    passwordForDeleting.controlName
+                  )
+                "
+                [ngClass]="{
+                  'error-messages_shifted': passwordErrorCount === 2,
+                  'error-messages_shifted-2': passwordErrorCount === 3,
+                }"
+              >
+                <span
+                  *ngIf="
+                    deleteAccountProfileForm
+                      .get(passwordForDeleting.controlName)
+                      ?.hasError('required')
+                  "
+                >
+                  {{ passwordForDeleting.label }} is required.
+                </span>
+                <span
+                  *ngIf="
+                    passwordForDeleting.controlName === 'actualPassword' &&
+                    deleteAccountProfileForm
+                      .get('actualPassword')
+                      ?.hasError('minlength')
+                  "
+                >
+                  Must be at least 8 characters.
+                </span>
+                <span
+                  *ngIf="
+                    passwordForDeleting.controlName === 'actualPassword' &&
+                    deleteAccountProfileForm.get('actualPassword')?.errors?.[
+                      'passwordStrength'
+                    ]
+                  "
+                >
+                  Mix upper, lower case and digit.
+                </span>
+              </div>
+            </div>
+          </div>
+        </form>
+        <div class="actions-buttons__wrapper">
+          <button class="action__button edit__button">Delete my account</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

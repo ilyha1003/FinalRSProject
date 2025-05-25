@@ -6,6 +6,8 @@ import {
   generalInputFieldBirthDate,
   shippingAddresses,
   billingAddresses,
+  passwords,
+  passwordForDeleting,
 } from './input-fields';
 import {
   FormControl,
@@ -19,6 +21,7 @@ import { hasError } from '../../utils/validations/has-error';
 import { postalCodeValidator } from '../../utils/validations/postal-code-validator';
 import { noSpacesValidator } from '../../utils/validations/no-spaces-validator';
 import { FormsModule } from '@angular/forms';
+import { strengthPasswordValidator } from '../../utils/validations/strength-password-validator';
 
 @Component({
   selector: 'app-profile-page',
@@ -80,6 +83,27 @@ export class ProfilePageComponent {
     ]),
   });
 
+  public passwordsProfileForm = new FormGroup({
+    oldPassword: new FormControl('', [
+      Validators.required,
+      Validators.minLength(8),
+      strengthPasswordValidator,
+    ]),
+    newPassword: new FormControl('', [
+      Validators.required,
+      Validators.minLength(8),
+      strengthPasswordValidator,
+    ]),
+  });
+
+  public deleteAccountProfileForm = new FormGroup({
+    actualPassword: new FormControl('', [
+      Validators.required,
+      Validators.minLength(8),
+      strengthPasswordValidator,
+    ]),
+  });
+
   public activeMainButton: string = 'general';
   public isEditMode: boolean = false;
   public isShippingDefaultChecked: boolean = false;
@@ -89,6 +113,8 @@ export class ProfilePageComponent {
   public shippingAddress = shippingAddresses;
   public billingAddress = billingAddresses;
   public countries = countries;
+  public passwords = passwords;
+  public passwordForDeleting = passwordForDeleting;
 
   public isFocused: Record<string, boolean> = {};
   public hasError = hasError;
@@ -99,6 +125,9 @@ export class ProfilePageComponent {
   }
 
   public setActiveMainButton(buttonName: string): void {
+    if (this.activeMainButton !== buttonName) {
+      this.isEditMode = false;
+    }
     this.activeMainButton = buttonName;
   }
 
