@@ -1,12 +1,141 @@
-<div
-  style="
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 15px;
-  "
->
-  <h2 style="font-size: 3rem">Catalog-page</h2>
-  <img src="/assets/work.png" style="width: 30vw" alt="work-in-progress" />
-</div>
+<section class="catalog__wrapper">
+  <aside class="catalog__filter-products">
+    <form class="catalog__form" [formGroup]="filterForm">
+      <div class="filter__price">
+        <p class="price__text">Price</p>
+        <div class="filter__price-inputs">
+          <input
+            class="price-input_min"
+            formControlName="minPrice"
+            (blur)="onPriceBlur()"
+          />
+          <input
+            class="price-input_max"
+            formControlName="maxPrice"
+            (blur)="onPriceBlur()"
+          />
+        </div>
+      </div>
+      <div class="price__buttons-container">
+        <button
+          (click)="getCategoriesHandler()"
+          formArrayName="isCatalogOpen"
+          class="button button__price button__price_on-catalog"
+        >
+          Category
+        </button>
+        <button
+          (click)="getDiscountProductsHandler()"
+          class="button button__price button__price_on-sale"
+        >
+          On sale
+        </button>
+      </div>
+    </form>
+  </aside>
+
+  <div
+    class="catalog__products"
+    [ngClass]="{
+      catalog__products_none: products.length === 0 && !isLoadingNewPage,
+      catalog__products_categories: filterForm.get('isCatalogOpen')?.value,
+    }"
+  >
+    @if (isLoadingNewPage) {
+      @for (_ of skeletonArray; track $index) {
+        <figure class="skeleton">
+          <div class="skeleton__image-wrapper">
+            <img class="skeleton__img" />
+          </div>
+          <figcaption class="skeleton__text-container">
+            <p class="skeleton__price"></p>
+            <p class="skeleton__name"></p>
+            <p class="skeleton__description"></p>
+          </figcaption>
+        </figure>
+      }
+    } @else if (filterForm.get('isCatalogOpen')?.value) {
+      <div class="catalog__categories">
+        @for (category of categories; track $index) {
+          <button
+            class="button button__category"
+            (click)="categoryHandler(category)"
+          >
+            {{ category.name['en-US'] }}
+          </button>
+        }
+      </div>
+    } @else {
+      @if (products.length === 0) {
+        <div class="catalog__no-products">
+          <img
+            class="catalog__no-products__img"
+            src="/assets/images/no-found.png"
+          />
+        </div>
+        <h2 class="catalog__no-products__h2">
+          Sorry, no products were found for your query.
+        </h2>
+      } @else {
+        @for (product of products; track product.id) {
+          <figure class="product" id="{{ product.id }}">
+            <span class="badge"></span>
+            <div class="product__image-wrapper">
+              <img
+                class="product__img"
+                src="{{ product.img }}"
+                alt="{{ product.id }}"
+              />
+            </div>
+            <figcaption class="product__text-container">
+              <p
+                class="product__price"
+                [ngClass]="{
+                  product__price_discount: product.price?.discountedPrice,
+                }"
+              >
+                <span class="price" *ngIf="product.price?.discountedPrice"
+                  >{{ product.price?.discountedPrice
+                  }}{{ product.price?.currency }}
+                </span>
+                <span
+                  [ngClass]="{
+                    price__text_discount: product.price?.discountedPrice,
+                  }"
+                  >{{ product.price?.price }}{{ product.price?.currency }}</span
+                >
+                <span class="badge" *ngIf="product.price?.discountedPrice">{{
+                  product.price?.nameDiscount
+                }}</span>
+              </p>
+              <p class="product__name">
+                {{ product.name }}
+              </p>
+              <p class="product__description">
+                {{ product.description }}
+              </p>
+            </figcaption>
+          </figure>
+        }
+      }
+    }
+  </div>
+  <div
+    class="catalog__button-container"
+    [ngClass]="{
+      'catalog__button-container_none':
+        products.length === 0 ||
+        products.length < 20 ||
+        filterForm.get('isCatalogOpen')?.value,
+    }"
+  >
+    <button
+      (click)="getMoreProductsHandler()"
+      class="button button__catalog"
+      [ngClass]="{ button__catalog_loading: isLoading }"
+    >
+      Upload more...
+      <span *ngIf="isLoading" class="loader__catalog"></span>
+    </button>
+  </div>
+</section>

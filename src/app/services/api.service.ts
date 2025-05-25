@@ -12,6 +12,9 @@ import {
   LoginCustomer,
   NewCustomer,
 } from '../utils/interfaces';
+import { Product, ProductDiscounts } from '../utils/interface-product';
+import { SearchProduct } from '../utils/interface-product-search';
+import { Category } from '../utils/interface-categories';
 
 @Injectable({
   providedIn: 'root',
@@ -675,6 +678,225 @@ export class ApiService {
       return await response.json();
     } catch (error) {
       console.error('Error load custumer id:', error);
+      return undefined;
+    }
+  }
+
+  public static async getProducts(
+    offset: number,
+  ): Promise<Product[] | undefined> {
+    const actual_admin_access_token: string =
+      await ApiService.getAdminAccessToken();
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/products?offset=${offset}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${actual_admin_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      return data.results;
+    } catch (error) {
+      console.error('Error load products:', error);
+      return undefined;
+    }
+  }
+
+  public static async getProductDiscounts(): Promise<
+    ProductDiscounts[] | undefined
+  > {
+    const actual_admin_access_token: string =
+      await ApiService.getAdminAccessToken();
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/product-discounts`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${actual_admin_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      return data.results;
+    } catch (error) {
+      console.error('Error load products:', error);
+      return undefined;
+    }
+  }
+
+  // public static async getSearchProduct(
+  //   searchString: string,
+  // ): Promise<SearchProduct[] | undefined> {
+  //   const actual_admin_access_token: string =
+  //     await ApiService.getAdminAccessToken();
+
+  //   try {
+  //     const response = await fetch(
+  //       `${api_url}/${project_key}/product-projections/search?${searchString}`,
+  //       {
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           Authorization: `Bearer ${actual_admin_access_token}`,
+  //         },
+  //       },
+  //     );
+
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
+
+  //     const data = await response.json();
+
+  //     return data.results;
+  //   } catch (error) {
+  //     console.error('Error load products:', error);
+  //     return undefined;
+  //   }
+  // }
+
+  public static async getSearchProducts(
+    queryParameters: Record<string, string | string[]>,
+  ): Promise<SearchProduct[] | undefined> {
+    const actual_admin_access_token: string =
+      await ApiService.getAdminAccessToken();
+
+    const query = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(queryParameters)) {
+      if (Array.isArray(value)) {
+        for (const v of value) query.append(key, v);
+      } else {
+        query.append(key, value);
+      }
+    }
+
+    const url = `${api_url}/${project_key}/product-projections/search?${query.toString()}`;
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${actual_admin_access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.results;
+    } catch (error) {
+      console.error('Error loading products:', error);
+      return undefined;
+    }
+  }
+
+  // public static async getRangePrice(
+  //   min: number,
+  //   max: number,
+  //   filterOffset: number,
+  // ): Promise<SearchProduct[] | undefined> {
+  //   console.log(filterOffset);
+  //   const actual_admin_access_token: string =
+  //     await ApiService.getAdminAccessToken();
+
+  //   try {
+  //     const response = await fetch(
+  //       `${api_url}/${project_key}/product-projections/search?offset=${filterOffset}&filter=variants.price.centAmount:range(${min} to ${max})`,
+  //       {
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           Authorization: `Bearer ${actual_admin_access_token}`,
+  //         },
+  //       },
+  //     );
+
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
+
+  //     const data = await response.json();
+
+  //     return data.results;
+  //   } catch (error) {
+  //     console.error('Error load products:', error);
+  //     return undefined;
+  //   }
+  // }
+
+  public static async getProductsDiscount(): Promise<
+    SearchProduct[] | undefined
+  > {
+    const actual_admin_access_token: string =
+      await ApiService.getAdminAccessToken();
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/product-projections/search?filter=variants.prices.discounted.value.centAmount:range(0 to *)`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${actual_admin_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      return data.results;
+    } catch (error) {
+      console.error('Error load products:', error);
+      return undefined;
+    }
+  }
+
+  public static async getCategories(): Promise<Category[] | undefined> {
+    const actual_admin_access_token: string =
+      await ApiService.getAdminAccessToken();
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/categories?sort=name.en-US asc&limit=50`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${actual_admin_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      return data.results;
+    } catch (error) {
+      console.error('Error load products:', error);
       return undefined;
     }
   }
