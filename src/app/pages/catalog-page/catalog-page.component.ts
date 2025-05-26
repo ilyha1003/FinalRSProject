@@ -5,6 +5,7 @@ import { ApiService } from '../../services/api.service';
 import { MasterPrice, ProductDiscounts } from '../../utils/interface-product';
 import { isPositiveNumber } from '../../utils/is-positive-number';
 import { Category } from '../../utils/interface-categories';
+import { SearchProduct } from '../../utils/interface-product-search';
 
 export interface GetMinProduct {
   id: string;
@@ -21,6 +22,11 @@ interface PriceProduct {
   nameDiscount?: string;
 }
 
+interface ProductColor {
+  nameColor: string;
+  codeColor: string;
+}
+
 @Component({
   selector: 'app-catalog-page',
   imports: [NgIf, NgClass, ReactiveFormsModule],
@@ -32,13 +38,16 @@ export class CatalogPageComponent {
     minPrice: new FormControl(''),
     maxPrice: new FormControl(''),
     isCatalogOpen: new FormControl(false),
+    selectedColor: new FormControl(''),
   });
 
   public isLoading = true;
   public isLoadingNewPage = true;
+  public isEmptyCatalog = false;
   public skeletonArray = Array.from({ length: 8 });
   public products: GetMinProduct[] = [];
   public categories: Category[] = [];
+  public productsColorArray: ProductColor[] = [];
   public minValue = 0;
   public maxValue = 0;
 
@@ -46,6 +55,8 @@ export class CatalogPageComponent {
   private offset = 0;
   private filterOffset = 0;
   private isFiltering = false;
+  private filterIdCategory = '';
+  private productsSetColor: Set<string> = new Set();
 
   constructor() {}
 
@@ -121,6 +132,7 @@ export class CatalogPageComponent {
     } finally {
       this.isLoading = false;
       this.isLoadingNewPage = false;
+      this.isEmpty(this.products);
     }
   }
 
@@ -152,7 +164,7 @@ export class CatalogPageComponent {
   }
 
   public async categoryHandler(category: Category): Promise<void> {
-    this.products = [];
+    this.resetAllPositions();
 
     const isOpenValue = !this.filterForm.get('isCatalogOpen')?.value;
 
@@ -163,8 +175,6 @@ export class CatalogPageComponent {
     const response = await ApiService.getSearchProducts({
       filter: `categories.id:"${category.id}"`,
     });
-
-    console.log(response);
 
     if (response) {
       for (const product of response) {
@@ -180,7 +190,67 @@ export class CatalogPageComponent {
           price: this.calculatePrice(product.masterVariant.prices),
           img: product.masterVariant.images[0].url,
         });
+
+        const productColor = product.masterVariant.attributes.find(
+          (element) => element.name === 'color',
+        );
+
+        if (productColor) {
+          this.productsSetColor.add(productColor?.value['en-US']);
+        }
       }
+
+      this.getColorPalette();
+    }
+
+    this.isFiltering = true;
+    this.isEmpty(this.products);
+    this.filterIdCategory = category.id;
+    await this.patchMinMaxInputs(`categories.id:"${category.id}"`);
+  }
+
+  public async formColorHandler(): Promise<void> {
+    const selectColor = this.filterForm.get('selectedColor')?.value;
+
+    if (selectColor) {
+      this.products = [];
+      const response = await ApiService.getSearchProducts({
+        'text.en-US': `${selectColor}`,
+        filter: `categories.id:"${this.filterIdCategory}"`,
+      });
+
+      if (response) {
+        for (const product of response) {
+          this.products.push({
+            ...this.products,
+            ...product,
+            id: product.id,
+            name: product.name['en-US'],
+            description: this.getShortDescription(
+              product.description['en-US'],
+              60,
+            ),
+            price: this.calculatePrice(product.masterVariant.prices),
+            img: product.masterVariant.images[0].url,
+          });
+        }
+      }
+    }
+  }
+
+  private resetAllPositions(): void {
+    this.products = [];
+    this.productsSetColor.clear();
+    this.productsColorArray = [];
+    this.filterForm.get('selectedColor')?.reset();
+  }
+
+  private getColorPalette(): void {
+    for (const color of this.productsSetColor) {
+      this.productsColorArray.push({
+        nameColor: color.split(':')[0],
+        codeColor: color.split(':')[1],
+      });
     }
   }
 
@@ -191,7 +261,7 @@ export class CatalogPageComponent {
       this.productDiscounts.push(...getDiscount);
     }
 
-    await this.getMinMaxPrice();
+    await this.patchMinMaxInputs();
     await this.getProducts();
   }
 
@@ -224,6 +294,7 @@ export class CatalogPageComponent {
     } finally {
       this.isLoading = false;
       this.isLoadingNewPage = false;
+      this.isEmpty(this.products);
     }
   }
 
@@ -266,14 +337,29 @@ export class CatalogPageComponent {
     return { price, currency };
   }
 
-  private async getMinMaxPrice(): Promise<void> {
+  private async patchMinMaxInputs(filter = ''): Promise<void> {
+    if (this.isFiltering) {
+      this.getMinMaxPrice(filter);
+    } else {
+      this.getMinMaxPrice('');
+    }
+  }
+
+  private async getMinMaxPrice(filter: string): Promise<void> {
+    const baseParameters = {
+      limit: '1',
+    };
+
     const getMin = await ApiService.getSearchProducts({
-      limit: '1',
+      ...baseParameters,
       sort: 'price asc',
+      ...(filter && { filter }),
     });
+
     const getMax = await ApiService.getSearchProducts({
-      limit: '1',
+      ...baseParameters,
       sort: 'price desc',
+      ...(filter && { filter }),
     });
 
     if (getMin && getMax) {
@@ -283,12 +369,12 @@ export class CatalogPageComponent {
       this.maxValue =
         (getMax?.[0]?.masterVariant?.prices?.at(-1)?.value?.centAmount ?? 0) /
         100;
-
-      this.filterForm.patchValue({
-        minPrice: this.minValue?.toString() ?? '',
-        maxPrice: this.maxValue?.toString() ?? '',
-      });
     }
+
+    this.filterForm.patchValue({
+      minPrice: this.minValue?.toString() ?? '',
+      maxPrice: this.maxValue?.toString() ?? '',
+    });
   }
 
   private patchValidPriceValues(input?: { min: number; max: number }): void {
@@ -316,15 +402,24 @@ export class CatalogPageComponent {
       this.isFiltering = true;
     }
 
+    const filters = [
+      `variants.price.centAmount:range(${minCent} to ${maxCent})`,
+    ];
+
+    if (this.filterIdCategory.length > 0) {
+      filters.push(`categories.id:"${this.filterIdCategory}"`);
+    }
+
+    console.log(this.filterForm.get('selectedColor')?.value, 'selected');
+
     const range = await ApiService.getSearchProducts({
       offset: filterOffset.toString(),
       limit: '20',
-      filter: [`variants.price.centAmount:range(${minCent} to ${maxCent})`],
+      filter: filters,
     });
 
     if (range) {
       for (const product of range) {
-        console.log(product);
         this.products.push({
           ...product,
           id: product.id,
@@ -338,7 +433,11 @@ export class CatalogPageComponent {
         });
       }
     }
-
+    this.isEmpty(this.products);
     this.isLoadingNewPage = false;
+  }
+
+  private isEmpty(product: GetMinProduct[] | SearchProduct[]): void {
+    this.isEmptyCatalog = product.length === 0 ? true : false;
   }
 }

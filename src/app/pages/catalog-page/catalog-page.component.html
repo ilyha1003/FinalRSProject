@@ -31,6 +31,28 @@
           On sale
         </button>
       </div>
+      <div class="filter__colors">
+        <p>Color</p>
+        <div class="colors__container">
+          @for (color of productsColorArray; track $index) {
+            <label class="filter__color-option">
+              <input
+                type="radio"
+                formControlName="selectedColor"
+                [value]="color.codeColor"
+                (change)="formColorHandler()"
+              />
+              <div class="color__border">
+                <span
+                  class="color-swatch"
+                  [style.background]="color.codeColor"
+                  [title]="color.nameColor"
+                ></span>
+              </div>
+            </label>
+          }
+        </div>
+      </div>
     </form>
   </aside>
 
@@ -66,7 +88,7 @@
         }
       </div>
     } @else {
-      @if (products.length === 0) {
+      @if (isEmptyCatalog) {
         <div class="catalog__no-products">
           <img
             class="catalog__no-products__img"
