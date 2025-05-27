@@ -221,8 +221,18 @@
           class="floating__input customer-addresses"
           name="shippingSelect"
           id="shippingAddressList"
+          (change)="onShippingOptionSelect($event)"
         >
-          <option value="">Select shipping address</option>
+          <option value="new">Create new shipping address</option>
+          @for (address of shippingAddressesIds; track address?.id) {
+            <option
+              value="{{ address?.id }}"
+              [selected]="selectedShippingAddressId === address?.id"
+            >
+              {{ address?.country }}, {{ address?.city }},
+              {{ address?.streetName }}
+            </option>
+          }
         </select>
 
         <form [formGroup]="shippingProfileForm" class="profile__form">
@@ -275,7 +285,9 @@
                 <label
                   for="{{ field.id }}"
                   class="floating__label"
-                  [class.focused]="isFocused[field.track] || field.value"
+                  [class.focused]="
+                    isFocused[field.track] || isInputNotEmpty[field.track]
+                  "
                 >
                   {{ field.label }}
                 </label>
@@ -374,6 +386,7 @@
             <label class="custom-checkbox">
               <input
                 type="checkbox"
+                formControlName="isShippingDefault"
                 [checked]="isShippingDefaultChecked"
                 (change)="onShippingCheckboxChange($event)"
               />
@@ -393,18 +406,37 @@
 
       <div class="actions-buttons__wrapper">
         <button
+          *ngIf="isEditMode === false && isShippingCreationMode === false"
           (click)="setActiveEditMode()"
-          [class.action__button-disabled]="isEditMode === true"
           class="action__button edit__button"
         >
           Edit
         </button>
         <button
-          (click)="setInactiveEditMode()"
-          [class.action__button-disabled]="isEditMode === false"
+          *ngIf="isEditMode === false && isShippingCreationMode === false"
+          class="action__button cancel__button"
+        >
+          Delete address
+        </button>
+        <button
+          *ngIf="isEditMode === true && isShippingCreationMode === false"
+          (click)="cancelShippingFormChanges()"
+          class="action__button cancel__button"
+        >
+          Cancel
+        </button>
+        <button
+          *ngIf="isShippingCreationMode === false && isEditMode === true"
+          (click)="submitShippingFormChanges($event)"
           class="action__button save__button"
         >
           Save
+        </button>
+        <button
+          *ngIf="isShippingCreationMode === true"
+          class="action__button save__button"
+        >
+          Create new shipping address
         </button>
       </div>
     </div>
@@ -470,7 +502,9 @@
                 <label
                   for="{{ field.id }}"
                   class="floating__label"
-                  [class.focused]="isFocused[field.track] || field.value"
+                  [class.focused]="
+                    isFocused[field.track] || isInputNotEmpty[field.track]
+                  "
                 >
                   {{ field.label }}
                 </label>
@@ -568,6 +602,7 @@
               <input
                 type="checkbox"
                 [checked]="isBillingDefaultChecked"
+                formControlName="isBillingDefault"
                 (change)="onBillingCheckboxChange($event)"
               />
 
@@ -628,7 +663,9 @@
                 <label
                   for="{{ field.id }}"
                   class="floating__label"
-                  [class.focused]="isFocused[field.track] || field.value"
+                  [class.focused]="
+                    isFocused[field.track] || isInputNotEmpty[field.track]
+                  "
                 >
                   {{ field.label }}
                 </label>
@@ -730,7 +767,7 @@
                 class="floating__label"
                 [class.focused]="
                   isFocused[passwordForDeleting.track] ||
-                  passwordForDeleting.value
+                  isInputNotEmpty[passwordForDeleting.track]
                 "
               >
                 {{ passwordForDeleting.label }}

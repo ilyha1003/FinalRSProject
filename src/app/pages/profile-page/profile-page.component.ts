@@ -25,6 +25,7 @@ import { strengthPasswordValidator } from '../../utils/validations/strength-pass
 // import { ApiService } from '../../services/api.service';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { ProfileService } from '../../services/profile.service';
+import { CustomerAddress } from '../../utils/interfaces';
 
 @Component({
   selector: 'app-profile-page',
@@ -52,13 +53,6 @@ export class ProfilePageComponent {
     birthDate: new FormControl('', [Validators.required, birthDateValidator]),
   });
 
-  public generalProfileFormFields = {
-    email: 'test@mail.ru',
-    firstName: 'Ilya',
-    lastName: 'Sankovich',
-    birthDate: '1999-03-10',
-  };
-
   public shippingProfileForm = new FormGroup({
     shippingCountry: new FormControl('', [Validators.required]),
     shippingCity: new FormControl('', [
@@ -74,6 +68,7 @@ export class ProfilePageComponent {
       Validators.required,
       noSpacesValidator,
     ]),
+    isShippingDefault: new FormControl(false),
   });
 
   public billingProfileForm = new FormGroup({
@@ -91,6 +86,7 @@ export class ProfilePageComponent {
       Validators.required,
       noSpacesValidator,
     ]),
+    isBillingDefault: new FormControl(false),
   });
 
   public passwordsProfileForm = new FormGroup({
@@ -120,6 +116,7 @@ export class ProfilePageComponent {
   public isEditMode: boolean = false;
   public isShippingDefaultChecked: boolean = false;
   public isBillingDefaultChecked: boolean = false;
+  public isShippingCreationMode: boolean = true;
 
   public generalInputFields = generalInputFields;
   public generalInputFieldBirthDate = generalInputFieldBirthDate;
@@ -128,6 +125,9 @@ export class ProfilePageComponent {
   public countries = countries;
   public passwords = passwords;
   public passwordForDeleting = passwordForDeleting;
+
+  public shippingAddressesIds: (CustomerAddress | undefined)[] = [];
+  public selectedShippingAddressId: string = '';
 
   public isFocused: Record<string, boolean> = {};
   public isInputNotEmpty: Record<string, boolean> = {};
@@ -141,19 +141,23 @@ export class ProfilePageComponent {
   public setActiveMainButton(buttonName: string): void {
     if (this.activeMainButton !== buttonName) {
       this.isEditMode = false;
-      this.disableAllForms();
+      this.disableGeneralForm();
     }
     this.activeMainButton = buttonName;
   }
 
   public setActiveEditMode(): void {
     this.isEditMode = true;
-    this.enableAllForms();
+    this.enableGeneralForm();
+    this.enableShippingForm();
+    this.enableBillingForm();
   }
 
   public setInactiveEditMode(): void {
     this.isEditMode = false;
-    this.disableAllForms();
+    this.disableGeneralForm();
+    this.disableShippingForm();
+    this.disableBillingForm();
   }
 
   public onShippingCheckboxChange(event: Event): void {
@@ -176,15 +180,27 @@ export class ProfilePageComponent {
     this.isFocused[inputTrack] = false;
   }
 
-  public disableAllForms(): void {
+  public disableGeneralForm(): void {
     this.generalProfileForm.disable();
+  }
+
+  public enableGeneralForm(): void {
+    this.generalProfileForm.enable();
+  }
+
+  public disableShippingForm(): void {
     this.shippingProfileForm.disable();
+  }
+
+  public enableShippingForm(): void {
+    this.shippingProfileForm.enable();
+  }
+
+  public disableBillingForm(): void {
     this.billingProfileForm.disable();
   }
 
-  public enableAllForms(): void {
-    this.generalProfileForm.enable();
-    this.shippingProfileForm.enable();
+  public enableBillingForm(): void {
     this.billingProfileForm.enable();
   }
 
@@ -198,7 +214,12 @@ export class ProfilePageComponent {
 
   public async cancelGeneralFormChanges(): Promise<void> {
     this.setInactiveEditMode();
-    this.setGeneralInputsValues();
+    this.fillGeneralInputsValues();
+  }
+
+  public async cancelShippingFormChanges(): Promise<void> {
+    this.setInactiveEditMode();
+    this.fillShippingInputsValues(this.selectedShippingAddressId);
   }
 
   public async submitGeneralFormChanges(event: Event): Promise<void> {
@@ -207,15 +228,13 @@ export class ProfilePageComponent {
       onlySelf: false,
       emitEvent: true,
     });
+
     if (this.generalProfileForm.invalid) {
       this.generalProfileForm.markAllAsTouched();
       return;
     }
-    console.log(this.generalProfileForm.value);
 
     const generalForm = this.generalProfileForm.value;
-
-    console.log(generalForm.email);
 
     if (
       generalForm.email &&
@@ -243,11 +262,10 @@ export class ProfilePageComponent {
     this.setInactiveEditMode();
   }
 
-  public async setGeneralInputsValues(): Promise<void> {
+  public async fillGeneralInputsValues(): Promise<void> {
     const customerData = await ProfileService.getCustomerDataById(
       LocalStorageService.getCustomerId(),
     );
-    console.log(customerData);
 
     this.isInputNotEmpty['email'] = true;
     this.isInputNotEmpty['firstName'] = true;
@@ -275,8 +293,101 @@ export class ProfilePageComponent {
     }
   }
 
-  public ngOnInit(): void {
-    this.disableAllForms();
-    this.setGeneralInputsValues();
+  public async fillShippingInputsValues(address_id: string): Promise<void> {
+    const customer_id = LocalStorageService.getCustomerId();
+
+    if (address_id === 'new') {
+      this.enableShippingForm();
+      this.isShippingCreationMode = true;
+      this.resetShippingInputValues();
+      return;
+    } else {
+      this.disableShippingForm();
+      this.isShippingCreationMode = false;
+      this.isEditMode = false;
+      const address_data = await ProfileService.getAddressData(
+        customer_id,
+        address_id,
+      );
+
+      if (address_data) {
+        this.isInputNotEmpty['shippingCountry'] = true;
+        this.isInputNotEmpty['shippingCity'] = true;
+        this.isInputNotEmpty['shippingPostalCode'] = true;
+        this.isInputNotEmpty['shippingAddress'] = true;
+
+        this.shippingProfileForm
+          .get('shippingCountry')
+          ?.setValue(address_data?.country);
+        this.shippingProfileForm
+          .get('shippingCity')
+          ?.setValue(address_data?.city);
+        this.shippingProfileForm
+          .get('shippingPostalCode')
+          ?.setValue(address_data?.postalCode);
+        this.shippingProfileForm
+          .get('shippingAddress')
+          ?.setValue(address_data?.streetName);
+      }
+    }
+  }
+
+  //test method for shipping submit
+  public submitShippingFormChanges(event: Event): void {
+    event.preventDefault();
+    this.generalProfileForm.updateValueAndValidity({
+      onlySelf: false,
+      emitEvent: true,
+    });
+
+    if (this.generalProfileForm.invalid) {
+      this.generalProfileForm.markAllAsTouched();
+      return;
+    }
+    const data = this.shippingProfileForm.value;
+    console.log(data);
+
+    this.setInactiveEditMode();
+  }
+
+  public resetShippingInputValues(): void {
+    this.shippingProfileForm.get('shippingCountry')?.setValue('');
+    this.shippingProfileForm.get('shippingCity')?.setValue('');
+    this.shippingProfileForm.get('shippingPostalCode')?.setValue('');
+    this.shippingProfileForm.get('shippingAddress')?.setValue('');
+    this.isInputNotEmpty['shippingCountry'] = false;
+    this.isInputNotEmpty['shippingCity'] = false;
+    this.isInputNotEmpty['shippingPostalCode'] = false;
+    this.isInputNotEmpty['shippingAddress'] = false;
+  }
+
+  public async fillShippingSelect(): Promise<void> {
+    this.shippingAddressesIds = [];
+    const customer_id: string = LocalStorageService.getCustomerId();
+    const shippingAddressesIds =
+      await ProfileService.getCustomerShippingAddressIds(customer_id);
+    for (const shippingAddress of shippingAddressesIds) {
+      const addressData = await ProfileService.getAddressData(
+        customer_id,
+        shippingAddress,
+      );
+      this.shippingAddressesIds.push(addressData);
+    }
+    console.log(this.shippingAddressesIds);
+  }
+
+  public async onShippingOptionSelect(event: Event): Promise<void> {
+    const target = event.target;
+    if (target instanceof HTMLSelectElement) {
+      this.selectedShippingAddressId = target.value;
+    }
+    await this.fillShippingInputsValues(this.selectedShippingAddressId);
+  }
+
+  public async ngOnInit(): Promise<void> {
+    this.disableGeneralForm();
+    await this.fillGeneralInputsValues();
+
+    await this.fillShippingSelect();
   }
 }

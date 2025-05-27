@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 // import { ApiService } from './api.service';
-import { Customer } from '../utils/interfaces';
+import { Customer, CustomerAddress } from '../utils/interfaces';
 import { api_url, project_key } from './confidential-data';
 import { LocalStorageService } from './local-storage.service';
 import { ApiService } from './api.service';
@@ -202,5 +202,41 @@ export class ProfileService {
     } catch (error) {
       console.error('Changing customer email ERROR:', error);
     }
+  }
+
+  //
+  // Shipping and Billing Profile Forms Methods
+  //
+  public static async getCustomerShippingAddressIds(
+    customer_id: string,
+  ): Promise<string[]> {
+    const customer_data = await ProfileService.getCustomerDataById(customer_id);
+    let customer_shipping_addresses: string[] = [];
+    if (customer_data) {
+      customer_shipping_addresses = customer_data.shippingAddressIds;
+    }
+    return customer_shipping_addresses;
+  }
+
+  public static async getCustomerBillingAddressIds(
+    customer_id: string,
+  ): Promise<string[]> {
+    const customer_data = await ProfileService.getCustomerDataById(customer_id);
+    let customer_billing_addresses: string[] = [];
+    if (customer_data) {
+      customer_billing_addresses = customer_data.billingAddressIds;
+    }
+    return customer_billing_addresses;
+  }
+
+  public static async getAddressData(
+    customer_id: string,
+    address_id: string,
+  ): Promise<CustomerAddress | undefined> {
+    const customer_data = await ProfileService.getCustomerDataById(customer_id);
+    const customer_addresses: CustomerAddress[] =
+      customer_data?.addresses || [];
+
+    return customer_addresses.find((address) => address.id === address_id);
   }
 }
