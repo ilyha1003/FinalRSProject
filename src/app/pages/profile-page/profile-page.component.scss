@@ -140,6 +140,10 @@
   background-color: var(--color-primary);
 }
 
+.cancel__button {
+  background-color: #923131;
+}
+
 .action__button-disabled {
   background-color: var(--color-gray);
   cursor: default;
@@ -191,7 +195,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 30px;
 }
 
 .customer-addresses {
@@ -275,8 +279,13 @@
     background-color: var(--color-primary);
   }
 
-  .action__button:hover {
+  .edit__button:hover,
+  .save__button:hover {
     background-color: #63fcff;
+  }
+
+  .cancel__button:hover {
+    background-color: #c54242;
   }
 }
 

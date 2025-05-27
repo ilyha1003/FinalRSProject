@@ -1,5 +1,5 @@
 <div class="profile-page__wrapper">
-  <h1 class="greeting">Hi, Unknown Customer!</h1>
+  <h1 class="greeting">Hi, {{ lastName }} {{ firstName }}</h1>
 
   <h3 *ngIf="activeMainButton === 'general'" class="profile-description">
     Here you can change your main information
@@ -54,9 +54,8 @@
             <div class="profile__input-container">
               <input
                 [type]="field.type"
-                [(ngModel)]="field.value"
                 (focus)="isFocused[field.track] = true"
-                (blur)="isFocused[field.track] = field.value ? true : false"
+                (blur)="onInputBlur(generalProfileForm, field.track)"
                 [id]="field.id"
                 class="floating__input"
                 [attr.autocomplete]="'off'"
@@ -68,7 +67,9 @@
               <label
                 for="{{ field.id }}"
                 class="floating__label"
-                [class.focused]="isFocused[field.track] || field.value"
+                [class.focused]="
+                  isFocused[field.track] || isInputNotEmpty[field.track]
+                "
               >
                 {{ field.label }}
               </label>
@@ -197,7 +198,14 @@
           Edit
         </button>
         <button
-          (click)="setInactiveEditMode()"
+          *ngIf="isEditMode === true"
+          (click)="cancelGeneralFormChanges()"
+          class="action__button cancel__button"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="submitGeneralFormChanges($event)"
           [class.action__button-disabled]="isEditMode === false"
           class="action__button save__button"
         >
@@ -209,13 +217,13 @@
     <!-- Shipping address inputs wrapper -->
     <div *ngIf="activeMainButton === 'shipping'" class="customer-info__wrapper">
       <div class="customer-info">
-        <!-- <select
+        <select
           class="floating__input customer-addresses"
           name="shippingSelect"
           id="shippingAddressList"
         >
           <option value="">Select shipping address</option>
-        </select> -->
+        </select>
 
         <form [formGroup]="shippingProfileForm" class="profile__form">
           <div class="profile__field-input">
@@ -250,9 +258,8 @@
               <div class="profile__input-container">
                 <input
                   [type]="field.type"
-                  [(ngModel)]="field.value"
                   (focus)="isFocused[field.track] = true"
-                  (blur)="isFocused[field.track] = field.value ? true : false"
+                  (blur)="onInputBlur(shippingProfileForm, field.track)"
                   [id]="field.id"
                   class="floating__input"
                   [attr.autocomplete]="'off'"
@@ -363,12 +370,12 @@
             </div>
           }
 
-          <!-- <div class="checkbox-field">
+          <div class="checkbox-field">
             <label class="custom-checkbox">
               <input
                 type="checkbox"
                 [checked]="isShippingDefaultChecked"
-                (change)="onCheckboxChange($event)"
+                (change)="onShippingCheckboxChange($event)"
               />
 
               <span
@@ -377,10 +384,10 @@
               ></span>
 
               <span class="checkbox-label">
-                Set as default Shipping address
+                Set as default shipping address
               </span>
             </label>
-          </div> -->
+          </div>
         </form>
       </div>
 
@@ -405,13 +412,13 @@
     <!-- Billing address -->
     <div *ngIf="activeMainButton === 'billing'" class="customer-info__wrapper">
       <div class="customer-info">
-        <!-- <select
+        <select
           class="floating__input customer-addresses"
           name="shippingSelect"
           id="shippingAddressList"
         >
-          <option value="">Select shipping address</option>
-        </select> -->
+          <option value="">Select billing address</option>
+        </select>
 
         <form [formGroup]="billingProfileForm" class="profile__form">
           <div class="profile__field-input">
@@ -446,9 +453,8 @@
               <div class="profile__input-container">
                 <input
                   [type]="field.type"
-                  [(ngModel)]="field.value"
                   (focus)="isFocused[field.track] = true"
-                  (blur)="isFocused[field.track] = field.value ? true : false"
+                  (blur)="onInputBlur(billingProfileForm, field.track)"
                   [id]="field.id"
                   class="floating__input"
                   [attr.autocomplete]="'off'"
@@ -557,24 +563,24 @@
             </div>
           }
 
-          <!-- <div class="checkbox-field">
+          <div class="checkbox-field">
             <label class="custom-checkbox">
               <input
                 type="checkbox"
-                [checked]="isbillingDefaultChecked"
-                (change)="onCheckboxChange($event)"
+                [checked]="isBillingDefaultChecked"
+                (change)="onBillingCheckboxChange($event)"
               />
 
               <span
                 class="checkmark"
-                [class.checked]="isbillingDefaultChecked"
+                [class.checked]="isBillingDefaultChecked"
               ></span>
 
               <span class="checkbox-label">
                 Set as default billing address
               </span>
             </label>
-          </div> -->
+          </div>
         </form>
       </div>
 
@@ -605,9 +611,8 @@
               <div class="profile__input-container">
                 <input
                   [type]="field.type"
-                  [(ngModel)]="field.value"
                   (focus)="isFocused[field.track] = true"
-                  (blur)="isFocused[field.track] = field.value ? true : false"
+                  (blur)="onInputBlur(passwordsProfileForm, field.track)"
                   [id]="field.id"
                   class="floating__input"
                   [attr.autocomplete]="'off'"
@@ -701,11 +706,12 @@
             <div class="profile__input-container">
               <input
                 [type]="passwordForDeleting.type"
-                [(ngModel)]="passwordForDeleting.value"
                 (focus)="isFocused[passwordForDeleting.track] = true"
                 (blur)="
-                  isFocused[passwordForDeleting.track] =
-                    passwordForDeleting.value ? true : false
+                  onInputBlur(
+                    deleteAccountProfileForm,
+                    passwordForDeleting.track
+                  )
                 "
                 [id]="passwordForDeleting.id"
                 class="floating__input"
