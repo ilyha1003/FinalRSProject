@@ -23,6 +23,14 @@ export interface CustomerAddress {
   country: string;
 }
 
+export interface CustomerShortAddress {
+  id: string;
+  streetName: string;
+  postalCode: string;
+  city: string;
+  country: string;
+}
+
 export interface RegistrationFormValues {
   email: string;
   firstName: string;
@@ -59,6 +67,19 @@ export interface AddAddressPayload {
     address: {
       firstName: string;
       lastName: string;
+      streetName: string;
+      postalCode: string;
+      city: string;
+      country: string;
+    };
+  }[];
+}
+
+export interface AddShortAddress {
+  version: number;
+  actions: {
+    action: 'addAddress';
+    address: {
       streetName: string;
       postalCode: string;
       city: string;

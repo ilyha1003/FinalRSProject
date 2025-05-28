@@ -229,8 +229,9 @@
               value="{{ address?.id }}"
               [selected]="selectedShippingAddressId === address?.id"
             >
-              {{ address?.country }}, {{ address?.city }},
+              {{ address?.country }}; {{ address?.city }};
               {{ address?.streetName }}
+              {{ defaultShippingAddress === address?.id ? '(default)' : '' }}
             </option>
           }
         </select>
@@ -415,6 +416,7 @@
         <button
           *ngIf="isEditMode === false && isShippingCreationMode === false"
           class="action__button cancel__button"
+          (click)="deleteSelectedAddress()"
         >
           Delete address
         </button>
@@ -435,6 +437,7 @@
         <button
           *ngIf="isShippingCreationMode === true"
           class="action__button save__button"
+          (click)="createNewShippingAddress()"
         >
           Create new shipping address
         </button>

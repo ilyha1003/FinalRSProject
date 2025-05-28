@@ -208,6 +208,12 @@
 .input__country {
   cursor: pointer;
   padding: 2px;
+  color: rgb(0, 0, 0);
+
+  &:disabled {
+    cursor: default;
+    background-color: rgba(239, 239, 239, 0.3);
+  }
 }
 
 // checkbox

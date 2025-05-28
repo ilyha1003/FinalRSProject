@@ -112,6 +112,8 @@ export class ProfilePageComponent {
 
   public firstName: string = '';
   public lastName: string = '';
+  public defaultShippingAddress: string = '';
+  public defaultBillingAddress: string = '';
   public activeMainButton: string = 'general';
   public isEditMode: boolean = false;
   public isShippingDefaultChecked: boolean = false;
@@ -138,12 +140,40 @@ export class ProfilePageComponent {
     return errors ? Object.keys(errors).length : 0;
   }
 
+  public checkFormValidity(form: FormGroup): boolean {
+    form.updateValueAndValidity({
+      onlySelf: false,
+      emitEvent: true,
+    });
+
+    if (this.shippingProfileForm.invalid) {
+      this.shippingProfileForm.markAllAsTouched();
+      return true;
+    }
+    return false;
+  }
+
   public setActiveMainButton(buttonName: string): void {
     if (this.activeMainButton !== buttonName) {
       this.isEditMode = false;
       this.disableGeneralForm();
     }
     this.activeMainButton = buttonName;
+  }
+
+  public async checkSelectedAddressIsDefault(
+    customer_id: string,
+    address_id: string,
+  ): Promise<boolean> {
+    const defaultShippingAddress =
+      await ProfileService.getDefaultShippingAddress(customer_id);
+    if (defaultShippingAddress === address_id) {
+      this.isShippingDefaultChecked = true;
+      return true;
+    } else {
+      this.isShippingDefaultChecked = false;
+      return false;
+    }
   }
 
   public setActiveEditMode(): void {
@@ -224,13 +254,8 @@ export class ProfilePageComponent {
 
   public async submitGeneralFormChanges(event: Event): Promise<void> {
     event.preventDefault();
-    this.generalProfileForm.updateValueAndValidity({
-      onlySelf: false,
-      emitEvent: true,
-    });
 
-    if (this.generalProfileForm.invalid) {
-      this.generalProfileForm.markAllAsTouched();
+    if (this.checkFormValidity(this.generalProfileForm)) {
       return;
     }
 
@@ -298,6 +323,7 @@ export class ProfilePageComponent {
 
     if (address_id === 'new') {
       this.enableShippingForm();
+      await this.checkSelectedAddressIsDefault(customer_id, address_id);
       this.isShippingCreationMode = true;
       this.resetShippingInputValues();
       return;
@@ -328,6 +354,8 @@ export class ProfilePageComponent {
         this.shippingProfileForm
           .get('shippingAddress')
           ?.setValue(address_data?.streetName);
+
+        await this.checkSelectedAddressIsDefault(customer_id, address_id);
       }
     }
   }
@@ -335,13 +363,7 @@ export class ProfilePageComponent {
   //test method for shipping submit
   public submitShippingFormChanges(event: Event): void {
     event.preventDefault();
-    this.generalProfileForm.updateValueAndValidity({
-      onlySelf: false,
-      emitEvent: true,
-    });
-
-    if (this.generalProfileForm.invalid) {
-      this.generalProfileForm.markAllAsTouched();
+    if (this.checkFormValidity(this.shippingProfileForm)) {
       return;
     }
     const data = this.shippingProfileForm.value;
@@ -373,7 +395,24 @@ export class ProfilePageComponent {
       );
       this.shippingAddressesIds.push(addressData);
     }
-    console.log(this.shippingAddressesIds);
+    this.defaultShippingAddress =
+      await ProfileService.getDefaultShippingAddress(customer_id);
+  }
+
+  public async updateShippingSelectAfterCreation(
+    newAddressId: string,
+  ): Promise<void> {
+    this.selectedShippingAddressId = newAddressId;
+    await this.fillShippingSelect();
+    this.isShippingCreationMode = false;
+    this.disableShippingForm();
+  }
+
+  public async updateShippingSelectAfterDeletion(): Promise<void> {
+    this.selectedShippingAddressId = 'new';
+    await this.fillShippingSelect();
+    this.isShippingCreationMode = true;
+    this.enableShippingForm();
   }
 
   public async onShippingOptionSelect(event: Event): Promise<void> {
@@ -382,6 +421,49 @@ export class ProfilePageComponent {
       this.selectedShippingAddressId = target.value;
     }
     await this.fillShippingInputsValues(this.selectedShippingAddressId);
+    this.shippingProfileForm.markAsUntouched();
+  }
+
+  public async createNewShippingAddress(): Promise<void> {
+    const customer_id = LocalStorageService.getCustomerId();
+
+    if (this.checkFormValidity(this.shippingProfileForm)) {
+      return;
+    }
+
+    const formData = this.shippingProfileForm.value;
+    if (
+      formData.shippingCountry &&
+      formData.shippingCity &&
+      formData.shippingPostalCode &&
+      formData.shippingAddress
+    ) {
+      const newAddressId: string = await ProfileService.addNewAddress(
+        customer_id,
+        formData.shippingCountry,
+        formData.shippingCity,
+        formData.shippingPostalCode,
+        formData.shippingAddress,
+      );
+      await (formData.isShippingDefault === true
+        ? ProfileService.setDefaultShippingAddress(customer_id, newAddressId)
+        : ProfileService.addAddressToShippingAddresses(
+            customer_id,
+            newAddressId,
+          ));
+
+      await this.updateShippingSelectAfterCreation(newAddressId);
+    }
+  }
+
+  public async deleteSelectedAddress(): Promise<void> {
+    const customer_id = LocalStorageService.getCustomerId();
+    await ProfileService.removeShippingAddressId(
+      customer_id,
+      this.selectedShippingAddressId,
+    );
+    await this.updateShippingSelectAfterDeletion();
+    this.resetShippingInputValues();
   }
 
   public async ngOnInit(): Promise<void> {
