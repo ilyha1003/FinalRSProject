@@ -416,7 +416,7 @@
         <button
           *ngIf="isEditMode === false && isShippingCreationMode === false"
           class="action__button cancel__button"
-          (click)="deleteSelectedAddress()"
+          (click)="deleteSelectedShippingAddress()"
         >
           Delete address
         </button>
@@ -449,10 +449,21 @@
       <div class="customer-info">
         <select
           class="floating__input customer-addresses"
-          name="shippingSelect"
-          id="shippingAddressList"
+          name="billingSelect"
+          id="billingAddressList"
+          (change)="onBillingOptionSelect($event)"
         >
-          <option value="">Select billing address</option>
+          <option value="new">Create new billing address</option>
+          @for (address of billingAddressesIds; track address?.id) {
+            <option
+              value="{{ address?.id }}"
+              [selected]="selectedBillingAddressId === address?.id"
+            >
+              {{ address?.country }}; {{ address?.city }};
+              {{ address?.streetName }}
+              {{ defaultBillingAddress === address?.id ? '(default)' : '' }}
+            </option>
+          }
         </select>
 
         <form [formGroup]="billingProfileForm" class="profile__form">
@@ -604,8 +615,8 @@
             <label class="custom-checkbox">
               <input
                 type="checkbox"
-                [checked]="isBillingDefaultChecked"
                 formControlName="isBillingDefault"
+                [checked]="isBillingDefaultChecked"
                 (change)="onBillingCheckboxChange($event)"
               />
 
@@ -624,18 +635,39 @@
 
       <div class="actions-buttons__wrapper">
         <button
+          *ngIf="isEditMode === false && isBillingCreationMode === false"
           (click)="setActiveEditMode()"
-          [class.action__button-disabled]="isEditMode === true"
           class="action__button edit__button"
         >
           Edit
         </button>
         <button
-          (click)="setInactiveEditMode()"
-          [class.action__button-disabled]="isEditMode === false"
+          *ngIf="isEditMode === false && isBillingCreationMode === false"
+          class="action__button cancel__button"
+          (click)="deleteSelectedBillingAddress()"
+        >
+          Delete address
+        </button>
+        <button
+          *ngIf="isEditMode === true && isBillingCreationMode === false"
+          (click)="cancelBillingFormChanges()"
+          class="action__button cancel__button"
+        >
+          Cancel
+        </button>
+        <button
+          *ngIf="isBillingCreationMode === false && isEditMode === true"
+          (click)="submitBillingFormChanges($event)"
           class="action__button save__button"
         >
           Save
+        </button>
+        <button
+          *ngIf="isBillingCreationMode === true"
+          class="action__button save__button"
+          (click)="createNewBillingAddress()"
+        >
+          Create new billing address
         </button>
       </div>
     </div>

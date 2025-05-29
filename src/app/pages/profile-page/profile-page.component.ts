@@ -119,6 +119,7 @@ export class ProfilePageComponent {
   public isShippingDefaultChecked: boolean = false;
   public isBillingDefaultChecked: boolean = false;
   public isShippingCreationMode: boolean = true;
+  public isBillingCreationMode: boolean = true;
 
   public generalInputFields = generalInputFields;
   public generalInputFieldBirthDate = generalInputFieldBirthDate;
@@ -129,7 +130,9 @@ export class ProfilePageComponent {
   public passwordForDeleting = passwordForDeleting;
 
   public shippingAddressesIds: (CustomerAddress | undefined)[] = [];
+  public billingAddressesIds: (CustomerAddress | undefined)[] = [];
   public selectedShippingAddressId: string = '';
+  public selectedBillingAddressId: string = '';
 
   public isFocused: Record<string, boolean> = {};
   public isInputNotEmpty: Record<string, boolean> = {};
@@ -140,14 +143,14 @@ export class ProfilePageComponent {
     return errors ? Object.keys(errors).length : 0;
   }
 
-  public checkFormValidity(form: FormGroup): boolean {
+  public static checkFormValidity(form: FormGroup): boolean {
     form.updateValueAndValidity({
       onlySelf: false,
       emitEvent: true,
     });
 
-    if (this.shippingProfileForm.invalid) {
-      this.shippingProfileForm.markAllAsTouched();
+    if (form.invalid) {
+      form.markAllAsTouched();
       return true;
     }
     return false;
@@ -161,7 +164,7 @@ export class ProfilePageComponent {
     this.activeMainButton = buttonName;
   }
 
-  public async checkSelectedAddressIsDefault(
+  public async checkSelectedShippingAddressIsDefault(
     customer_id: string,
     address_id: string,
   ): Promise<boolean> {
@@ -172,6 +175,21 @@ export class ProfilePageComponent {
       return true;
     } else {
       this.isShippingDefaultChecked = false;
+      return false;
+    }
+  }
+
+  public async checkSelectedBillingAddressIsDefault(
+    customer_id: string,
+    address_id: string,
+  ): Promise<boolean> {
+    const defaultBillingAddress =
+      await ProfileService.getDefaultBillingAddress(customer_id);
+    if (defaultBillingAddress === address_id) {
+      this.isBillingDefaultChecked = true;
+      return true;
+    } else {
+      this.isBillingDefaultChecked = false;
       return false;
     }
   }
@@ -252,11 +270,16 @@ export class ProfilePageComponent {
     this.fillShippingInputsValues(this.selectedShippingAddressId);
   }
 
+  public async cancelBillingFormChanges(): Promise<void> {
+    this.setInactiveEditMode();
+    this.fillBillingInputsValues(this.selectedBillingAddressId);
+  }
+
   // main method for general submit
   public async submitGeneralFormChanges(event: Event): Promise<void> {
     event.preventDefault();
 
-    if (this.checkFormValidity(this.generalProfileForm)) {
+    if (ProfilePageComponent.checkFormValidity(this.generalProfileForm)) {
       return;
     }
 
@@ -324,7 +347,7 @@ export class ProfilePageComponent {
 
     if (address_id === 'new') {
       this.enableShippingForm();
-      await this.checkSelectedAddressIsDefault(customer_id, address_id);
+      await this.checkSelectedShippingAddressIsDefault(customer_id, address_id);
       this.isShippingCreationMode = true;
       this.resetShippingInputValues();
       return;
@@ -356,7 +379,10 @@ export class ProfilePageComponent {
           .get('shippingAddress')
           ?.setValue(address_data?.streetName);
 
-        await this.checkSelectedAddressIsDefault(customer_id, address_id);
+        await this.checkSelectedShippingAddressIsDefault(
+          customer_id,
+          address_id,
+        );
       }
     }
   }
@@ -364,7 +390,7 @@ export class ProfilePageComponent {
   //main method for shipping submit
   public async submitShippingFormChanges(event: Event): Promise<void> {
     event.preventDefault();
-    if (this.checkFormValidity(this.shippingProfileForm)) {
+    if (ProfilePageComponent.checkFormValidity(this.shippingProfileForm)) {
       return;
     }
     const customer_id = LocalStorageService.getCustomerId();
@@ -392,7 +418,7 @@ export class ProfilePageComponent {
         );
       } else {
         if (
-          await this.checkSelectedAddressIsDefault(
+          await this.checkSelectedShippingAddressIsDefault(
             customer_id,
             this.selectedShippingAddressId,
           )
@@ -420,6 +446,17 @@ export class ProfilePageComponent {
     this.isInputNotEmpty['shippingAddress'] = false;
   }
 
+  public resetBillingInputValues(): void {
+    this.billingProfileForm.get('billingCountry')?.setValue('');
+    this.billingProfileForm.get('billingCity')?.setValue('');
+    this.billingProfileForm.get('billingPostalCode')?.setValue('');
+    this.billingProfileForm.get('billingAddress')?.setValue('');
+    this.isInputNotEmpty['billingCountry'] = false;
+    this.isInputNotEmpty['billingCity'] = false;
+    this.isInputNotEmpty['billingPostalCode'] = false;
+    this.isInputNotEmpty['billingAddress'] = false;
+  }
+
   public async fillShippingSelect(): Promise<void> {
     this.shippingAddressesIds = [];
     const customer_id: string = LocalStorageService.getCustomerId();
@@ -445,12 +482,29 @@ export class ProfilePageComponent {
     this.disableShippingForm();
   }
 
+  public async updateBillingSelectAfterCreation(
+    newAddressId: string,
+  ): Promise<void> {
+    this.selectedBillingAddressId = newAddressId;
+    await this.fillBillingSelect();
+    this.isBillingCreationMode = false;
+    this.disableBillingForm();
+  }
+
   public async updateShippingSelectAfterDeletion(): Promise<void> {
     this.selectedShippingAddressId = 'new';
     await this.fillShippingSelect();
     this.isShippingCreationMode = true;
     this.enableShippingForm();
     await this.markShippingFormAsUntouched();
+  }
+
+  public async updateBillingSelectAfterDeletion(): Promise<void> {
+    this.selectedBillingAddressId = 'new';
+    await this.fillBillingSelect();
+    this.isBillingCreationMode = true;
+    this.enableBillingForm();
+    await this.markBillingFormAsUntouched();
   }
 
   public async onShippingOptionSelect(event: Event): Promise<void> {
@@ -469,10 +523,17 @@ export class ProfilePageComponent {
     this.shippingProfileForm.get('shippingAddress')?.markAsUntouched();
   }
 
+  public async markBillingFormAsUntouched(): Promise<void> {
+    this.billingProfileForm.get('billingCity')?.markAsUntouched();
+    this.billingProfileForm.get('billingCountry')?.markAsUntouched();
+    this.billingProfileForm.get('billingPostalCode')?.markAsUntouched();
+    this.billingProfileForm.get('billingAddress')?.markAsUntouched();
+  }
+
   public async createNewShippingAddress(): Promise<void> {
     const customer_id = LocalStorageService.getCustomerId();
 
-    if (this.checkFormValidity(this.shippingProfileForm)) {
+    if (ProfilePageComponent.checkFormValidity(this.shippingProfileForm)) {
       return;
     }
 
@@ -501,7 +562,39 @@ export class ProfilePageComponent {
     }
   }
 
-  public async deleteSelectedAddress(): Promise<void> {
+  public async createNewBillingAddress(): Promise<void> {
+    const customer_id = LocalStorageService.getCustomerId();
+
+    if (ProfilePageComponent.checkFormValidity(this.billingProfileForm)) {
+      return;
+    }
+
+    const formData = this.billingProfileForm.value;
+    if (
+      formData.billingCountry &&
+      formData.billingCity &&
+      formData.billingPostalCode &&
+      formData.billingAddress
+    ) {
+      const newAddressId: string = await ProfileService.addNewAddress(
+        customer_id,
+        formData.billingCountry,
+        formData.billingCity,
+        formData.billingPostalCode,
+        formData.billingAddress,
+      );
+      await (formData.isBillingDefault === true
+        ? ProfileService.setDefaultBillingAddress(customer_id, newAddressId)
+        : ProfileService.addAddressToBillingAddresses(
+            customer_id,
+            newAddressId,
+          ));
+
+      await this.updateBillingSelectAfterCreation(newAddressId);
+    }
+  }
+
+  public async deleteSelectedShippingAddress(): Promise<void> {
     const customer_id = LocalStorageService.getCustomerId();
     await ProfileService.removeShippingAddressId(
       customer_id,
@@ -511,10 +604,138 @@ export class ProfilePageComponent {
     this.resetShippingInputValues();
   }
 
+  public async deleteSelectedBillingAddress(): Promise<void> {
+    const customer_id = LocalStorageService.getCustomerId();
+    await ProfileService.removeBillingAddressId(
+      customer_id,
+      this.selectedBillingAddressId,
+    );
+    await this.updateBillingSelectAfterDeletion();
+    this.resetBillingInputValues();
+  }
+
+  //billing
+  public async submitBillingFormChanges(event: Event): Promise<void> {
+    event.preventDefault();
+    if (ProfilePageComponent.checkFormValidity(this.billingProfileForm)) {
+      return;
+    }
+    const customer_id = LocalStorageService.getCustomerId();
+    const formData = this.billingProfileForm.value;
+    console.log(formData);
+
+    if (
+      formData.billingAddress &&
+      formData.billingPostalCode &&
+      formData.billingCity &&
+      formData.billingCountry
+    ) {
+      await ProfileService.changeAddress(
+        customer_id,
+        this.selectedBillingAddressId,
+        formData.billingAddress,
+        formData.billingPostalCode,
+        formData.billingCity,
+        formData.billingCountry,
+      );
+      if (formData.isBillingDefault) {
+        await ProfileService.setDefaultBillingAddress(
+          customer_id,
+          this.selectedBillingAddressId,
+        );
+      } else {
+        if (
+          await this.checkSelectedBillingAddressIsDefault(
+            customer_id,
+            this.selectedBillingAddressId,
+          )
+        ) {
+          await ProfileService.removeDefaultBillingAddress(customer_id);
+          this.isBillingDefaultChecked = false;
+        }
+      }
+      await this.updateBillingSelectAfterCreation(
+        this.selectedBillingAddressId,
+      );
+    }
+
+    this.setInactiveEditMode();
+  }
+
+  public async fillBillingSelect(): Promise<void> {
+    this.billingAddressesIds = [];
+    const customer_id: string = LocalStorageService.getCustomerId();
+    const billingAddressesIds =
+      await ProfileService.getCustomerBillingAddressIds(customer_id);
+    for (const billingAddress of billingAddressesIds) {
+      const addressData = await ProfileService.getAddressData(
+        customer_id,
+        billingAddress,
+      );
+      this.billingAddressesIds.push(addressData);
+    }
+    this.defaultBillingAddress =
+      await ProfileService.getDefaultBillingAddress(customer_id);
+  }
+
+  public async onBillingOptionSelect(event: Event): Promise<void> {
+    const target = event.target;
+    if (target instanceof HTMLSelectElement) {
+      this.selectedBillingAddressId = target.value;
+    }
+    await this.fillBillingInputsValues(this.selectedBillingAddressId);
+    await this.markBillingFormAsUntouched();
+  }
+
+  public async fillBillingInputsValues(address_id: string): Promise<void> {
+    const customer_id = LocalStorageService.getCustomerId();
+
+    if (address_id === 'new') {
+      this.enableBillingForm();
+      await this.checkSelectedBillingAddressIsDefault(customer_id, address_id);
+      this.isBillingCreationMode = true;
+      this.resetBillingInputValues();
+      return;
+    } else {
+      this.disableBillingForm();
+      this.isBillingCreationMode = false;
+      this.isEditMode = false;
+      const address_data = await ProfileService.getAddressData(
+        customer_id,
+        address_id,
+      );
+
+      if (address_data) {
+        this.isInputNotEmpty['billingCountry'] = true;
+        this.isInputNotEmpty['billingCity'] = true;
+        this.isInputNotEmpty['billingPostalCode'] = true;
+        this.isInputNotEmpty['billingAddress'] = true;
+
+        this.billingProfileForm
+          .get('billingCountry')
+          ?.setValue(address_data?.country);
+        this.billingProfileForm
+          .get('billingCity')
+          ?.setValue(address_data?.city);
+        this.billingProfileForm
+          .get('billingPostalCode')
+          ?.setValue(address_data?.postalCode);
+        this.billingProfileForm
+          .get('billingAddress')
+          ?.setValue(address_data?.streetName);
+
+        await this.checkSelectedBillingAddressIsDefault(
+          customer_id,
+          address_id,
+        );
+      }
+    }
+  }
+
   public async ngOnInit(): Promise<void> {
     this.disableGeneralForm();
     await this.fillGeneralInputsValues();
-
     await this.fillShippingSelect();
+    await this.fillBillingSelect();
   }
 }
