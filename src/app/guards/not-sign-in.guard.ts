@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { SignInService } from '../services/sign-in.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotSignInGuard implements CanActivate {
   constructor(private router: Router) {}

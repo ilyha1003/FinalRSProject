@@ -5,7 +5,7 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 Our application is an online store. This project is educational and was created as part of the Frontend development course at RS SCHOOL. However, if desired, this project can be further developed into a fully functional commercial online store.
 
 The application is powered by [commerce API](https://commercetools.com/), a leading provider of commerce solutions for B2C and B2B enterprises.
-        
+
 ## Development server
 
 To start a local development server, run:
@@ -13,11 +13,13 @@ To start a local development server, run:
 ```bash
 ng serve
 ```
+
 or
 
 ```bash
 npm start
 ```
+
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
 ## Running ESLint and Prettier
@@ -69,7 +71,9 @@ To build the project run:
 ```bash
 ng build
 ```
+
 or
+
 ```bash
 npm run build
 ```
@@ -83,10 +87,13 @@ To execute unit tests with the [Karma](https://karma-runner.github.io) test runn
 ```bash
 ng test
 ```
+
 or
+
 ```bash
 npm run test-ng
 ```
+
 To execute unit tests with the [Jest](https://jestjs.io/) test runner, use the following command:
 
 ```bash
@@ -98,6 +105,7 @@ This script runs tests in watch mode. Jest will automatically monitor changes in
 ```bash
 npm run test:watch
 ```
+
 This script generates a test coverage report. Jest analyzes what percentage of your code is covered by tests and provides detailed information in the form of a text or HTML report. This is useful for ensuring the quality of testing and identifying parts of the code that are not covered by tests, use the following command:
 
 ```bash
