@@ -1,3 +1,11 @@
+export interface GetProduct {
+  count: number;
+  limit: number;
+  offset: number;
+  results: Product[];
+  total: number;
+}
+
 export interface Product {
   id: string;
   productType: ProductType;
