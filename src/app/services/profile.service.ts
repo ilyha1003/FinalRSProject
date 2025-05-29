@@ -491,6 +491,47 @@ export class ProfileService {
     }
   }
 
+  public static async removeDefaultShippingAddress(
+    customer_id: string,
+  ): Promise<void> {
+    try {
+      const [customer_access_token, actual_customer_version] =
+        await Promise.all([
+          LocalStorageService.getCustomerAccessToken(),
+          ApiService.getCustomerVersion(customer_id),
+        ]);
+
+      const fetch_body = {
+        version: actual_customer_version,
+        actions: [
+          {
+            action: 'setDefaultShippingAddress',
+          },
+        ],
+      };
+
+      const response = await fetch(
+        `${api_url}/${project_key}/customers/${customer_id}`,
+        {
+          method: 'POST',
+          body: JSON.stringify(fetch_body),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${customer_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to delete default shipping address. Status: ${response.status}`,
+        );
+      }
+    } catch (error) {
+      console.error('Something went wrong:', error);
+    }
+  }
+
   public static async getDefaultShippingAddress(
     customer_id: string,
   ): Promise<string> {
@@ -505,5 +546,56 @@ export class ProfileService {
       console.error('Error load custumer id:', error);
     }
     return defaultShippingAddressId;
+  }
+
+  public static async changeAddress(
+    customer_id: string,
+    address_id: string,
+    street_name: string,
+    postal_code: string,
+    city: string,
+    country: string,
+  ): Promise<void> {
+    try {
+      const [customer_access_token, actual_customer_version] =
+        await Promise.all([
+          LocalStorageService.getCustomerAccessToken(),
+          ApiService.getCustomerVersion(customer_id),
+        ]);
+
+      const fetch_body = {
+        version: actual_customer_version,
+        actions: [
+          {
+            action: 'changeAddress',
+            addressId: address_id,
+            address: {
+              streetName: street_name,
+              postalCode: postal_code,
+              city: city,
+              country: country,
+            },
+          },
+        ],
+      };
+      const response = await fetch(
+        `${api_url}/${project_key}/customers/${customer_id}`,
+        {
+          method: 'POST',
+          body: JSON.stringify(fetch_body),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${customer_access_token}`,
+          },
+        },
+      );
+      if (!response.ok) {
+        throw new Error(
+          `Failed to delete shipping address. Status: ${response.status}`,
+        );
+      }
+    } catch (error) {
+      console.error('Something went wrong:', error);
+    }
   }
 }

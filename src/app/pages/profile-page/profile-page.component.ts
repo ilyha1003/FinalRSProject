@@ -252,6 +252,7 @@ export class ProfilePageComponent {
     this.fillShippingInputsValues(this.selectedShippingAddressId);
   }
 
+  // main method for general submit
   public async submitGeneralFormChanges(event: Event): Promise<void> {
     event.preventDefault();
 
@@ -360,14 +361,50 @@ export class ProfilePageComponent {
     }
   }
 
-  //test method for shipping submit
-  public submitShippingFormChanges(event: Event): void {
+  //main method for shipping submit
+  public async submitShippingFormChanges(event: Event): Promise<void> {
     event.preventDefault();
     if (this.checkFormValidity(this.shippingProfileForm)) {
       return;
     }
-    const data = this.shippingProfileForm.value;
-    console.log(data);
+    const customer_id = LocalStorageService.getCustomerId();
+    const formData = this.shippingProfileForm.value;
+    console.log(formData);
+
+    if (
+      formData.shippingAddress &&
+      formData.shippingPostalCode &&
+      formData.shippingCity &&
+      formData.shippingCountry
+    ) {
+      await ProfileService.changeAddress(
+        customer_id,
+        this.selectedShippingAddressId,
+        formData.shippingAddress,
+        formData.shippingPostalCode,
+        formData.shippingCity,
+        formData.shippingCountry,
+      );
+      if (formData.isShippingDefault) {
+        await ProfileService.setDefaultShippingAddress(
+          customer_id,
+          this.selectedShippingAddressId,
+        );
+      } else {
+        if (
+          await this.checkSelectedAddressIsDefault(
+            customer_id,
+            this.selectedShippingAddressId,
+          )
+        ) {
+          await ProfileService.removeDefaultShippingAddress(customer_id);
+          this.isShippingDefaultChecked = false;
+        }
+      }
+      await this.updateShippingSelectAfterCreation(
+        this.selectedShippingAddressId,
+      );
+    }
 
     this.setInactiveEditMode();
   }
@@ -413,6 +450,7 @@ export class ProfilePageComponent {
     await this.fillShippingSelect();
     this.isShippingCreationMode = true;
     this.enableShippingForm();
+    await this.markShippingFormAsUntouched();
   }
 
   public async onShippingOptionSelect(event: Event): Promise<void> {
@@ -421,7 +459,14 @@ export class ProfilePageComponent {
       this.selectedShippingAddressId = target.value;
     }
     await this.fillShippingInputsValues(this.selectedShippingAddressId);
-    this.shippingProfileForm.markAsUntouched();
+    await this.markShippingFormAsUntouched();
+  }
+
+  public async markShippingFormAsUntouched(): Promise<void> {
+    this.shippingProfileForm.get('shippingCity')?.markAsUntouched();
+    this.shippingProfileForm.get('shippingCountry')?.markAsUntouched();
+    this.shippingProfileForm.get('shippingPostalCode')?.markAsUntouched();
+    this.shippingProfileForm.get('shippingAddress')?.markAsUntouched();
   }
 
   public async createNewShippingAddress(): Promise<void> {
