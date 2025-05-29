@@ -861,3 +861,10 @@
     </div>
   </div>
 </div>
+
+<app-profile-modal
+  *ngIf="isModalShow"
+  [message]="modalErrorMessage"
+  [header]="modalHeader"
+  (closeModalEvent)="closeModal()"
+></app-profile-modal>

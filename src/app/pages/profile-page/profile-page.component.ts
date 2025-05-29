@@ -22,14 +22,21 @@ import { postalCodeValidator } from '../../utils/validations/postal-code-validat
 import { noSpacesValidator } from '../../utils/validations/no-spaces-validator';
 import { FormsModule } from '@angular/forms';
 import { strengthPasswordValidator } from '../../utils/validations/strength-password-validator';
-// import { ApiService } from '../../services/api.service';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { ProfileService } from '../../services/profile.service';
 import { CustomerAddress } from '../../utils/interfaces';
+import { ProfileModalComponent } from '../../components/profile-modal/profile-modal.component';
+import { LoaderService } from '../../services/loader.service';
 
 @Component({
   selector: 'app-profile-page',
-  imports: [NgIf, NgClass, ReactiveFormsModule, FormsModule],
+  imports: [
+    NgIf,
+    NgClass,
+    ReactiveFormsModule,
+    FormsModule,
+    ProfileModalComponent,
+  ],
   templateUrl: './profile-page.component.html',
   styleUrl: './profile-page.component.scss',
 })
@@ -114,12 +121,16 @@ export class ProfilePageComponent {
   public lastName: string = '';
   public defaultShippingAddress: string = '';
   public defaultBillingAddress: string = '';
+  public modalErrorMessage: string = '';
+  public modalHeader: string = '';
   public activeMainButton: string = 'general';
+  public isModalShow: boolean = false;
   public isEditMode: boolean = false;
   public isShippingDefaultChecked: boolean = false;
   public isBillingDefaultChecked: boolean = false;
   public isShippingCreationMode: boolean = true;
   public isBillingCreationMode: boolean = true;
+  public isRequestError: boolean = false;
 
   public generalInputFields = generalInputFields;
   public generalInputFieldBirthDate = generalInputFieldBirthDate;
@@ -137,6 +148,8 @@ export class ProfilePageComponent {
   public isFocused: Record<string, boolean> = {};
   public isInputNotEmpty: Record<string, boolean> = {};
   public hasError = hasError;
+
+  constructor(private loaderService: LoaderService) {}
 
   public get passwordErrorCount(): number {
     const errors = this.generalProfileForm.get('password')?.errors;
@@ -160,6 +173,8 @@ export class ProfilePageComponent {
     if (this.activeMainButton !== buttonName) {
       this.isEditMode = false;
       this.disableGeneralForm();
+      this.disableShippingForm();
+      this.disableBillingForm();
     }
     this.activeMainButton = buttonName;
   }
@@ -275,40 +290,70 @@ export class ProfilePageComponent {
     this.fillBillingInputsValues(this.selectedBillingAddressId);
   }
 
+  public async requestErrorsCheck(
+    errors: string[],
+    success_mesage: string,
+  ): Promise<void> {
+    for (const error of errors) {
+      if (error !== '') {
+        this.isRequestError = true;
+      }
+    }
+    if (this.isRequestError) {
+      this.openModal('Something went wrong. Try again later', '❗ Error ❗');
+    } else {
+      this.openModal(success_mesage, 'Success ✅');
+    }
+    this.isRequestError = false;
+  }
+
   // main method for general submit
   public async submitGeneralFormChanges(event: Event): Promise<void> {
     event.preventDefault();
-
     if (ProfilePageComponent.checkFormValidity(this.generalProfileForm)) {
       return;
     }
-
+    this.loaderService.show();
+    const customer_id = LocalStorageService.getCustomerId();
     const generalForm = this.generalProfileForm.value;
-
     if (
       generalForm.email &&
       generalForm.firstName &&
       generalForm.lastName &&
       generalForm.birthDate
     ) {
-      const customer_id = LocalStorageService.getCustomerId();
-      await ProfileService.changeCustomerEmail(customer_id, generalForm.email);
-      await ProfileService.changeCustomerFirstName(
+      const changeCustomerEmailError = await ProfileService.changeCustomerEmail(
         customer_id,
-        generalForm.firstName,
+        generalForm.email,
       );
-      await ProfileService.changeCustomerLastName(
-        customer_id,
-        generalForm.lastName,
-      );
-      await ProfileService.changeCustomerBirthDate(
-        customer_id,
-        generalForm.birthDate,
+      const changeCustomerFirstNameError =
+        await ProfileService.changeCustomerFirstName(
+          customer_id,
+          generalForm.firstName,
+        );
+      const changeCustomerLastNameError =
+        await ProfileService.changeCustomerLastName(
+          customer_id,
+          generalForm.lastName,
+        );
+      const changeCustomerBirthDateError =
+        await ProfileService.changeCustomerBirthDate(
+          customer_id,
+          generalForm.birthDate,
+        );
+      await this.requestErrorsCheck(
+        [
+          changeCustomerEmailError,
+          changeCustomerFirstNameError,
+          changeCustomerLastNameError,
+          changeCustomerBirthDateError,
+        ],
+        'Information updated',
       );
       await this.updateGreeting(generalForm.firstName, generalForm.lastName);
     }
-
     this.setInactiveEditMode();
+    this.loaderService.hide();
   }
 
   public async fillGeneralInputsValues(): Promise<void> {
@@ -395,7 +440,7 @@ export class ProfilePageComponent {
     }
     const customer_id = LocalStorageService.getCustomerId();
     const formData = this.shippingProfileForm.value;
-    console.log(formData);
+    this.loaderService.show();
 
     if (
       formData.shippingAddress &&
@@ -403,7 +448,7 @@ export class ProfilePageComponent {
       formData.shippingCity &&
       formData.shippingCountry
     ) {
-      await ProfileService.changeAddress(
+      const changeAddressError = await ProfileService.changeAddress(
         customer_id,
         this.selectedShippingAddressId,
         formData.shippingAddress,
@@ -430,6 +475,8 @@ export class ProfilePageComponent {
       await this.updateShippingSelectAfterCreation(
         this.selectedShippingAddressId,
       );
+      this.requestErrorsCheck([changeAddressError], 'Address updated');
+      this.loaderService.hide();
     }
 
     this.setInactiveEditMode();
@@ -537,6 +584,7 @@ export class ProfilePageComponent {
       return;
     }
 
+    this.loaderService.show();
     const formData = this.shippingProfileForm.value;
     if (
       formData.shippingCountry &&
@@ -544,21 +592,27 @@ export class ProfilePageComponent {
       formData.shippingPostalCode &&
       formData.shippingAddress
     ) {
-      const newAddressId: string = await ProfileService.addNewAddress(
-        customer_id,
-        formData.shippingCountry,
-        formData.shippingCity,
-        formData.shippingPostalCode,
-        formData.shippingAddress,
-      );
+      const { address_id, request_error_message } =
+        await ProfileService.addNewAddress(
+          customer_id,
+          formData.shippingCountry,
+          formData.shippingCity,
+          formData.shippingPostalCode,
+          formData.shippingAddress,
+        );
       await (formData.isShippingDefault === true
-        ? ProfileService.setDefaultShippingAddress(customer_id, newAddressId)
+        ? ProfileService.setDefaultShippingAddress(customer_id, address_id)
         : ProfileService.addAddressToShippingAddresses(
             customer_id,
-            newAddressId,
+            address_id,
           ));
 
-      await this.updateShippingSelectAfterCreation(newAddressId);
+      await this.updateShippingSelectAfterCreation(address_id);
+      this.requestErrorsCheck(
+        [request_error_message],
+        'Address has been added',
+      );
+      this.loaderService.hide();
     }
   }
 
@@ -569,6 +623,7 @@ export class ProfilePageComponent {
       return;
     }
 
+    this.loaderService.show();
     const formData = this.billingProfileForm.value;
     if (
       formData.billingCountry &&
@@ -576,21 +631,24 @@ export class ProfilePageComponent {
       formData.billingPostalCode &&
       formData.billingAddress
     ) {
-      const newAddressId: string = await ProfileService.addNewAddress(
-        customer_id,
-        formData.billingCountry,
-        formData.billingCity,
-        formData.billingPostalCode,
-        formData.billingAddress,
-      );
+      const { address_id, request_error_message } =
+        await ProfileService.addNewAddress(
+          customer_id,
+          formData.billingCountry,
+          formData.billingCity,
+          formData.billingPostalCode,
+          formData.billingAddress,
+        );
       await (formData.isBillingDefault === true
-        ? ProfileService.setDefaultBillingAddress(customer_id, newAddressId)
-        : ProfileService.addAddressToBillingAddresses(
-            customer_id,
-            newAddressId,
-          ));
+        ? ProfileService.setDefaultBillingAddress(customer_id, address_id)
+        : ProfileService.addAddressToBillingAddresses(customer_id, address_id));
 
-      await this.updateBillingSelectAfterCreation(newAddressId);
+      await this.updateBillingSelectAfterCreation(address_id);
+      this.requestErrorsCheck(
+        [request_error_message],
+        'Address has been added',
+      );
+      this.loaderService.hide();
     }
   }
 
@@ -622,7 +680,6 @@ export class ProfilePageComponent {
     }
     const customer_id = LocalStorageService.getCustomerId();
     const formData = this.billingProfileForm.value;
-    console.log(formData);
 
     if (
       formData.billingAddress &&
@@ -730,6 +787,16 @@ export class ProfilePageComponent {
         );
       }
     }
+  }
+
+  public openModal(message: string, header: string): void {
+    this.modalErrorMessage = message;
+    this.modalHeader = header;
+    this.isModalShow = true;
+  }
+
+  public closeModal(): void {
+    this.isModalShow = false;
   }
 
   public async ngOnInit(): Promise<void> {

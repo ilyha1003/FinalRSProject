@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 // import { ApiService } from './api.service';
 import {
+  AddressWithError,
   AddShortAddress,
   Customer,
   CustomerAddress,
@@ -8,7 +9,6 @@ import {
 } from '../utils/interfaces';
 import { api_url, project_key } from './confidential-data';
 import { LocalStorageService } from './local-storage.service';
-import { ApiService } from './api.service';
 
 @Injectable({
   providedIn: 'root',
@@ -49,12 +49,43 @@ export class ProfileService {
     }
   }
 
+  public static async getCustomerVersion(user_id: string): Promise<number> {
+    const customer_access_token: string =
+      LocalStorageService.getCustomerAccessToken();
+    let user_version: number = 0;
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/customers/${user_id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${customer_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      user_version = data.version;
+    } catch (error) {
+      console.log(error);
+    }
+
+    return user_version;
+  }
+
   public static async changeCustomerEmail(
     customer_id: string,
     customer_new_email: string,
-  ): Promise<void> {
+  ): Promise<string> {
+    let request_error_message: string = '';
     const actual_customer_version: number =
-      await ApiService.getCustomerVersion(customer_id);
+      await ProfileService.getCustomerVersion(customer_id);
     const customer_access_token: string =
       LocalStorageService.getCustomerAccessToken();
 
@@ -82,19 +113,22 @@ export class ProfileService {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        request_error_message = 'error';
       }
     } catch (error) {
       console.error('Changing customer email ERROR:', error);
+      return 'error';
     }
+    return request_error_message;
   }
 
   public static async changeCustomerFirstName(
     customer_id: string,
     customer_new_first_name: string,
-  ): Promise<void> {
+  ): Promise<string> {
+    let request_error_message: string = '';
     const actual_customer_version: number =
-      await ApiService.getCustomerVersion(customer_id);
+      await ProfileService.getCustomerVersion(customer_id);
     const customer_access_token: string =
       LocalStorageService.getCustomerAccessToken();
 
@@ -122,19 +156,22 @@ export class ProfileService {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        request_error_message = 'error';
       }
     } catch (error) {
       console.error('Changing customer email ERROR:', error);
+      return 'error';
     }
+    return request_error_message;
   }
 
   public static async changeCustomerLastName(
     customer_id: string,
     customer_new_last_name: string,
-  ): Promise<void> {
+  ): Promise<string> {
+    let request_error_message: string = '';
     const actual_customer_version: number =
-      await ApiService.getCustomerVersion(customer_id);
+      await ProfileService.getCustomerVersion(customer_id);
     const customer_access_token: string =
       LocalStorageService.getCustomerAccessToken();
 
@@ -162,19 +199,22 @@ export class ProfileService {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        request_error_message = 'error';
       }
     } catch (error) {
       console.error('Changing customer email ERROR:', error);
+      return 'error';
     }
+    return request_error_message;
   }
 
   public static async changeCustomerBirthDate(
     customer_id: string,
     customer_new_birth_date: string,
-  ): Promise<void> {
+  ): Promise<string> {
+    let request_error_message: string = '';
     const actual_customer_version: number =
-      await ApiService.getCustomerVersion(customer_id);
+      await ProfileService.getCustomerVersion(customer_id);
     const customer_access_token: string =
       LocalStorageService.getCustomerAccessToken();
 
@@ -202,11 +242,14 @@ export class ProfileService {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        request_error_message = 'error';
       }
     } catch (error) {
       console.error('Changing customer email ERROR:', error);
+      return 'error';
     }
+
+    return request_error_message;
   }
 
   //
@@ -251,14 +294,15 @@ export class ProfileService {
     city: string,
     postal_code: string,
     address: string,
-  ): Promise<string> {
+  ): Promise<AddressWithError> {
+    let request_error_message: string = '';
+    let address_id: string = '';
     try {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
           LocalStorageService.getCustomerAccessToken(),
-          ApiService.getCustomerVersion(customer_id),
+          ProfileService.getCustomerVersion(customer_id),
         ]);
-
       const fetch_body = this.buildAddressBody(
         actual_customer_version,
         country,
@@ -266,7 +310,6 @@ export class ProfileService {
         postal_code,
         address,
       );
-
       const response = await fetch(
         `${api_url}/${project_key}/customers/${customer_id}`,
         {
@@ -280,16 +323,19 @@ export class ProfileService {
       );
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to update customer address. Status: ${response.status}`,
-        );
+        request_error_message = 'error';
       }
 
       const customerAddresses = await this.getCustomerAddresses(customer_id);
-      return await this.getAddressIdByAddressValue(customerAddresses, address);
+      address_id = await this.getAddressIdByAddressValue(
+        customerAddresses,
+        address,
+      );
+      return { address_id, request_error_message };
     } catch (error) {
       console.error('Error setting address to customer:', error);
-      return '';
+      request_error_message = 'error';
+      return { address_id, request_error_message };
     }
   }
 
@@ -370,7 +416,7 @@ export class ProfileService {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
           LocalStorageService.getCustomerAccessToken(),
-          ApiService.getCustomerVersion(customer_id),
+          ProfileService.getCustomerVersion(customer_id),
         ]);
 
       const fetch_body = {
@@ -413,7 +459,7 @@ export class ProfileService {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
           LocalStorageService.getCustomerAccessToken(),
-          ApiService.getCustomerVersion(customer_id),
+          ProfileService.getCustomerVersion(customer_id),
         ]);
 
       const fetch_body = {
@@ -456,7 +502,7 @@ export class ProfileService {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
           LocalStorageService.getCustomerAccessToken(),
-          ApiService.getCustomerVersion(customer_id),
+          ProfileService.getCustomerVersion(customer_id),
         ]);
 
       const fetch_body = {
@@ -499,7 +545,7 @@ export class ProfileService {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
           LocalStorageService.getCustomerAccessToken(),
-          ApiService.getCustomerVersion(customer_id),
+          ProfileService.getCustomerVersion(customer_id),
         ]);
 
       const fetch_body = {
@@ -542,7 +588,7 @@ export class ProfileService {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
           LocalStorageService.getCustomerAccessToken(),
-          ApiService.getCustomerVersion(customer_id),
+          ProfileService.getCustomerVersion(customer_id),
         ]);
 
       const fetch_body = {
@@ -585,7 +631,7 @@ export class ProfileService {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
           LocalStorageService.getCustomerAccessToken(),
-          ApiService.getCustomerVersion(customer_id),
+          ProfileService.getCustomerVersion(customer_id),
         ]);
 
       const fetch_body = {
@@ -627,7 +673,7 @@ export class ProfileService {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
           LocalStorageService.getCustomerAccessToken(),
-          ApiService.getCustomerVersion(customer_id),
+          ProfileService.getCustomerVersion(customer_id),
         ]);
 
       const fetch_body = {
@@ -668,7 +714,7 @@ export class ProfileService {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
           LocalStorageService.getCustomerAccessToken(),
-          ApiService.getCustomerVersion(customer_id),
+          ProfileService.getCustomerVersion(customer_id),
         ]);
 
       const fetch_body = {
@@ -741,14 +787,14 @@ export class ProfileService {
     postal_code: string,
     city: string,
     country: string,
-  ): Promise<void> {
+  ): Promise<string> {
+    let request_error_message: string = '';
     try {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
           LocalStorageService.getCustomerAccessToken(),
-          ApiService.getCustomerVersion(customer_id),
+          ProfileService.getCustomerVersion(customer_id),
         ]);
-
       const fetch_body = {
         version: actual_customer_version,
         actions: [
@@ -776,12 +822,12 @@ export class ProfileService {
         },
       );
       if (!response.ok) {
-        throw new Error(
-          `Failed to delete shipping address. Status: ${response.status}`,
-        );
+        request_error_message = 'error';
       }
     } catch (error) {
       console.error('Something went wrong:', error);
+      return 'error';
     }
+    return request_error_message;
   }
 }

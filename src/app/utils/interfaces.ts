@@ -87,3 +87,8 @@ export interface AddShortAddress {
     };
   }[];
 }
+
+export interface AddressWithError {
+  address_id: string;
+  request_error_message: string;
+}
