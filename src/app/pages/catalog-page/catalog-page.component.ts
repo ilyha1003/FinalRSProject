@@ -8,6 +8,7 @@ import { SearchProduct } from '../../utils/interface-product-search';
 import { MasterPrice, ProductDiscounts } from '../../utils/interface-product';
 import { isPositiveNumber } from '../../utils/is-positive-number';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
+import { getShortDescription } from '../../utils/get-short-description';
 
 export interface GetMinProduct {
   id: string;
@@ -70,6 +71,8 @@ export class CatalogPageComponent {
   private excludedId = '9ad4266a-0e46-4c4c-9ae4-cac3e1dd59ff';
   private isNewPage: boolean = true;
   private filterIdCategory = '';
+  private prevNumberMin = 0;
+  private prevNumberMax = 0;
 
   // public isLoading = true;
   // public isLoadingNewPage = true;
@@ -99,40 +102,29 @@ export class CatalogPageComponent {
   ) {}
 
   public async onPriceBlur(): Promise<void> {
-    const minValueFilter = this.filterForm
-      .get('minPrice')
-      ?.value?.trim()
-      .replace(',', '.');
-    const maxValueFilter = this.filterForm
-      .get('maxPrice')
-      ?.value?.trim()
-      .replace(',', '.');
+    const { numberMin, numberMax, isValueMin, isValueMax } =
+      this.getParsedInputValues();
 
-    const isValueMin = isPositiveNumber(minValueFilter ?? '');
-    const isValueMax = isPositiveNumber(maxValueFilter ?? '');
+    if (this.isFirstBlur(numberMin, numberMax)) return;
+
+    if (this.isSameAsPrevious(numberMin, numberMax)) return;
 
     if (!isValueMin || !isValueMax) {
       this.patchValidPriceValues();
       return;
     }
 
-    if (
-      Number(minValueFilter) < this.minValue ||
-      Number(maxValueFilter) > this.maxValue ||
-      Number(minValueFilter) > Number(maxValueFilter)
-    ) {
-      this.patchValidPriceValues({
-        min: Number(minValueFilter),
-        max: Number(maxValueFilter),
-      });
+    if (!this.isInValidRange(numberMin, numberMax)) {
+      this.patchValidPriceValues({ min: numberMin, max: numberMax });
       return;
     }
 
     await this.loadProductsInRange(
-      Number(minValueFilter) * 100,
-      Number(maxValueFilter) * 100,
+      numberMin * 100,
+      numberMax * 100,
       this.offset,
     );
+    this.setPreviousValues(numberMin, numberMax);
   }
 
   public async allProductButtonHandler(): Promise<void> {
@@ -200,48 +192,58 @@ export class CatalogPageComponent {
   }
 
   public async categoryHandler(category: string): Promise<void> {
-    this.isLoadingProducts = true;
-    this.products = [];
-    this.offset = 0;
+    if (this.isNewPage) {
+      this.isLoadingProducts = true;
+    }
+
+    this.isLoading = true;
 
     try {
       const response = await ApiService.getSearchProducts({
+        offset: this.offset.toString(),
         filter: `categories.id:"${category}"`,
       });
 
       if (response) {
+        console.log(response);
+
         this.totalProduct = response.total > 20 ? true : false;
+
         for (const product of response.results) {
           this.products.push(this.mapSearchProduct(product));
+        }
 
-          const productColor = product.masterVariant.attributes.find(
-            (element) => element.name === 'color',
-          );
-
-          if (productColor) {
-            this.productsSetColor.add(productColor?.value['en-US']);
-          }
+        if (this.products.length >= response.total) {
+          this.totalProduct = false;
         }
       }
-
-      this.getColorPalette();
+      if (this.isNewPage) {
+        this.getAllColors(category);
+      }
     } catch (error) {
       console.error('get categories error:', error);
     } finally {
       this.isLoadingProducts = false;
+      this.isLoading = false;
+      this.isNewPage = false;
     }
   }
 
   public goToCategory(category: Category): void {
+    this.filterForm.patchValue({
+      isCatalogOpen: false,
+    });
+
+    if (category.id === this.filterIdCategory) {
+      return;
+    }
+
     this.isNewPage = true;
     this.products = [];
     this.isNoProducts = false;
     this.productsSetColor.clear();
     this.productColors = [];
-
-    this.filterForm.patchValue({
-      isCatalogOpen: false,
-    });
+    this.offset = 0;
 
     const categorySlug = category.slug['en-US'];
 
@@ -261,9 +263,14 @@ export class CatalogPageComponent {
   }
 
   public async getMoreProductsHandler(): Promise<void> {
-    this.offset += 20;
+    if (this.filterIdCategory) {
+      this.offset += 20;
 
-    await this.getProducts();
+      await this.categoryHandler(this.filterIdCategory);
+    } else {
+      this.offset += 20;
+      await this.getProducts();
+    }
   }
 
   public async formColorHandler(colorCode: string): Promise<void> {
@@ -272,32 +279,45 @@ export class CatalogPageComponent {
     this.filterForm.get('selectedColor')?.setValue(this.checkColor || '');
     this.isLoadingProducts = true;
 
-    if (this.checkColor) {
-      this.products = [];
+    this.products = [];
 
-      const response = await ApiService.getSearchProducts({
-        'text.en-US': this.checkColor,
-        filter: `categories.id:"${this.filterIdCategory}"`,
-      });
+    const response = await ApiService.getSearchProducts({
+      filter: `categories.id:"${this.filterIdCategory}"`,
+      limit: '50',
+    });
+    if (response) {
+      let filteredResults = response.results;
+      if (this.checkColor) {
+        const hexToMatch = this.checkColor.toLowerCase();
+        filteredResults = response.results.filter((product) => {
+          const variants = [product.masterVariant];
 
-      if (response) {
-        for (const product of response.results) {
-          this.products.push(this.mapSearchProduct(product));
-        }
+          return variants.some((variant) => {
+            const colorAttribute = variant.attributes.find(
+              (atr) => atr.name === 'color',
+            );
+            const finishAttribute = variant.attributes.find(
+              (atr) => atr.name === 'finish',
+            );
+            const matchesColor = colorAttribute?.value?.['en-US']
+              .toLowerCase()
+              .includes(hexToMatch);
+            const matchesFinish = finishAttribute?.value?.['en-US']
+              .toLowerCase()
+              .includes(hexToMatch);
+
+            return matchesColor || matchesFinish;
+          });
+        });
       }
-    } else {
-      this.products = [];
-
-      const response = await ApiService.getSearchProducts({
-        filter: `categories.id:"${this.filterIdCategory}"`,
-      });
-      if (response) {
-        for (const product of response.results) {
-          this.products.push(this.mapSearchProduct(product));
-        }
+      for (const product of filteredResults) {
+        this.products.push(this.mapSearchProduct(product));
+      }
+      this.totalProduct = this.products.length > 20;
+      if (this.products.length >= response.total) {
+        this.totalProduct = false;
       }
     }
-
     this.isLoadingProducts = false;
   }
 
@@ -345,6 +365,29 @@ export class CatalogPageComponent {
     });
   }
 
+  private async getAllColors(category: string): Promise<void> {
+    const responseAllSearch = await ApiService.getSearchProducts({
+      offset: this.offset.toString(),
+      limit: '50',
+      filter: `categories.id:"${category}"`,
+    });
+
+    if (responseAllSearch) {
+      console.log(responseAllSearch);
+      for (const product of responseAllSearch.results) {
+        const productColor = product.masterVariant.attributes.find(
+          (element) => element.name === 'color' || element.name === 'finish',
+        );
+
+        if (productColor) {
+          this.productsSetColor.add(productColor?.value['en-US']);
+        }
+      }
+
+      this.getColorPalette();
+    }
+  }
+
   private async getProducts(): Promise<void> {
     if (this.isNewPage) {
       this.isLoadingProducts = true;
@@ -362,7 +405,7 @@ export class CatalogPageComponent {
             ...product,
             id: product.id,
             name: product.masterData.current.name['en-US'],
-            description: this.getShortDescription(
+            description: getShortDescription(
               product.masterData.current.description['en-US'],
               60,
             ),
@@ -371,6 +414,10 @@ export class CatalogPageComponent {
             ),
             img: product.masterData.current.masterVariant.images[0].url,
           });
+        }
+
+        if (this.products.length >= responseProducts.total) {
+          this.totalProduct = false;
         }
       }
     } catch (error) {
@@ -385,7 +432,7 @@ export class CatalogPageComponent {
     return {
       id: product.id,
       name: product.name['en-US'],
-      description: this.getShortDescription(product.description['en-US'], 60),
+      description: getShortDescription(product.description['en-US'], 60),
       price: this.calculatePrice(product.masterVariant.prices),
       img: product.masterVariant.images[0].url,
     };
@@ -421,13 +468,6 @@ export class CatalogPageComponent {
     }
 
     return { price, currency };
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private getShortDescription(product: string, maxLength: number): string {
-    return product.length > maxLength
-      ? product.slice(0, maxLength) + '...'
-      : product;
   }
 
   private async patchMinMaxInputs(filter = ''): Promise<void> {
@@ -469,6 +509,9 @@ export class CatalogPageComponent {
         if (minPriceUS && maxPriceUS) {
           this.minValue = minPriceUS?.value.centAmount / 100;
           this.maxValue = maxPriceUS?.value.centAmount / 100;
+
+          this.prevNumberMin = minPriceUS?.value.centAmount / 100;
+          this.prevNumberMax = maxPriceUS?.value.centAmount / 100;
         }
       }
 
@@ -510,8 +553,6 @@ export class CatalogPageComponent {
       filters.push(`categories.id:"${this.filterIdCategory}"`);
     }
 
-    console.log(filters);
-
     const range = await ApiService.getSearchProducts({
       offset: offset.toString(),
       limit: '20',
@@ -532,6 +573,53 @@ export class CatalogPageComponent {
         codeColor: color.split(':')[1],
       });
     }
+  }
+
+  private getParsedInputValues(): {
+    numberMin: number;
+    numberMax: number;
+    isValueMin: boolean;
+    isValueMax: boolean;
+  } {
+    const minValueFilter =
+      this.filterForm.get('minPrice')?.value?.trim().replace(',', '.') ?? '';
+    const maxValueFilter =
+      this.filterForm.get('maxPrice')?.value?.trim().replace(',', '.') ?? '';
+
+    const isValueMin = isPositiveNumber(minValueFilter);
+    const isValueMax = isPositiveNumber(maxValueFilter);
+
+    return {
+      numberMin: Number(minValueFilter),
+      numberMax: Number(maxValueFilter),
+      isValueMin,
+      isValueMax,
+    };
+  }
+
+  private isFirstBlur(numberMin: number, numberMax: number): boolean {
+    if (this.prevNumberMin === undefined && this.prevNumberMax === undefined) {
+      this.setPreviousValues(numberMin, numberMax);
+      return true;
+    }
+    return false;
+  }
+
+  private isSameAsPrevious(numberMin: number, numberMax: number): boolean {
+    return numberMin === this.prevNumberMin && numberMax === this.prevNumberMax;
+  }
+
+  private isInValidRange(numberMin: number, numberMax: number): boolean {
+    return (
+      numberMin >= this.minValue &&
+      numberMax <= this.maxValue &&
+      numberMin <= numberMax
+    );
+  }
+
+  private setPreviousValues(min: number, max: number): void {
+    this.prevNumberMin = min;
+    this.prevNumberMax = max;
   }
 
   // public async onPriceBlur(): Promise<void> {

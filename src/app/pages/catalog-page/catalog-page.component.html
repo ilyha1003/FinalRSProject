@@ -128,44 +128,6 @@
         }
       }
     }
-    <!-- @if (isLoadingNewPage) {
-      @for (_ of skeletonArray; track $index) {
-        <figure class="skeleton">
-          <div class="skeleton__image-wrapper">
-            <img class="skeleton__img" />
-          </div>
-          <figcaption class="skeleton__text-container">
-            <p class="skeleton__price"></p>
-            <p class="skeleton__name"></p>
-            <p class="skeleton__description"></p>
-          </figcaption>
-        </figure>
-      }
-    } @else if (filterForm.get('isCatalogOpen')?.value) {
-      <div class="catalog__categories">
-        @for (category of categories; track $index) {
-          <button
-            class="button button__category"
-            (click)="goToCategory(category)"
-          >
-            {{ category.name['en-US'] }}
-          </button>
-        }
-      </div>
-    } @else {
-      @if (isEmptyCatalog) {
-        <div class="catalog__no-products">
-          <img
-            class="catalog__no-products__img"
-            src="/assets/images/no-found.png"
-          />
-        </div>
-        <h2 class="catalog__no-products__h2">
-          Sorry, no products were found for your query.
-        </h2>
-      } @else { -->
-    <!-- }
-    } -->
   </div>
   <div
     class="catalog__button-container"
