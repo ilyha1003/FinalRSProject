@@ -219,7 +219,7 @@ export class CatalogPageComponent {
       offset: this.offset.toString(),
       filter: `categories.id:"${category}"`,
     };
-    console.log(category);
+
     CatalogPageComponent.applySortOption(
       objectTest,
       this.sortChange ?? 'default',
@@ -425,19 +425,37 @@ export class CatalogPageComponent {
     this.filterForm
       .get('search')!
       .valueChanges.pipe(debounceTime(300), distinctUntilChanged())
-      .subscribe(async (searchTerm: string | null) => {
-        if (searchTerm === null || searchTerm === '') {
-          await this.getProducts();
-        } else {
-          if (searchTerm?.trim().length < 2) {
-            return;
+      .subscribe(async (rawSearchTerm: string | null) => {
+        const searchTerm = rawSearchTerm?.trim() ?? '';
+
+        if (searchTerm === '') {
+          if (this.filterIdCategory) {
+            this.products = [];
+            await this.categoryHandler(this.filterIdCategory);
+          } else {
+            this.products = [];
+            await this.getProducts();
           }
-          console.log('Поиск', searchTerm);
-          const searchObject = {
-            'text.en-US': searchTerm,
-            fuzzy: 'true',
-            fuzzyLevel: '1',
-          };
+          return;
+        }
+
+        if (searchTerm.length < 2) {
+          return;
+        }
+
+        const searchObject = {
+          'text.en-US': searchTerm,
+          fuzzy: 'true',
+          fuzzyLevel: '1',
+        };
+
+        if (this.filterIdCategory) {
+          this.products = [];
+          Object.assign(searchObject, {
+            filter: `categories.id:"${this.filterIdCategory}"`,
+          });
+          await this.testing(searchObject);
+        } else {
           const searchProduct =
             await ApiService.getSearchProducts(searchObject);
 
@@ -449,6 +467,21 @@ export class CatalogPageComponent {
           }
         }
       });
+  }
+
+  private async testing(object: {
+    'text.en-US': string;
+    fuzzy: string;
+    fuzzyLevel: string;
+  }): Promise<void> {
+    const searchProduct = await ApiService.getSearchProducts(object);
+
+    if (searchProduct) {
+      this.products = [];
+      for (const product of searchProduct.results) {
+        this.products.push(this.mapSearchProduct(product));
+      }
+    }
   }
 
   private async getAllColors(category: string): Promise<void> {
