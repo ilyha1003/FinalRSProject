@@ -71,7 +71,12 @@
                 formControlName="selectedColor"
                 [value]="color.codeColor"
                 [checked]="checkColor === color.codeColor"
-                (change)="formColorHandler(color.codeColor)"
+                (change)="
+                  formColorHandler({
+                    colorName: color.nameColor,
+                    colorCode: color.codeColor,
+                  })
+                "
               />
               <div
                 class="color__border"
@@ -89,8 +94,56 @@
           }
         </div>
       </div>
+      <div class="catalog__filter-search">
+        <input
+          class="filter-search__input"
+          type="text"
+          placeholder="Search..."
+          formControlName="search"
+          placeholder="Search..."
+        />
+        <div class="filter-search__icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="0.9em"
+            height="0.9em"
+            viewBox="0 0 20 20"
+            class="search-icon"
+            fill="gray"
+          >
+            <path
+              d="M17.892 15.064a8 8 0 1 0-2.828 2.828l2.522 2.522a2 2 0 1 0 2.828-2.828zM11 16a5 5 0 1 1 0-10 5 5 0 0 1 0 10"
+            />
+          </svg>
+        </div>
+      </div>
     </form>
   </aside>
+
+  <form class="catalog__form-price" [formGroup]="sortForm">
+    <div class="select-sort">
+      <select formControlName="selectedSort">
+        <option value="default">Default sorting</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+        <option value="name-asc">Name: A to Z</option>
+        <option value="name-desc">Name: Z to A</option>
+      </select>
+    </div>
+  </form>
+
+  <div class="catalog__active-filters">
+    <div>
+      @for (filter of activeFilters; track $index) {
+        <span class="active-filter">{{ filter }}</span>
+      }
+    </div>
+    <div>
+      @for (filterColor of activeFiltersColors; track $index) {
+        <span class="active-filter">{{ filterColor }}</span>
+      }
+    </div>
+  </div>
 
   <div
     class="catalog__products"
