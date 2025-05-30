@@ -23,6 +23,14 @@ export interface CustomerAddress {
   country: string;
 }
 
+export interface CustomerShortAddress {
+  id: string;
+  streetName: string;
+  postalCode: string;
+  city: string;
+  country: string;
+}
+
 export interface RegistrationFormValues {
   email: string;
   firstName: string;
@@ -65,4 +73,27 @@ export interface AddAddressPayload {
       country: string;
     };
   }[];
+}
+
+export interface AddShortAddress {
+  version: number;
+  actions: {
+    action: 'addAddress';
+    address: {
+      streetName: string;
+      postalCode: string;
+      city: string;
+      country: string;
+    };
+  }[];
+}
+
+export interface AddressWithError {
+  address_id: string;
+  request_error_message: string;
+}
+
+export interface TokenAfterDeletingAccount {
+  new_access_token: string;
+  request_error_message: string;
 }

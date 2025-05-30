@@ -1,14 +1,14 @@
 <div class="profile-page__wrapper">
-  <h1 class="greeting">Hi, Unknown Customer!</h1>
+  <h1 class="greeting">Hi, {{ lastName }} {{ firstName }}</h1>
 
   <h3 *ngIf="activeMainButton === 'general'" class="profile-description">
     Here you can change your main information
   </h3>
   <h3 *ngIf="activeMainButton === 'shipping'" class="profile-description">
-    Here you can edit your shipping address
+    Here you can edit your shipping addresses and create new
   </h3>
   <h3 *ngIf="activeMainButton === 'billing'" class="profile-description">
-    Here you can edit your billing address
+    Here you can edit your billing addresses and create new
   </h3>
   <h3 *ngIf="activeMainButton === 'account'" class="profile-description">
     Here you can change your account password and delete account
@@ -54,9 +54,8 @@
             <div class="profile__input-container">
               <input
                 [type]="field.type"
-                [(ngModel)]="field.value"
                 (focus)="isFocused[field.track] = true"
-                (blur)="isFocused[field.track] = field.value ? true : false"
+                (blur)="onInputBlur(generalProfileForm, field.track)"
                 [id]="field.id"
                 class="floating__input"
                 [attr.autocomplete]="'off'"
@@ -68,7 +67,9 @@
               <label
                 for="{{ field.id }}"
                 class="floating__label"
-                [class.focused]="isFocused[field.track] || field.value"
+                [class.focused]="
+                  isFocused[field.track] || isInputNotEmpty[field.track]
+                "
               >
                 {{ field.label }}
               </label>
@@ -197,7 +198,14 @@
           Edit
         </button>
         <button
-          (click)="setInactiveEditMode()"
+          *ngIf="isEditMode === true"
+          (click)="cancelGeneralFormChanges()"
+          class="action__button cancel__button"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="submitGeneralFormChanges($event)"
           [class.action__button-disabled]="isEditMode === false"
           class="action__button save__button"
         >
@@ -209,13 +217,24 @@
     <!-- Shipping address inputs wrapper -->
     <div *ngIf="activeMainButton === 'shipping'" class="customer-info__wrapper">
       <div class="customer-info">
-        <!-- <select
+        <select
           class="floating__input customer-addresses"
           name="shippingSelect"
           id="shippingAddressList"
+          (change)="onShippingOptionSelect($event)"
         >
-          <option value="">Select shipping address</option>
-        </select> -->
+          <option value="new">Create new shipping address</option>
+          @for (address of shippingAddressesIds; track address?.id) {
+            <option
+              value="{{ address?.id }}"
+              [selected]="selectedShippingAddressId === address?.id"
+            >
+              {{ address?.country }}; {{ address?.city }};
+              {{ address?.streetName }}
+              {{ defaultShippingAddress === address?.id ? '(default)' : '' }}
+            </option>
+          }
+        </select>
 
         <form [formGroup]="shippingProfileForm" class="profile__form">
           <div class="profile__field-input">
@@ -250,9 +269,8 @@
               <div class="profile__input-container">
                 <input
                   [type]="field.type"
-                  [(ngModel)]="field.value"
                   (focus)="isFocused[field.track] = true"
-                  (blur)="isFocused[field.track] = field.value ? true : false"
+                  (blur)="onInputBlur(shippingProfileForm, field.track)"
                   [id]="field.id"
                   class="floating__input"
                   [attr.autocomplete]="'off'"
@@ -268,7 +286,9 @@
                 <label
                   for="{{ field.id }}"
                   class="floating__label"
-                  [class.focused]="isFocused[field.track] || field.value"
+                  [class.focused]="
+                    isFocused[field.track] || isInputNotEmpty[field.track]
+                  "
                 >
                   {{ field.label }}
                 </label>
@@ -363,12 +383,13 @@
             </div>
           }
 
-          <!-- <div class="checkbox-field">
+          <div class="checkbox-field">
             <label class="custom-checkbox">
               <input
                 type="checkbox"
+                formControlName="isShippingDefault"
                 [checked]="isShippingDefaultChecked"
-                (change)="onCheckboxChange($event)"
+                (change)="onShippingCheckboxChange($event)"
               />
 
               <span
@@ -377,27 +398,48 @@
               ></span>
 
               <span class="checkbox-label">
-                Set as default Shipping address
+                Set as default shipping address
               </span>
             </label>
-          </div> -->
+          </div>
         </form>
       </div>
 
       <div class="actions-buttons__wrapper">
         <button
+          *ngIf="isEditMode === false && isShippingCreationMode === false"
           (click)="setActiveEditMode()"
-          [class.action__button-disabled]="isEditMode === true"
           class="action__button edit__button"
         >
           Edit
         </button>
         <button
-          (click)="setInactiveEditMode()"
-          [class.action__button-disabled]="isEditMode === false"
+          *ngIf="isEditMode === false && isShippingCreationMode === false"
+          class="action__button cancel__button"
+          (click)="deleteSelectedShippingAddress()"
+        >
+          Delete address
+        </button>
+        <button
+          *ngIf="isEditMode === true && isShippingCreationMode === false"
+          (click)="cancelShippingFormChanges()"
+          class="action__button cancel__button"
+        >
+          Cancel
+        </button>
+        <button
+          *ngIf="isShippingCreationMode === false && isEditMode === true"
+          (click)="submitShippingFormChanges($event)"
           class="action__button save__button"
         >
           Save
+        </button>
+        <button
+          *ngIf="isShippingCreationMode === true"
+          class="action__button save__button"
+          (click)="createNewShippingAddress()"
+        >
+          Create new shipping address
         </button>
       </div>
     </div>
@@ -405,13 +447,24 @@
     <!-- Billing address -->
     <div *ngIf="activeMainButton === 'billing'" class="customer-info__wrapper">
       <div class="customer-info">
-        <!-- <select
+        <select
           class="floating__input customer-addresses"
-          name="shippingSelect"
-          id="shippingAddressList"
+          name="billingSelect"
+          id="billingAddressList"
+          (change)="onBillingOptionSelect($event)"
         >
-          <option value="">Select shipping address</option>
-        </select> -->
+          <option value="new">Create new billing address</option>
+          @for (address of billingAddressesIds; track address?.id) {
+            <option
+              value="{{ address?.id }}"
+              [selected]="selectedBillingAddressId === address?.id"
+            >
+              {{ address?.country }}; {{ address?.city }};
+              {{ address?.streetName }}
+              {{ defaultBillingAddress === address?.id ? '(default)' : '' }}
+            </option>
+          }
+        </select>
 
         <form [formGroup]="billingProfileForm" class="profile__form">
           <div class="profile__field-input">
@@ -446,9 +499,8 @@
               <div class="profile__input-container">
                 <input
                   [type]="field.type"
-                  [(ngModel)]="field.value"
                   (focus)="isFocused[field.track] = true"
-                  (blur)="isFocused[field.track] = field.value ? true : false"
+                  (blur)="onInputBlur(billingProfileForm, field.track)"
                   [id]="field.id"
                   class="floating__input"
                   [attr.autocomplete]="'off'"
@@ -464,7 +516,9 @@
                 <label
                   for="{{ field.id }}"
                   class="floating__label"
-                  [class.focused]="isFocused[field.track] || field.value"
+                  [class.focused]="
+                    isFocused[field.track] || isInputNotEmpty[field.track]
+                  "
                 >
                   {{ field.label }}
                 </label>
@@ -557,41 +611,63 @@
             </div>
           }
 
-          <!-- <div class="checkbox-field">
+          <div class="checkbox-field">
             <label class="custom-checkbox">
               <input
                 type="checkbox"
-                [checked]="isbillingDefaultChecked"
-                (change)="onCheckboxChange($event)"
+                formControlName="isBillingDefault"
+                [checked]="isBillingDefaultChecked"
+                (change)="onBillingCheckboxChange($event)"
               />
 
               <span
                 class="checkmark"
-                [class.checked]="isbillingDefaultChecked"
+                [class.checked]="isBillingDefaultChecked"
               ></span>
 
               <span class="checkbox-label">
                 Set as default billing address
               </span>
             </label>
-          </div> -->
+          </div>
         </form>
       </div>
 
       <div class="actions-buttons__wrapper">
         <button
+          *ngIf="isEditMode === false && isBillingCreationMode === false"
           (click)="setActiveEditMode()"
-          [class.action__button-disabled]="isEditMode === true"
           class="action__button edit__button"
         >
           Edit
         </button>
         <button
-          (click)="setInactiveEditMode()"
-          [class.action__button-disabled]="isEditMode === false"
+          *ngIf="isEditMode === false && isBillingCreationMode === false"
+          class="action__button cancel__button"
+          (click)="deleteSelectedBillingAddress()"
+        >
+          Delete address
+        </button>
+        <button
+          *ngIf="isEditMode === true && isBillingCreationMode === false"
+          (click)="cancelBillingFormChanges()"
+          class="action__button cancel__button"
+        >
+          Cancel
+        </button>
+        <button
+          *ngIf="isBillingCreationMode === false && isEditMode === true"
+          (click)="submitBillingFormChanges($event)"
           class="action__button save__button"
         >
           Save
+        </button>
+        <button
+          *ngIf="isBillingCreationMode === true"
+          class="action__button save__button"
+          (click)="createNewBillingAddress()"
+        >
+          Create new billing address
         </button>
       </div>
     </div>
@@ -605,9 +681,8 @@
               <div class="profile__input-container">
                 <input
                   [type]="field.type"
-                  [(ngModel)]="field.value"
                   (focus)="isFocused[field.track] = true"
-                  (blur)="isFocused[field.track] = field.value ? true : false"
+                  (blur)="onInputBlur(passwordsProfileForm, field.track)"
                   [id]="field.id"
                   class="floating__input"
                   [attr.autocomplete]="'off'"
@@ -623,7 +698,9 @@
                 <label
                   for="{{ field.id }}"
                   class="floating__label"
-                  [class.focused]="isFocused[field.track] || field.value"
+                  [class.focused]="
+                    isFocused[field.track] || isInputNotEmpty[field.track]
+                  "
                 >
                   {{ field.label }}
                 </label>
@@ -691,7 +768,12 @@
           }
         </form>
         <div class="actions-buttons__wrapper">
-          <button class="action__button edit__button">Change password</button>
+          <button
+            class="action__button edit__button"
+            (click)="changePassword($event)"
+          >
+            Change password
+          </button>
         </div>
       </div>
 
@@ -701,11 +783,12 @@
             <div class="profile__input-container">
               <input
                 [type]="passwordForDeleting.type"
-                [(ngModel)]="passwordForDeleting.value"
                 (focus)="isFocused[passwordForDeleting.track] = true"
                 (blur)="
-                  isFocused[passwordForDeleting.track] =
-                    passwordForDeleting.value ? true : false
+                  onInputBlur(
+                    deleteAccountProfileForm,
+                    passwordForDeleting.track
+                  )
                 "
                 [id]="passwordForDeleting.id"
                 class="floating__input"
@@ -724,7 +807,7 @@
                 class="floating__label"
                 [class.focused]="
                   isFocused[passwordForDeleting.track] ||
-                  passwordForDeleting.value
+                  isInputNotEmpty[passwordForDeleting.track]
                 "
               >
                 {{ passwordForDeleting.label }}
@@ -777,9 +860,22 @@
           </div>
         </form>
         <div class="actions-buttons__wrapper">
-          <button class="action__button edit__button">Delete my account</button>
+          <button
+            class="action__button edit__button"
+            (click)="deleteAccount($event)"
+          >
+            Delete my account
+          </button>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<app-profile-modal
+  *ngIf="isModalShow"
+  [message]="modalErrorMessage"
+  [header]="modalHeader"
+  [isPasswordChanged]="isPasswordChanged"
+  (closeModalEvent)="closeModal()"
+></app-profile-modal>
