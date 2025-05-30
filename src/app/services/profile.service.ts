@@ -6,8 +6,14 @@ import {
   Customer,
   CustomerAddress,
   CustomerShortAddress,
+  TokenAfterDeletingAccount,
 } from '../utils/interfaces';
-import { api_url, project_key } from './confidential-data';
+import {
+  api_url,
+  auth_url,
+  credentials,
+  project_key,
+} from './confidential-data';
 import { LocalStorageService } from './local-storage.service';
 
 @Injectable({
@@ -497,7 +503,8 @@ export class ProfileService {
   public static async removeShippingAddressId(
     customer_id: string,
     address_id: string,
-  ): Promise<void> {
+  ): Promise<string> {
+    let request_error_message: string = '';
     try {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
@@ -528,19 +535,20 @@ export class ProfileService {
       );
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to delete shipping address. Status: ${response.status}`,
-        );
+        request_error_message = 'error';
       }
     } catch (error) {
       console.error('Something went wrong:', error);
+      return 'error';
     }
+    return request_error_message;
   }
 
   public static async removeBillingAddressId(
     customer_id: string,
     address_id: string,
-  ): Promise<void> {
+  ): Promise<string> {
+    let request_error_message: string = '';
     try {
       const [customer_access_token, actual_customer_version] =
         await Promise.all([
@@ -571,13 +579,13 @@ export class ProfileService {
       );
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to delete shipping address. Status: ${response.status}`,
-        );
+        request_error_message = 'error';
       }
     } catch (error) {
       console.error('Something went wrong:', error);
+      return 'error';
     }
+    return request_error_message;
   }
 
   public static async setDefaultShippingAddress(
@@ -829,5 +837,120 @@ export class ProfileService {
       return 'error';
     }
     return request_error_message;
+  }
+
+  public static async changeCustomerPassword(
+    customer_id: string,
+    old_password: string,
+    new_password: string,
+  ): Promise<string> {
+    let request_error_message: string = '';
+    try {
+      const [customer_access_token, actual_customer_version] =
+        await Promise.all([
+          LocalStorageService.getCustomerAccessToken(),
+          ProfileService.getCustomerVersion(customer_id),
+        ]);
+
+      const fetch_body = {
+        id: customer_id,
+        version: actual_customer_version,
+        currentPassword: old_password,
+        newPassword: new_password,
+      };
+
+      const response = await fetch(
+        `${api_url}/${project_key}/customers/password`,
+        {
+          method: 'POST',
+          body: JSON.stringify(fetch_body),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${customer_access_token}`,
+          },
+        },
+      );
+      if (!response.ok) {
+        request_error_message = 'incorrect password';
+      }
+    } catch (error) {
+      console.error('Something went wrong:', error);
+      return 'error';
+    }
+    return request_error_message;
+  }
+
+  // deleting customer
+  public static async deleteCustomerAccount(
+    customer_id: string,
+    password: string,
+  ): Promise<string> {
+    let request_deleting_error_message: string = '';
+    const { new_access_token, request_error_message } =
+      await ProfileService.passwordCorrectnessCheck(
+        LocalStorageService.getCustomerEmail(),
+        password,
+      );
+    if (!new_access_token) {
+      return request_error_message === 'error' ? 'error' : 'incorrect password';
+    }
+    try {
+      const [customer_access_token, actual_customer_version] =
+        await Promise.all([
+          LocalStorageService.getCustomerAccessToken(),
+          ProfileService.getCustomerVersion(customer_id),
+        ]);
+
+      const response = await fetch(
+        `${api_url}/${project_key}/customers/${customer_id}?version=${actual_customer_version}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${customer_access_token}`,
+          },
+        },
+      );
+      if (!response.ok) {
+        request_deleting_error_message = 'error';
+      }
+    } catch (error) {
+      console.error('Something went wrong:', error);
+      return 'error';
+    }
+    return request_deleting_error_message;
+  }
+
+  public static async passwordCorrectnessCheck(
+    user_name: string,
+    user_password: string,
+  ): Promise<TokenAfterDeletingAccount> {
+    let new_access_token: string = '';
+    let request_error_message: string = '';
+
+    try {
+      const response = await fetch(
+        `${auth_url}/oauth/${project_key}/customers/token?grant_type=password&username=${user_name}&password=${user_password}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Basic ${credentials}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        request_error_message = 'incorrect password';
+      }
+
+      const data = await response.json();
+      new_access_token = data.access_token;
+    } catch (error) {
+      console.log(error);
+      request_error_message = 'error';
+    }
+
+    return { new_access_token, request_error_message };
   }
 }

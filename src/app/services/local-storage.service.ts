@@ -18,6 +18,18 @@ export class LocalStorageService {
     localStorage.removeItem('customerId');
   }
 
+  public static setCustomerEmail(customer_email: string): void {
+    localStorage.setItem('customerEmail', JSON.stringify(customer_email));
+  }
+
+  public static getCustomerEmail(): string {
+    return JSON.parse(localStorage.getItem('customerEmail') || '[]');
+  }
+
+  public static removeCustomerEmail(): void {
+    localStorage.removeItem('customerEmail');
+  }
+
   public static setCustomerAccessToken(customer_access_token: string): void {
     localStorage.setItem(
       'customerAccessToken',

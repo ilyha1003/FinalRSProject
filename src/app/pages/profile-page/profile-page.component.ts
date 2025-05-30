@@ -27,6 +27,7 @@ import { ProfileService } from '../../services/profile.service';
 import { CustomerAddress } from '../../utils/interfaces';
 import { ProfileModalComponent } from '../../components/profile-modal/profile-modal.component';
 import { LoaderService } from '../../services/loader.service';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-profile-page',
@@ -36,6 +37,7 @@ import { LoaderService } from '../../services/loader.service';
     ReactiveFormsModule,
     FormsModule,
     ProfileModalComponent,
+    RouterModule,
   ],
   templateUrl: './profile-page.component.html',
   styleUrl: './profile-page.component.scss',
@@ -131,6 +133,8 @@ export class ProfilePageComponent {
   public isShippingCreationMode: boolean = true;
   public isBillingCreationMode: boolean = true;
   public isRequestError: boolean = false;
+  public isTryingToManageAccount: boolean = false;
+  public isPasswordChanged: boolean = false;
 
   public generalInputFields = generalInputFields;
   public generalInputFieldBirthDate = generalInputFieldBirthDate;
@@ -175,6 +179,21 @@ export class ProfilePageComponent {
       this.disableGeneralForm();
       this.disableShippingForm();
       this.disableBillingForm();
+
+      this.fillShippingSelect();
+      this.fillBillingSelect();
+
+      this.fillShippingInputsValues(this.selectedShippingAddressId);
+      this.fillBillingInputsValues(this.selectedBillingAddressId);
+
+      if (this.isShippingCreationMode) {
+        this.enableShippingForm();
+        this.markShippingFormAsUntouched();
+      }
+      if (this.isBillingCreationMode) {
+        this.enableBillingForm();
+        this.markBillingFormAsUntouched();
+      }
     }
     this.activeMainButton = buttonName;
   }
@@ -187,6 +206,7 @@ export class ProfilePageComponent {
       await ProfileService.getDefaultShippingAddress(customer_id);
     if (defaultShippingAddress === address_id) {
       this.isShippingDefaultChecked = true;
+      this.shippingProfileForm.get('isShippingDefault')?.setValue(true);
       return true;
     } else {
       this.isShippingDefaultChecked = false;
@@ -202,6 +222,7 @@ export class ProfilePageComponent {
       await ProfileService.getDefaultBillingAddress(customer_id);
     if (defaultBillingAddress === address_id) {
       this.isBillingDefaultChecked = true;
+      this.billingProfileForm.get('isBillingDefault')?.setValue(true);
       return true;
     } else {
       this.isBillingDefaultChecked = false;
@@ -294,16 +315,35 @@ export class ProfilePageComponent {
     errors: string[],
     success_mesage: string,
   ): Promise<void> {
+    let isIncorrectPassword: boolean = false;
     for (const error of errors) {
       if (error !== '') {
         this.isRequestError = true;
       }
+      if (error === 'incorrect password') {
+        isIncorrectPassword = true;
+      }
     }
+
     if (this.isRequestError) {
-      this.openModal('Something went wrong. Try again later', '❗ Error ❗');
+      if (isIncorrectPassword) {
+        this.openModal('Incorrect password', '❗ Error ❗', false);
+      } else {
+        this.openModal(
+          'Something went wrong. Try again later',
+          '❗ Error ❗',
+          false,
+        );
+      }
     } else {
-      this.openModal(success_mesage, 'Success ✅');
+      if (this.isTryingToManageAccount) {
+        this.openModal(success_mesage, 'Success ✅', true);
+      } else {
+        this.openModal(success_mesage, 'Success ✅', false);
+      }
     }
+
+    this.isTryingToManageAccount = false;
     this.isRequestError = false;
   }
 
@@ -441,7 +481,6 @@ export class ProfilePageComponent {
     const customer_id = LocalStorageService.getCustomerId();
     const formData = this.shippingProfileForm.value;
     this.loaderService.show();
-
     if (
       formData.shippingAddress &&
       formData.shippingPostalCode &&
@@ -475,10 +514,12 @@ export class ProfilePageComponent {
       await this.updateShippingSelectAfterCreation(
         this.selectedShippingAddressId,
       );
-      this.requestErrorsCheck([changeAddressError], 'Address updated');
+      await this.requestErrorsCheck(
+        [changeAddressError],
+        'Shipping address has been updated',
+      );
       this.loaderService.hide();
     }
-
     this.setInactiveEditMode();
   }
 
@@ -608,9 +649,9 @@ export class ProfilePageComponent {
           ));
 
       await this.updateShippingSelectAfterCreation(address_id);
-      this.requestErrorsCheck(
+      await this.requestErrorsCheck(
         [request_error_message],
-        'Address has been added',
+        'New shipping address has been added',
       );
       this.loaderService.hide();
     }
@@ -644,32 +685,44 @@ export class ProfilePageComponent {
         : ProfileService.addAddressToBillingAddresses(customer_id, address_id));
 
       await this.updateBillingSelectAfterCreation(address_id);
-      this.requestErrorsCheck(
+      await this.requestErrorsCheck(
         [request_error_message],
-        'Address has been added',
+        'New billing address has been added',
       );
       this.loaderService.hide();
     }
   }
 
   public async deleteSelectedShippingAddress(): Promise<void> {
+    this.loaderService.show();
     const customer_id = LocalStorageService.getCustomerId();
-    await ProfileService.removeShippingAddressId(
+    const request_error_message = await ProfileService.removeShippingAddressId(
       customer_id,
       this.selectedShippingAddressId,
     );
     await this.updateShippingSelectAfterDeletion();
     this.resetShippingInputValues();
+    await this.requestErrorsCheck(
+      [request_error_message],
+      'The shipping address has been removed',
+    );
+    this.loaderService.hide();
   }
 
   public async deleteSelectedBillingAddress(): Promise<void> {
+    this.loaderService.show();
     const customer_id = LocalStorageService.getCustomerId();
-    await ProfileService.removeBillingAddressId(
+    const request_error_message = await ProfileService.removeBillingAddressId(
       customer_id,
       this.selectedBillingAddressId,
     );
     await this.updateBillingSelectAfterDeletion();
     this.resetBillingInputValues();
+    await this.requestErrorsCheck(
+      [request_error_message],
+      'The billing address has been removed',
+    );
+    this.loaderService.hide();
   }
 
   //billing
@@ -678,16 +731,16 @@ export class ProfilePageComponent {
     if (ProfilePageComponent.checkFormValidity(this.billingProfileForm)) {
       return;
     }
+    this.loaderService.show();
     const customer_id = LocalStorageService.getCustomerId();
     const formData = this.billingProfileForm.value;
-
     if (
       formData.billingAddress &&
       formData.billingPostalCode &&
       formData.billingCity &&
       formData.billingCountry
     ) {
-      await ProfileService.changeAddress(
+      const request_error_message = await ProfileService.changeAddress(
         customer_id,
         this.selectedBillingAddressId,
         formData.billingAddress,
@@ -714,8 +767,12 @@ export class ProfilePageComponent {
       await this.updateBillingSelectAfterCreation(
         this.selectedBillingAddressId,
       );
+      this.requestErrorsCheck(
+        [request_error_message],
+        'Billing address has been updated',
+      );
+      this.loaderService.hide();
     }
-
     this.setInactiveEditMode();
   }
 
@@ -789,9 +846,65 @@ export class ProfilePageComponent {
     }
   }
 
-  public openModal(message: string, header: string): void {
+  // account methods
+  public async changePassword(event: Event): Promise<void> {
+    event.preventDefault();
+    if (ProfilePageComponent.checkFormValidity(this.passwordsProfileForm)) {
+      return;
+    }
+    this.isTryingToManageAccount = true;
+    const customer_id = LocalStorageService.getCustomerId();
+    const formData = this.passwordsProfileForm.value;
+    this.loaderService.show();
+
+    if (formData.oldPassword && formData.newPassword) {
+      const request_error_message = await ProfileService.changeCustomerPassword(
+        customer_id,
+        formData.oldPassword,
+        formData.newPassword,
+      );
+      this.requestErrorsCheck(
+        [request_error_message],
+        'The password has been successfully changed. You need to login again',
+      );
+
+      this.loaderService.hide();
+    }
+  }
+
+  public async deleteAccount(event: Event): Promise<void> {
+    event.preventDefault();
+    if (ProfilePageComponent.checkFormValidity(this.deleteAccountProfileForm)) {
+      return;
+    }
+
+    this.isTryingToManageAccount = true;
+    const customer_id = LocalStorageService.getCustomerId();
+    const formData = this.deleteAccountProfileForm.value;
+    this.loaderService.show();
+
+    if (formData.actualPassword) {
+      const request_error_message = await ProfileService.deleteCustomerAccount(
+        customer_id,
+        formData.actualPassword,
+      );
+      this.requestErrorsCheck(
+        [request_error_message],
+        'Your account has been successfully deleted. We will be glad to see you again',
+      );
+
+      this.loaderService.hide();
+    }
+  }
+
+  public openModal(
+    message: string,
+    header: string,
+    passwordState: boolean,
+  ): void {
     this.modalErrorMessage = message;
     this.modalHeader = header;
+    this.isPasswordChanged = passwordState;
     this.isModalShow = true;
   }
 

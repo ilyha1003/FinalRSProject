@@ -92,3 +92,8 @@ export interface AddressWithError {
   address_id: string;
   request_error_message: string;
 }
+
+export interface TokenAfterDeletingAccount {
+  new_access_token: string;
+  request_error_message: string;
+}

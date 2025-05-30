@@ -5,10 +5,10 @@
     Here you can change your main information
   </h3>
   <h3 *ngIf="activeMainButton === 'shipping'" class="profile-description">
-    Here you can edit your shipping address
+    Here you can edit your shipping addresses and create new
   </h3>
   <h3 *ngIf="activeMainButton === 'billing'" class="profile-description">
-    Here you can edit your billing address
+    Here you can edit your billing addresses and create new
   </h3>
   <h3 *ngIf="activeMainButton === 'account'" class="profile-description">
     Here you can change your account password and delete account
@@ -768,7 +768,12 @@
           }
         </form>
         <div class="actions-buttons__wrapper">
-          <button class="action__button edit__button">Change password</button>
+          <button
+            class="action__button edit__button"
+            (click)="changePassword($event)"
+          >
+            Change password
+          </button>
         </div>
       </div>
 
@@ -855,7 +860,12 @@
           </div>
         </form>
         <div class="actions-buttons__wrapper">
-          <button class="action__button edit__button">Delete my account</button>
+          <button
+            class="action__button edit__button"
+            (click)="deleteAccount($event)"
+          >
+            Delete my account
+          </button>
         </div>
       </div>
     </div>
@@ -866,5 +876,6 @@
   *ngIf="isModalShow"
   [message]="modalErrorMessage"
   [header]="modalHeader"
+  [isPasswordChanged]="isPasswordChanged"
   (closeModalEvent)="closeModal()"
 ></app-profile-modal>
