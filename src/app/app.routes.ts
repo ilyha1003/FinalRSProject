@@ -9,14 +9,20 @@ import { AboutPageComponent } from './pages/about-page/about-page.component';
 import { BasketPageComponent } from './pages/basket-page/basket-page.component';
 import { SignInGuard } from './guards/sign-in.guard';
 import { NotSignInGuard } from './guards/not-sign-in.guard';
+import { ProductPageComponent } from './pages/product-page/product-page.component';
 
 export const routes: Routes = [
   { path: '', component: MainPageComponent },
   { path: 'registration', component: RegistrationPageComponent },
   { path: 'login', component: LoginPageComponent, canActivate: [SignInGuard] },
-  { path: 'catalog', component: CatalogPageComponent},
-  { path: 'about', component: AboutPageComponent},
-  { path: 'profile', component: ProfilePageComponent, canActivate: [NotSignInGuard]},
-  { path: 'basket', component: BasketPageComponent},
+  { path: 'catalog', component: CatalogPageComponent },
+  { path: 'about', component: AboutPageComponent },
+  {
+    path: 'profile',
+    component: ProfilePageComponent,
+    canActivate: [NotSignInGuard],
+  },
+  { path: 'basket', component: BasketPageComponent },
+  { path: 'product/:id', component: ProductPageComponent },
   { path: '**', component: NotFoundComponent },
 ];

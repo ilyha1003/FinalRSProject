@@ -1,12 +1,45 @@
-<div
-  style="
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 15px;
-  "
->
-  <h2 style="font-size: 3rem">Product-page</h2>
-  <img src="/assets/work.png" style="width: 30vw" alt="work-in-progress" />
+<div class="product-page__wrapper">
+
+  <div class="product__breadcrumbs">
+    <a routerLink="/catalog">Catalog</a> &rsaquo;
+    <span>{{ productName }}</span>
+  </div>
+
+  <div class="product__images-container">
+    <div class="product__gallery">
+      <div class="product__mini-images">
+        <button class="product__mini-images-nav product__mini-images-nav_up" *ngIf="productImages.length > 1" (click)="prevImage()"> &#9650;</button>
+        @for (image of productImages; track image.url; let i = $index) {
+          <img [src]="image.url" alt="Mini image {{ i }}" (click)="nextMiniImage(i)" [class.active]="i === selectedImageIndex">
+        }
+        <button class="product__mini-images-nav product__mini-images-nav_down" *ngIf="productImages.length > 1" (click)="nextImage()"> &#9660;</button>
+      </div>
+      <div class="product__main-image" (click)="openImageModal(selectedImageIndex)">
+        <img class="product__main-img" [src]="currentImageUrl" alt="{{ productName }}">
+      </div>
+    </div>
+
+    <div class="product__info">
+      <h1 class="product__name">{{ productName }}</h1>
+      <p class="product__description">{{ productDescription }}</p>
+      <div class="product__price-section">
+        <span class="product__discounted-price" *ngIf="discountedPrice">{{ discountedPrice }}</span>
+        <span class="product__original-price" *ngIf="discountedPrice">{{ price }}</span>
+        <span class="product__original-price-without-discont" *ngIf="!discountedPrice">{{ price }}</span>
+        <span class="product__percent-discount" *ngIf="discountedPrice">{{ discount }}%</span>
+      </div>
+      <button class="button product__button-add-to-cart">Add to cart</button>
+    </div>
+  </div>
 </div>
+
+<ng-container *ngIf="isModalOpen">
+  <div class="product__modal-window" (click)="closeImageModal()">
+    <div class="product__modal-content" (click)="$event.stopPropagation()">
+      <button class="product__modal-close" (click)="closeImageModal()">×</button>
+      <button class="product__modal-nav product__modal-nav_left" *ngIf="productImages.length > 1" (click)="prevImage()">&#10094;</button>
+      <img class="product__modal-image" [src]="currentImageUrl">
+      <button class="product__modal-nav product__modal-nav_right" *ngIf="productImages.length > 1" (click)="nextImage()">&#10095;</button>
+    </div>
+  </div>
+</ng-container>

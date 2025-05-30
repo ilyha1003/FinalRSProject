@@ -66,3 +66,65 @@ export interface AddAddressPayload {
     };
   }[];
 }
+
+// interface for ProductPageComponent
+export interface ProductImage {
+  url: string;
+  dimensions: { w: number; h: number };
+}
+
+export interface ProductPrice {
+  country: string;
+  value: {
+    currencyCode: string;
+    centAmount: number;
+    fractionDigits: number;
+  };
+  discounted?: {
+    value: {
+      currencyCode: string;
+      centAmount: number;
+      fractionDigits: number;
+    };
+  };
+}
+
+export interface ProductAttribute {
+  name: string;
+  value: Record<string, string>;
+}
+
+export interface ProductVariant {
+  id: number;
+  sku: string;
+  key: string;
+  prices: ProductPrice[];
+  images: ProductImage[];
+  attributes: ProductAttribute[];
+  availability: {
+    isOnStock: boolean;
+    availableQuantity: number;
+  };
+}
+
+export interface ProductDataCurrent {
+  name: Record<string, string>;
+  description: Record<string, string>;
+  slug: Record<string, string>;
+  masterVariant: ProductVariant;
+  categories: Array<{
+    typeId: string;
+    id: string;
+  }>;
+}
+
+export interface Product {
+  id: string;
+  version: number;
+  createdAt: string;
+  lastModifiedAt: string;
+  masterData: {
+    current: ProductDataCurrent;
+    staged: ProductDataCurrent;
+  };
+}
