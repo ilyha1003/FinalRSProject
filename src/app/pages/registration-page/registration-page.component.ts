@@ -214,7 +214,11 @@ export class RegistrationPageComponent {
       valueForm.email,
       valueForm.password,
     );
-    this.signInService.login(customer_id, customer_access_token);
+    this.signInService.login(
+      customer_id,
+      customer_access_token,
+      valueForm.email,
+    );
   }
 
   public async submitButtonHandler(event: Event): Promise<void> {

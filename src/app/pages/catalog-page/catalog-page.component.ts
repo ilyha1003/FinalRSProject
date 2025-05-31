@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-catalog-page',
   imports: [],
   templateUrl: './catalog-page.component.html',
-  styleUrl: './catalog-page.component.scss'
+  styleUrl: './catalog-page.component.scss',
 })
-export class CatalogPageComponent {
-
-}
+export class CatalogPageComponent {}
