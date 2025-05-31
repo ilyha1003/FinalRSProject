@@ -19,11 +19,16 @@ html {
   --color-primary: #00ced1;
   --color-bg: #000000;
   --color-bg-2: #494949;
+  --color-bg-modal: rgba(0, 0, 0, 0.9);
+  --color-bg-array: rgba(0, 0, 0, 0.5);
   --color-text: #ffffff;
   --color-white: #ffffff;
   --color-black: #000000;
   --color-gray: grey;
+  --color-description: #555;
   --color-checked: rgb(203, 250, 148);
+  --color-price-transparent: #aaa;
+  --color-discount: #e74c3c;
 }
 
 body {
@@ -36,7 +41,15 @@ app-root {
   flex-direction: column;
 }
 
-router-outlet {
+// router-outlet {
+//   flex: 1;
+// }
+
+app-product-page {
+  flex: 1;
+}
+
+app-main-page {
   flex: 1;
 }
 

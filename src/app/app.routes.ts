@@ -9,6 +9,7 @@ import { AboutPageComponent } from './pages/about-page/about-page.component';
 import { BasketPageComponent } from './pages/basket-page/basket-page.component';
 import { SignInGuard } from './guards/sign-in.guard';
 import { NotSignInGuard } from './guards/not-sign-in.guard';
+import { ProductPageComponent } from './pages/product-page/product-page.component';
 
 export const routes: Routes = [
   { path: '', component: MainPageComponent },
@@ -22,5 +23,6 @@ export const routes: Routes = [
     canActivate: [NotSignInGuard],
   },
   { path: 'basket', component: BasketPageComponent },
+  { path: 'product/:id', component: ProductPageComponent },
   { path: '**', component: NotFoundComponent },
 ];
