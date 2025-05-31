@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { Product, ProductImage } from '../../utils/interfaces';
 import { LoaderService } from '../../services/loader.service';
+import { getFormatPrice } from '../../utils/get-format-price';
 
 @Component({
   selector: 'app-product-page',
@@ -54,15 +55,17 @@ export class ProductPageComponent implements OnInit {
 
   public get price(): string | null {
     const lang = 'en-US';
-    const price = this.product?.masterData?.current?.masterVariant?.prices.find(
-      (p) => p.country === 'US',
+    let price = this.product?.masterData?.current?.masterVariant?.prices.find(
+      (p) => p.country === 'US' && p.key?.endsWith('_dist'),
     )?.value;
-    return price
-      ? new Intl.NumberFormat(lang, {
-          style: 'currency',
-          currency: 'USD',
-        }).format(price.centAmount / 100)
-      : null;
+
+    if (!price) {
+      price = this.product?.masterData?.current?.masterVariant?.prices.find(
+        (p) => p.country === 'US',
+      )?.value;
+    }
+
+    return price ? getFormatPrice(lang, price.centAmount / 100) : null;
   }
 
   public get discountedPrice(): string | null {
@@ -70,12 +73,7 @@ export class ProductPageComponent implements OnInit {
     const price = this.product?.masterData?.current?.masterVariant?.prices.find(
       (p) => p.country === 'US',
     )?.discounted?.value;
-    return price
-      ? new Intl.NumberFormat(lang, {
-          style: 'currency',
-          currency: 'USD',
-        }).format(price.centAmount / 100)
-      : null;
+    return price ? getFormatPrice(lang, price.centAmount / 100) : null;
   }
 
   public get discount(): number | null {

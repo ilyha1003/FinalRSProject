@@ -88,6 +88,11 @@ export interface ProductPrice {
     centAmount: number;
     fractionDigits: number;
   };
+  key: string;
+  channel?: {
+    typeId: string;
+    id: string;
+  };
   discounted?: {
     value: {
       currencyCode: string;
