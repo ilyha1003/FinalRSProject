@@ -135,6 +135,7 @@ export interface Product {
     current: ProductDataCurrent;
     staged: ProductDataCurrent;
   };
+}
 
 //interface for profile requests
 export interface AddShortAddress {
