@@ -1,5 +1,5 @@
-export const getFormatPrice = (lang: string, price: number): string => {
-  return new Intl.NumberFormat(lang, {
+export const getFormatPrice = (price: number): string => {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
   }).format(price);

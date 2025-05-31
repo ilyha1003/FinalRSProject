@@ -54,7 +54,6 @@ export class ProductPageComponent implements OnInit {
   }
 
   public get price(): string | null {
-    const lang = 'en-US';
     let price = this.product?.masterData?.current?.masterVariant?.prices.find(
       (p) => p.country === 'US' && p.key?.endsWith('_dist'),
     )?.value;
@@ -65,15 +64,14 @@ export class ProductPageComponent implements OnInit {
       )?.value;
     }
 
-    return price ? getFormatPrice(lang, price.centAmount / 100) : null;
+    return price ? getFormatPrice(price.centAmount / 100) : null;
   }
 
   public get discountedPrice(): string | null {
-    const lang = 'en-US';
     const price = this.product?.masterData?.current?.masterVariant?.prices.find(
       (p) => p.country === 'US',
     )?.discounted?.value;
-    return price ? getFormatPrice(lang, price.centAmount / 100) : null;
+    return price ? getFormatPrice(price.centAmount / 100) : null;
   }
 
   public get discount(): number | null {
