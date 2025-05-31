@@ -1,12 +1,200 @@
-<div
-  style="
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 15px;
-  "
->
-  <h2 style="font-size: 3rem">Catalog-page</h2>
-  <img src="/assets/work.png" style="width: 30vw" alt="work-in-progress" />
-</div>
+<section class="catalog__wrapper">
+  <aside class="catalog__filter-products">
+    <form class="catalog__form" [formGroup]="filterForm">
+      <div class="filter__price">
+        <p class="price__text">Price</p>
+        <div class="filter__price-inputs">
+          <input
+            class="price-input_min"
+            formControlName="minPrice"
+            (blur)="onPriceBlur()"
+          />
+          <input
+            class="price-input_max"
+            formControlName="maxPrice"
+            (blur)="onPriceBlur()"
+          />
+        </div>
+      </div>
+      <div class="price__buttons-container">
+        <button
+          (click)="allProductButtonHandler()"
+          class="button button__price button__price_all"
+        >
+          All products
+        </button>
+        <button
+          (click)="categoriesButtonHandler()"
+          formArrayName="isCatalogOpen"
+          class="button button__price button__price_on-catalog"
+          [ngClass]="{
+            button__catalog_isopen: this.filterForm.get('isCatalogOpen')?.value,
+          }"
+        >
+          Category
+        </button>
+        <button
+          (click)="goToOnSale()"
+          class="button button__price button__price_on-sale"
+          formArrayName="isSaleOpen"
+        >
+          On sale
+        </button>
+        @if (filterForm.get('isCatalogOpen')?.value) {
+          <div class="catalog__categories">
+            @if (isLoadingCategories) {
+              @for (_ of skeletonArrayCategory; track $index) {
+                <div class="skeleton__button-wrapper">
+                  <div class="skeleton__button"></div>
+                </div>
+              }
+            } @else {
+              @for (category of categories; track $index) {
+                <button
+                  class="button button__category"
+                  (click)="goToCategory(category)"
+                >
+                  {{ category.name['en-US'] }}
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
+      <div *ngIf="productsSetColor.size > 0" class="filter__colors">
+        <p class="price__text">Color</p>
+        <div class="colors__container">
+          @for (color of productColors; track $index) {
+            <label class="filter__color-option">
+              <input
+                type="checkbox"
+                formControlName="selectedColor"
+                [value]="color.codeColor"
+                [checked]="checkColor === color.codeColor"
+                (change)="
+                  formColorHandler({
+                    colorName: color.nameColor,
+                    colorCode: color.codeColor,
+                  })
+                "
+              />
+              <div
+                class="color__border"
+                [ngClass]="{
+                  color__border_active: checkColor === color.codeColor,
+                }"
+              >
+                <span
+                  class="color-swatch"
+                  [style.background]="color.codeColor"
+                  [title]="color.nameColor"
+                ></span>
+              </div>
+            </label>
+          }
+        </div>
+      </div>
+      <div class="catalog__filter-search">
+        <input
+          class="filter-search__input"
+          type="text"
+          placeholder="Search..."
+          formControlName="search"
+          placeholder="Search..."
+        />
+        <div class="filter-search__icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="0.9em"
+            height="0.9em"
+            viewBox="0 0 20 20"
+            class="search-icon"
+            fill="gray"
+          >
+            <path
+              d="M17.892 15.064a8 8 0 1 0-2.828 2.828l2.522 2.522a2 2 0 1 0 2.828-2.828zM11 16a5 5 0 1 1 0-10 5 5 0 0 1 0 10"
+            />
+          </svg>
+        </div>
+      </div>
+    </form>
+  </aside>
+
+  <form class="catalog__form-price" [formGroup]="sortForm">
+    <div class="select-sort">
+      <select formControlName="selectedSort">
+        <option value="default">Default sorting</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+        <option value="name-asc">Name: A to Z</option>
+        <option value="name-desc">Name: Z to A</option>
+      </select>
+    </div>
+  </form>
+
+  <div class="catalog__active-filters">
+    <div>
+      @for (filter of activeFilters; track $index) {
+        <span class="active-filter">{{ filter }}</span>
+      }
+    </div>
+    <div>
+      @for (filterColor of activeFiltersColors; track $index) {
+        <span class="active-filter">{{ filterColor }}</span>
+      }
+    </div>
+  </div>
+
+  <div
+    class="catalog__products"
+    [ngClass]="{
+      catalog__products_none: isNoProducts,
+    }"
+  >
+    @if (isLoadingProducts) {
+      @for (_ of skeletonArray; track $index) {
+        <figure class="skeleton">
+          <div class="skeleton__image-wrapper">
+            <img class="skeleton__img" />
+          </div>
+          <figcaption class="skeleton__text-container">
+            <p class="skeleton__price"></p>
+            <p class="skeleton__name"></p>
+            <p class="skeleton__description"></p>
+          </figcaption>
+        </figure>
+      }
+    } @else {
+      @if (isNoProducts) {
+        <div class="catalog__no-products">
+          <img
+            class="catalog__no-products__img"
+            src="/assets/images/no-found.png"
+          />
+        </div>
+        <h2 class="catalog__no-products__h2">
+          Sorry, no products were found for your query.
+        </h2>
+      } @else {
+        @for (product of products; track product.id) {
+          <app-product-card [product]="product"></app-product-card>
+        }
+      }
+    }
+  </div>
+  <div
+    class="catalog__button-container"
+    [ngClass]="{
+      'catalog__button-container_none': !totalProduct,
+    }"
+  >
+    <button
+      (click)="getMoreProductsHandler()"
+      class="button button__catalog"
+      [ngClass]="{ button__catalog_loading: isLoading }"
+    >
+      Upload more...
+      <span *ngIf="isLoading" class="loader__catalog"></span>
+    </button>
+  </div>
+</section>

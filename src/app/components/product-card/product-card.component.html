@@ -1,1 +1,33 @@
-<p>product-card works!</p>
+<figure class="product" id="{{ product.id }}">
+  <span class="badge"></span>
+  <div class="product__image-wrapper">
+    <img class="product__img" src="{{ product.img }}" alt="{{ product.id }}" />
+  </div>
+  <figcaption class="product__text-container">
+    <p
+      class="product__price"
+      [ngClass]="{
+        product__price_discount: product.price?.discountedPrice,
+      }"
+    >
+      <span class="price" *ngIf="product.price?.discountedPrice"
+        >{{ product.price?.discountedPrice }}{{ product.price?.currency }}
+      </span>
+      <span
+        [ngClass]="{
+          price__text_discount: product.price?.discountedPrice,
+        }"
+        >{{ product.price?.price }}{{ product.price?.currency }}</span
+      >
+      <span class="badge" *ngIf="product.price?.discountedPrice">{{
+        product.price?.nameDiscount
+      }}</span>
+    </p>
+    <p class="product__name">
+      {{ product.name }}
+    </p>
+    <p class="product__description">
+      {{ product.description }}
+    </p>
+  </figcaption>
+</figure>

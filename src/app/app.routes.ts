@@ -16,6 +16,8 @@ export const routes: Routes = [
   { path: 'registration', component: RegistrationPageComponent },
   { path: 'login', component: LoginPageComponent, canActivate: [SignInGuard] },
   { path: 'catalog', component: CatalogPageComponent },
+  { path: 'catalog/category/:name', component: CatalogPageComponent },
+  { path: 'catalog/:name', component: CatalogPageComponent },
   { path: 'about', component: AboutPageComponent },
   {
     path: 'profile',
