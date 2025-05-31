@@ -20,12 +20,17 @@ html {
   --color-bg: #000000;
   --color-bg-white: #f1f0f5;
   --color-bg-2: #494949;
+  --color-bg-modal: rgba(0, 0, 0, 0.9);
+  --color-bg-array: rgba(0, 0, 0, 0.5);
   --color-text: #ffffff;
   --color-white: #ffffff;
   --color-black: #000000;
   --color-gray: grey;
+  --color-description: #555;
   --color-checked: rgb(203, 250, 148);
   --sale: rgb(241, 17, 126);
+  --color-price-transparent: #aaa;
+  --color-discount: #e74c3c;
 }
 
 body {
@@ -39,7 +44,15 @@ app-root {
   background-color: var(--color-bg-white);
 }
 
-router-outlet {
+// router-outlet {
+//   flex: 1;
+// }
+
+app-product-page {
+  flex: 1;
+}
+
+app-main-page {
   flex: 1;
 }
 
@@ -116,4 +129,12 @@ body {
   100% {
     clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 0);
   }
+}
+
+app-profile-page {
+  display: flex;
+  flex: 2000;
+  justify-content: center;
+  padding: 1rem 1rem;
+  margin: 0 auto;
 }

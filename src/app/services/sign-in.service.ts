@@ -20,10 +20,15 @@ export class SignInService {
     return LocalStorageService.getLoginState() === 'true';
   }
 
-  public login(customer_id: string, customer_access_token: string): void {
+  public login(
+    customer_id: string,
+    customer_access_token: string,
+    customer_email: string,
+  ): void {
     LocalStorageService.setCustomerId(customer_id);
     LocalStorageService.setCustomerAccessToken(customer_access_token);
     LocalStorageService.setLoginState('true');
+    LocalStorageService.setCustomerEmail(customer_email);
     this._isLogin$.next(true);
   }
 

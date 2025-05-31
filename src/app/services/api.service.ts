@@ -11,6 +11,7 @@ import {
   CustomerAddress,
   LoginCustomer,
   NewCustomer,
+  Product,
 } from '../utils/interfaces';
 import { GetProduct, ProductDiscounts } from '../utils/interface-product';
 import {
@@ -681,6 +682,34 @@ export class ApiService {
       return await response.json();
     } catch (error) {
       console.error('Error load custumer id:', error);
+      return undefined;
+    }
+  }
+
+  public static async getProductById(
+    product_id: string | null,
+  ): Promise<Product | undefined> {
+    const actual_admin_access_token: string =
+      await ApiService.getAdminAccessToken();
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/products/${product_id}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${actual_admin_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error load product id:', error);
       return undefined;
     }
   }

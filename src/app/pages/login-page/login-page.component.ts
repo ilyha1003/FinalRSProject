@@ -98,7 +98,11 @@ export class LoginPageComponent {
             valueForm.password,
           );
 
-          this.signInService.login(customer_id, customer_access_token);
+          this.signInService.login(
+            customer_id,
+            customer_access_token,
+            valueForm.email,
+          );
 
           this.profileForm.reset();
           this.goToMainPage();
