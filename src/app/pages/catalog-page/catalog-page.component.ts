@@ -87,6 +87,7 @@ export class CatalogPageComponent {
   private prevNumberMin = 0;
   private prevNumberMax = 0;
   private sortChange: string | null = 'default';
+  private isSaleOpen = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -176,6 +177,7 @@ export class CatalogPageComponent {
   }
 
   public async onSaleButtonHandler(): Promise<void> {
+    this.isSaleOpen = true;
     const isOpenValue = this.filterForm.get('isCatalogOpen')?.value;
     if (isOpenValue) {
       this.filterForm.patchValue({
@@ -188,20 +190,20 @@ export class CatalogPageComponent {
     try {
       const response = await ApiService.getSearchProducts({
         limit: '20',
-        filter: 'variants.prices.discounted.value.centAmount:range(0 to *)',
+        filter: [
+          `variants.prices.discounted.discount.id:"${this.excludedId}"`,
+          'variants.prices.discounted.value.centAmount:range(0 to *)',
+        ],
       });
       if (response) {
-        const products = response.results.filter((product) => {
-          return product.masterVariant.prices.every((price) => {
-            const id = price.discounted?.discount?.id;
-            return id?.trim() === this.excludedId;
-          });
-        });
-
-        for (const product of products) {
+        for (const product of response.results) {
           this.products.push(this.mapSearchProduct(product));
         }
       }
+      await this.patchMinMaxInputs([
+        'variants.prices.discounted.value.centAmount:range(0 to *)',
+        `variants.prices.discounted.discount.id:"${this.excludedId}"`,
+      ]);
     } catch (error) {
       console.error('get product error:', error);
     } finally {
@@ -210,33 +212,38 @@ export class CatalogPageComponent {
   }
 
   public async categoryHandler(category: string): Promise<void> {
+    this.isSaleOpen = false;
     if (this.isNewPage) {
       this.isLoadingProducts = true;
     }
     this.isLoading = true;
 
-    const objectTest: { offset: string; filter: string; sort?: string } = {
+    const objectCategory: { offset: string; filter: string; sort?: string } = {
       offset: this.offset.toString(),
       filter: `categories.id:"${category}"`,
     };
 
     CatalogPageComponent.applySortOption(
-      objectTest,
+      objectCategory,
       this.sortChange ?? 'default',
     );
 
     try {
-      const response = await ApiService.getSearchProducts(objectTest);
-      console.log(response, 'response');
-      if (response) {
-        this.totalProduct = response.total > 20;
+      if (this.sortChange === 'price-asc') {
+        await this.testing(objectCategory);
+      } else {
+        const response = await ApiService.getSearchProducts(objectCategory);
+        console.log(response, 'response');
+        if (response) {
+          this.totalProduct = response.total > 20;
 
-        for (const product of response.results) {
-          this.products.push(this.mapSearchProduct(product));
-        }
+          for (const product of response.results) {
+            this.products.push(this.mapSearchProduct(product));
+          }
 
-        if (this.products.length >= response.total) {
-          this.totalProduct = false;
+          if (this.products.length >= response.total) {
+            this.totalProduct = false;
+          }
         }
       }
 
@@ -354,6 +361,34 @@ export class CatalogPageComponent {
     this.isLoadingProducts = false;
   }
 
+  private async testing(objectCategory: {
+    offset: string;
+    filter: string;
+    sort?: string;
+  }): Promise<void> {
+    Object.assign(objectCategory, { limit: '50' });
+    try {
+      const response = await ApiService.getSearchProducts(objectCategory);
+
+      if (response) {
+        const responseSort = response.results.sort((a, b) => {
+          const priceA =
+            a.masterVariant.prices.find((p) => p.country === 'US')?.value
+              .centAmount ?? Infinity;
+          const priceB =
+            b.masterVariant.prices.find((p) => p.country === 'US')?.value
+              .centAmount ?? Infinity;
+          return priceA - priceB;
+        });
+        for (const product of responseSort) {
+          this.products.push(this.mapSearchProduct(product));
+        }
+      }
+    } catch (error) {
+      console.error('sort asc error', error);
+    }
+  }
+
   private updateActiveFiltersColors(colorName: string | null): void {
     this.activeFiltersColors = [];
     if (colorName) {
@@ -393,6 +428,7 @@ export class CatalogPageComponent {
 
       if (nameFromRoute === 'on-sale') {
         this.activeFilters.push(nameFromRoute);
+        this.isSaleOpen = true;
         await this.onSaleButtonHandler();
       } else if (nameFromRoute.length === 0) {
         await this.getProducts();
@@ -429,13 +465,7 @@ export class CatalogPageComponent {
         const searchTerm = rawSearchTerm?.trim() ?? '';
 
         if (searchTerm === '') {
-          if (this.filterIdCategory) {
-            this.products = [];
-            await this.categoryHandler(this.filterIdCategory);
-          } else {
-            this.products = [];
-            await this.getProducts();
-          }
+          await this.handleEmptySearch();
           return;
         }
 
@@ -443,37 +473,81 @@ export class CatalogPageComponent {
           return;
         }
 
-        const searchObject = {
-          'text.en-US': searchTerm,
-          fuzzy: 'true',
-          fuzzyLevel: '1',
-        };
-
-        if (this.filterIdCategory) {
-          this.products = [];
-          Object.assign(searchObject, {
-            filter: `categories.id:"${this.filterIdCategory}"`,
-          });
-          await this.testing(searchObject);
-        } else {
-          const searchProduct =
-            await ApiService.getSearchProducts(searchObject);
-
-          if (searchProduct) {
-            this.products = [];
-            for (const product of searchProduct.results) {
-              this.products.push(this.mapSearchProduct(product));
-            }
-          }
-        }
+        await this.handleSearchByTerm(searchTerm);
       });
   }
 
-  private async testing(object: {
-    'text.en-US': string;
-    fuzzy: string;
-    fuzzyLevel: string;
-  }): Promise<void> {
+  private async handleEmptySearch(): Promise<void> {
+    this.products = [];
+
+    if (this.filterIdCategory) {
+      await this.categoryHandler(this.filterIdCategory);
+    } else if (this.isSaleOpen) {
+      await this.onSaleButtonHandler();
+    } else {
+      this.getProducts();
+    }
+  }
+
+  private async handleSearchByTerm(searchTerm: string): Promise<void> {
+    const searchObject: Record<string, string | string[]> = {
+      'text.en-US': searchTerm,
+      fuzzy: 'true',
+      fuzzyLevel: '1',
+    };
+
+    if (this.filterIdCategory) {
+      await this.searchInCategory(searchObject);
+      return;
+    }
+
+    if (this.isSaleOpen) {
+      await this.searchInDiscount(searchObject);
+      return;
+    }
+
+    await this.searchGeneral(searchObject);
+  }
+
+  private async searchInCategory(
+    searchObject: Record<string, string | string[]>,
+  ): Promise<void> {
+    this.products = [];
+    Object.assign(searchObject, {
+      filter: `categories.id:"${this.filterIdCategory}"`,
+    });
+
+    await this.forAndPushSearchProducts(searchObject);
+  }
+
+  private async searchInDiscount(
+    searchObject: Record<string, string | string[]>,
+  ): Promise<void> {
+    Object.assign(searchObject, {
+      filter: [
+        `variants.prices.discounted.discount.id:"${this.excludedId}"`,
+        'variants.prices.discounted.value.centAmount:range(0 to *)',
+      ],
+    });
+
+    await this.forAndPushSearchProducts(searchObject);
+  }
+
+  private async searchGeneral(
+    searchObject: Record<string, string | string[]>,
+  ): Promise<void> {
+    const searchProduct = await ApiService.getSearchProducts(searchObject);
+    if (searchProduct) {
+      this.products = [];
+      for (const product of searchProduct.results) {
+        this.products.push(this.mapSearchProduct(product));
+      }
+    }
+  }
+
+  private async forAndPushSearchProducts(
+    object: Record<string, string | string[]>,
+  ): Promise<void> {
     const searchProduct = await ApiService.getSearchProducts(object);
 
     if (searchProduct) {
@@ -510,9 +584,11 @@ export class CatalogPageComponent {
     if (this.isNewPage) {
       this.isLoadingProducts = true;
     }
-
+    this.isSaleOpen = false;
     this.isNewPage = false;
     this.isLoading = true;
+
+    console.log(this.isSaleOpen, 'getAllProduct');
     try {
       const responseProducts = await ApiService.getProducts(this.offset);
 
@@ -596,7 +672,9 @@ export class CatalogPageComponent {
     return { price, currency };
   }
 
-  private async patchMinMaxInputs(filter = ''): Promise<void> {
+  private async patchMinMaxInputs(
+    filter: string | string[] = '',
+  ): Promise<void> {
     if (filter) {
       this.getMinMaxPrice(filter);
     } else {
@@ -604,12 +682,12 @@ export class CatalogPageComponent {
     }
   }
 
-  private async getMinMaxPrice(filterString: string): Promise<void> {
-    const objectSearchMin = {
+  private async getMinMaxPrice(filterString: string | string[]): Promise<void> {
+    const objectSearchMin: Record<string, string | string[]> = {
       sort: 'price asc',
       limit: '1',
     };
-    const objectSearchMax = {
+    const objectSearchMax: Record<string, string | string[]> = {
       sort: 'price desc',
       limit: '1',
     };
@@ -622,6 +700,9 @@ export class CatalogPageComponent {
     try {
       const getMin = await ApiService.getSearchProducts(objectSearchMin);
       const getMax = await ApiService.getSearchProducts(objectSearchMax);
+
+      console.log(getMin);
+      console.log(getMax);
 
       if (getMin && getMax) {
         const minPriceUS = getMin?.results?.[0].masterVariant.prices.find(
@@ -676,6 +757,12 @@ export class CatalogPageComponent {
 
     if (this.filterIdCategory) {
       filters.push(`categories.id:"${this.filterIdCategory}"`);
+    }
+
+    if (this.isSaleOpen) {
+      filters.push(
+        `variants.prices.discounted.discount.id:"${this.excludedId}"`,
+      );
     }
 
     const range = await ApiService.getSearchProducts({
