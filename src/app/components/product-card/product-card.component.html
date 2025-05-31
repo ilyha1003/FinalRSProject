@@ -1,7 +1,15 @@
-<figure class="product" id="{{ product.id }}">
+<figure
+  class="product"
+  id="{{ product.id }}"
+  routerLink="/product/{{ product.id }}"
+>
   <span class="badge"></span>
   <div class="product__image-wrapper">
-    <img class="product__img" src="{{ product.img }}" alt="{{ product.id }}" />
+    <img
+      class="product__img"
+      src="{{ product.img }}"
+      alt="{{ product.name }}"
+    />
   </div>
   <figcaption class="product__text-container">
     <p
