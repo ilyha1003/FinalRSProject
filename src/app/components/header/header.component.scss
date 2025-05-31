@@ -36,18 +36,6 @@
   max-width: 700px;
   min-width: 200px;
 
-  .header__search {
-    display: flex;
-  }
-
-  .header__search-input {
-    max-width: 650px;
-    width: 100%;
-    padding: 0.5rem 0.5rem 0.5rem 1rem;
-    border-radius: 10px 0 0 10px;
-    border: none;
-  }
-
   .header__search-button {
     padding: 0.5rem 1rem;
     border: none;
@@ -109,6 +97,7 @@
 .header__buttons {
   display: flex;
   gap: 0.5rem;
+  margin-left: auto;
 
   @media (max-width: 515px) {
     flex-direction: column;

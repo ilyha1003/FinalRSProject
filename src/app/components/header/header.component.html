@@ -14,29 +14,6 @@
       <a class="header__link" routerLink="/catalog">Catalog</a>
       <a class="header__link" routerLink="/about">About Us</a>
     </nav>
-    <form class="header__form" action="" *ngIf="!isMobile">
-      <div class="header__search">
-        <input
-          class="header__search-input"
-          type="text"
-          placeholder="Search..."
-        />
-        <button class="button header__search-button" type="submit">
-          <svg
-            class="header__search-icon"
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            class="ag100-b2"
-          >
-            <path
-              fill="currentColor"
-              d="M17.892 15.064a8 8 0 1 0-2.828 2.828l2.522 2.522a2 2 0 1 0 2.828-2.828zM11 16a5 5 0 1 1 0-10 5 5 0 0 1 0 10"
-            ></path>
-          </svg>
-        </button>
-      </div>
-    </form>
 
     <div class="header__buttons" *ngIf="!isLogin">
       <button
