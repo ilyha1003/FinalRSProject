@@ -97,7 +97,6 @@ export class CatalogPageComponent implements OnInit {
   private prevNumberMax = 0;
   private sortChange: string | null = 'default';
   private isSaleOpen = false;
-  private isPriceRangeActive = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -210,6 +209,9 @@ export class CatalogPageComponent implements OnInit {
     const { numberMin, numberMax, isValueMin, isValueMax } =
       this.getParsedInputValues();
 
+    const min = Math.round(numberMin * 100);
+    const max = Math.round(numberMax * 100);
+
     if (this.isFirstBlur(numberMin, numberMax)) return;
 
     if (this.isSameAsPrevious(numberMin, numberMax)) return;
@@ -226,11 +228,7 @@ export class CatalogPageComponent implements OnInit {
     this.isNewPage = true;
     this.isLoadingProducts = true;
     this.offset = 0;
-    await this.loadProductsInRange(
-      numberMin * 100,
-      numberMax * 100,
-      this.offset,
-    );
+    await this.loadProductsInRange(min, max, this.offset);
     this.isLoadingProducts = false;
     this.setPreviousValues(numberMin, numberMax);
   }
@@ -457,7 +455,10 @@ export class CatalogPageComponent implements OnInit {
   private async allProductsRange(offset: number): Promise<void> {
     const { numberMin, numberMax } = this.getParsedInputValues();
 
-    this.loadProductsInRange(numberMin * 100, numberMax * 100, offset);
+    const min = Math.round(numberMin * 100);
+    const max = Math.round(numberMax * 100);
+
+    this.loadProductsInRange(min, max, offset);
   }
 
   private async sortingAscCategory(objectCategory: {
@@ -565,6 +566,8 @@ export class CatalogPageComponent implements OnInit {
   private async searchInCategory(
     searchObject: Record<string, string | string[]>,
   ): Promise<void> {
+    const getSortFormValue = this.sortForm.get('selectedSort')?.value;
+
     const searchText = searchObject['text.en-US'];
     if (typeof searchText !== 'string') return;
 
@@ -582,6 +585,12 @@ export class CatalogPageComponent implements OnInit {
     Object.assign(searchObject, {
       filter: `categories.id:"${this.filterIdCategory}"`,
     });
+    if (getSortFormValue !== 'default') {
+      CatalogPageComponent.applySortOption(
+        searchObject,
+        getSortFormValue ?? 'default',
+      );
+    }
 
     await this.forAndPushSearchProducts(searchObject);
   }
@@ -870,7 +879,6 @@ export class CatalogPageComponent implements OnInit {
   ): Promise<void> {
     const getSearchFormValue = this.filterForm.get('search')?.value?.trim();
     const getSortFormValue = this.sortForm.get('selectedSort')?.value;
-    this.isPriceRangeActive = true;
     if (this.isNewPage) {
       this.products = [];
     }
@@ -900,6 +908,8 @@ export class CatalogPageComponent implements OnInit {
     if (getSearchFormValue && getSearchFormValue.length >= 3) {
       searchObject['text.en-US'] = getSearchFormValue;
     }
+
+    console.log(searchObject);
     const range = await ApiService.getSearchProducts(searchObject);
     if (range) {
       this.totalProduct = range.total > 20;

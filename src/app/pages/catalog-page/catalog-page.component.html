@@ -1,6 +1,10 @@
 <section class="catalog__wrapper">
   <aside class="catalog__filter-products">
-    <form class="catalog__form" [formGroup]="filterForm">
+    <form
+      class="catalog__form"
+      [formGroup]="filterForm"
+      (keydown.enter)="$event.preventDefault()"
+    >
       <div class="filter__price">
         <p class="price__text">Price</p>
         <div class="filter__price-inputs">
@@ -8,11 +12,17 @@
             class="price-input_min"
             formControlName="minPrice"
             (blur)="onPriceBlur()"
+            [ngClass]="{
+              'price-input_inactive': isNoProducts,
+            }"
           />
           <input
             class="price-input_max"
             formControlName="maxPrice"
             (blur)="onPriceBlur()"
+            [ngClass]="{
+              'price-input_inactive': isNoProducts,
+            }"
           />
         </div>
       </div>
