@@ -17,14 +17,41 @@ import { ProductCardComponent } from '../../components/product-card/product-card
 import { getShortDescription } from '../../utils/get-short-description';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { getFormatPrice } from '../../utils/get-format-price';
-import {
-  CategoriesIdSlug,
-  Color,
-  GetMinProduct,
-  inputValueObject,
-  PriceProduct,
-  ProductColor,
-} from '../../utils/interfaces/interface-catalog-page';
+
+export interface GetMinProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: PriceProduct | null;
+  img: string;
+}
+
+type PriceProduct = {
+  price: string;
+  currency: string;
+  discountedPrice?: string;
+  nameDiscount?: string;
+};
+
+interface ProductColor {
+  nameColor: string;
+  codeColor: string;
+}
+
+interface CategoriesIdSlug {
+  id: string;
+  slug: string;
+}
+
+interface Color {
+  colorName: string;
+  colorCode: string;
+}
+
+interface inputValueObject {
+  name?: string;
+  filter?: string[];
+}
 
 @Component({
   selector: 'app-catalog-page',
