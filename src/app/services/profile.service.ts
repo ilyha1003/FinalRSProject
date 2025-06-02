@@ -7,7 +7,7 @@ import {
   CustomerAddress,
   CustomerShortAddress,
   TokenAfterDeletingAccount,
-} from '../utils/interfaces';
+} from '../utils/interfaces/interfaces';
 import {
   api_url,
   auth_url,

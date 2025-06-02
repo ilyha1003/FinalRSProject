@@ -2,53 +2,29 @@ import { Component, OnInit } from '@angular/core';
 import { NgClass, NgIf } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
-import { Category } from '../../utils/interface-categories';
+import { Category } from '../../utils/interfaces/interface-categories';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   GetSearchProduct,
   SearchProduct,
-} from '../../utils/interface-product-search';
-import { MasterPrice, ProductDiscounts } from '../../utils/interface-product';
+} from '../../utils/interfaces/interface-product-search';
+import {
+  MasterPrice,
+  ProductDiscounts,
+} from '../../utils/interfaces/interface-product';
 import { isPositiveNumber } from '../../utils/is-positive-number';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { getShortDescription } from '../../utils/get-short-description';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { getFormatPrice } from '../../utils/get-format-price';
-
-export interface GetMinProduct {
-  id: string;
-  name: string;
-  description: string;
-  price: PriceProduct | null;
-  img: string;
-}
-
-type PriceProduct = {
-  price: string;
-  currency: string;
-  discountedPrice?: string;
-  nameDiscount?: string;
-};
-
-interface ProductColor {
-  nameColor: string;
-  codeColor: string;
-}
-
-interface CategoriesIdSlug {
-  id: string;
-  slug: string;
-}
-
-interface Color {
-  colorName: string;
-  colorCode: string;
-}
-
-interface inputValueObject {
-  name?: string;
-  filter?: string[];
-}
+import {
+  CategoriesIdSlug,
+  Color,
+  GetMinProduct,
+  inputValueObject,
+  PriceProduct,
+  ProductColor,
+} from '../../utils/interfaces/interface-catalog-page';
 
 @Component({
   selector: 'app-catalog-page',

@@ -12,13 +12,16 @@ import {
   LoginCustomer,
   NewCustomer,
   Product,
-} from '../utils/interfaces';
-import { GetProduct, ProductDiscounts } from '../utils/interface-product';
+} from '../utils/interfaces/interfaces';
+import {
+  GetProduct,
+  ProductDiscounts,
+} from '../utils/interfaces/interface-product';
 import {
   GetSearchProduct,
   SearchProduct,
-} from '../utils/interface-product-search';
-import { Category } from '../utils/interface-categories';
+} from '../utils/interfaces/interface-product-search';
+import { Category } from '../utils/interfaces/interface-categories';
 
 @Injectable({
   providedIn: 'root',
