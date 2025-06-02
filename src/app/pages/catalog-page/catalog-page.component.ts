@@ -17,6 +17,13 @@ import { ProductCardComponent } from '../../components/product-card/product-card
 import { getShortDescription } from '../../utils/get-short-description';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { getFormatPrice } from '../../utils/get-format-price';
+import {
+  CategoriesIdSlug,
+  Color,
+  inputValueObject,
+  PriceProduct,
+  ProductColor,
+} from '../../utils/interfaces/interface-catalog-page';
 
 export interface GetMinProduct {
   id: string;
@@ -24,33 +31,6 @@ export interface GetMinProduct {
   description: string;
   price: PriceProduct | null;
   img: string;
-}
-
-type PriceProduct = {
-  price: string;
-  currency: string;
-  discountedPrice?: string;
-  nameDiscount?: string;
-};
-
-interface ProductColor {
-  nameColor: string;
-  codeColor: string;
-}
-
-interface CategoriesIdSlug {
-  id: string;
-  slug: string;
-}
-
-interface Color {
-  colorName: string;
-  colorCode: string;
-}
-
-interface inputValueObject {
-  name?: string;
-  filter?: string[];
 }
 
 @Component({
@@ -89,6 +69,7 @@ export class CatalogPageComponent implements OnInit {
   public productsSetColor: Set<string> = new Set();
   public activeFilters: string[] = [];
   public activeFiltersColors: string[] = [];
+  public isColor = false;
 
   private CategoriesIdsNames: CategoriesIdSlug[] = [];
   private productsDiscount: ProductDiscounts[] = [];
@@ -315,21 +296,20 @@ export class CatalogPageComponent implements OnInit {
   }
 
   public async categoryHandler(category: string): Promise<void> {
+    this.isColor = false;
+    this.activeFiltersColors = [];
     const getMinPriceRaw = this.filterForm.get('minPrice')?.value;
     const getMaxPriceRaw = this.filterForm.get('maxPrice')?.value;
 
     const getMinPrice = getMinPriceRaw == null ? 0 : Number(getMinPriceRaw);
     const getMaxPrice =
       getMaxPriceRaw == null ? Number.MAX_SAFE_INTEGER : Number(getMaxPriceRaw);
-
     this.isSaleOpen = false;
 
     if (this.isNewPage) {
       this.isLoadingProducts = true;
     }
-
     this.isLoading = true;
-
     const objectCategory: {
       offset: string;
       filter: string[] | string;
@@ -346,7 +326,7 @@ export class CatalogPageComponent implements OnInit {
       objectCategory,
       this.sortChange ?? 'default',
     );
-    console.log(objectCategory);
+
     try {
       await (this.sortChange === 'price-asc'
         ? this.sortingAscCategory(objectCategory)
@@ -419,23 +399,52 @@ export class CatalogPageComponent implements OnInit {
     colorCode,
   }: Color): Promise<void> {
     const isUnselecting = this.checkColor === colorCode;
+    this.checkColor = isUnselecting ? null : colorCode;
 
-    this.checkColor = this.checkColor === colorCode ? null : colorCode;
+    this.filterForm.get('selectedColor')?.setValue(this.checkColor || '');
+    this.updateActiveFiltersColors(this.checkColor ? colorName : null);
 
     if (isUnselecting) {
       this.products = [];
-      this.updateActiveFiltersColors(this.checkColor ? colorName : null);
+      this.isColor = false;
       await this.categoryHandler(this.filterIdCategory);
       return;
     }
-    this.filterForm.get('selectedColor')?.setValue(this.checkColor || '');
+
+    await this.loadFilteredProducts();
+  }
+
+  private async loadFilteredProducts(): Promise<void> {
+    this.isColor = true;
+    const getFormMinPrice = this.filterForm.get('minPrice')?.value;
+    const getFormMaxPrice = this.filterForm.get('maxPrice')?.value;
+    const getFormSearchValue = this.filterForm.get('search')?.value;
+    const getSortFormValue = this.sortForm.get('selectedSort')?.value;
+
+    const min = Math.round(Number(getFormMinPrice) * 100);
+    const max = Math.round(Number(getFormMaxPrice) * 100);
+
+    const searchObject: Record<string, string | string[]> = {
+      limit: '100',
+      fuzzy: 'true',
+      fuzzyLevel: '1',
+      filter: [
+        `categories.id:"${this.filterIdCategory}"`,
+        `variants.price.centAmount:range(${min} to ${max})`,
+      ],
+    };
+    if (getSortFormValue !== 'default') {
+      CatalogPageComponent.applySortOption(
+        searchObject,
+        getSortFormValue ?? 'default',
+      );
+    }
+    if (getFormSearchValue) {
+      searchObject['text.en-US'] = getFormSearchValue;
+    }
     this.isLoadingProducts = true;
     this.products = [];
-    this.updateActiveFiltersColors(this.checkColor ? colorName : null);
-    const response = await ApiService.getSearchProducts({
-      filter: `categories.id:"${this.filterIdCategory}"`,
-      limit: '50',
-    });
+    const response = await ApiService.getSearchProducts(searchObject);
     if (response) {
       let filteredResults = response.results;
       if (this.checkColor) {
@@ -452,6 +461,7 @@ export class CatalogPageComponent implements OnInit {
         this.totalProduct = false;
       }
     }
+
     this.isLoadingProducts = false;
   }
 
@@ -538,6 +548,7 @@ export class CatalogPageComponent implements OnInit {
       await this.patchMinMaxInputs({
         filter: [`categories.id:"${this.filterIdCategory}"`],
       });
+      await this.getAllColors(this.filterIdCategory);
     } else if (this.isSaleOpen) {
       await this.onSaleButtonHandler();
     } else {
@@ -594,7 +605,8 @@ export class CatalogPageComponent implements OnInit {
         getSortFormValue ?? 'default',
       );
     }
-
+    this.isNewPage = true;
+    await this.getAllColors(this.filterIdCategory);
     await this.forAndPushSearchProducts(searchObject);
   }
 
@@ -642,7 +654,10 @@ export class CatalogPageComponent implements OnInit {
     const searchProduct = await ApiService.searchProductsByName(object);
 
     if (searchProduct) {
-      this.products = [];
+      if (this.isNewPage) {
+        this.products = [];
+      }
+
       this.totalProduct = searchProduct.total > 20;
 
       for (const product of searchProduct.results) {
@@ -655,25 +670,54 @@ export class CatalogPageComponent implements OnInit {
   }
 
   private async getAllColors(category: string): Promise<void> {
-    const responseAllSearch = await ApiService.getSearchProducts({
-      offset: this.offset.toString(),
-      limit: '50',
-      filter: `categories.id:"${category}"`,
-    });
+    const getFormMinPrice = this.filterForm.get('minPrice')?.value;
+    const getFormMaxPrice = this.filterForm.get('maxPrice')?.value;
+    const getFormSearchValue = this.filterForm.get('search')?.value;
+    const getSortFormValue = this.sortForm.get('selectedSort')?.value;
 
-    if (responseAllSearch) {
-      for (const product of responseAllSearch.results) {
-        const productColor = product.masterVariant.attributes.find(
-          (element) => element.name === 'color' || element.name === 'finish',
-        );
+    const min = Math.round(Number(getFormMinPrice) * 100);
+    const max = Math.round(Number(getFormMaxPrice) * 100);
 
-        if (productColor) {
-          this.productsSetColor.add(productColor?.value['en-US']);
-        }
-      }
+    const searchObject: Record<string, string | string[]> = {
+      offset: '0',
+      limit: '100',
+      fuzzy: 'true',
+      fuzzyLevel: '1',
+      filter: [
+        `categories.id:"${category}"`,
+        `variants.price.centAmount:range(${min} to ${max})`,
+      ],
+    };
 
-      this.getColorPalette();
+    if (getSortFormValue !== 'default') {
+      CatalogPageComponent.applySortOption(
+        searchObject,
+        getSortFormValue ?? 'default',
+      );
     }
+    if (getFormSearchValue) {
+      searchObject['text.en-US'] = getFormSearchValue;
+    }
+
+    const responsePriceProduct =
+      await ApiService.getSearchProducts(searchObject);
+
+    if (!responsePriceProduct) return;
+    console.log(searchObject);
+    this.productsSetColor.clear();
+    this.productColors = [];
+
+    for (const product of responsePriceProduct.results) {
+      const productColor = product.masterVariant.attributes.find(
+        (element) => element.name === 'color' || element.name === 'finish',
+      );
+
+      if (productColor) {
+        this.productsSetColor.add(productColor.value['en-US']);
+      }
+    }
+
+    this.getColorPalette();
   }
 
   private async getProducts(): Promise<void> {
@@ -891,6 +935,7 @@ export class CatalogPageComponent implements OnInit {
     ];
     if (this.filterIdCategory) {
       filters.push(`categories.id:"${this.filterIdCategory}"`);
+      await this.getAllColors(this.filterIdCategory);
     }
     if (this.isSaleOpen) {
       filters.push(
