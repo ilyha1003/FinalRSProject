@@ -14,7 +14,7 @@ import { birthDateValidator } from '../../utils/validations/birth-date-validator
 import { postalCodeValidator } from '../../utils/validations/postal-code-validator';
 import { ApiService } from '../../services/api.service';
 import { FormModalComponent } from '../../components/form-modal/form-modal.component';
-import { RegistrationFormValues } from '../../utils/interfaces';
+import { RegistrationFormValues } from '../../utils/interfaces/interfaces';
 import { trimFormValues } from '../../utils/trim-form-values';
 import { noSpacesValidator } from '../../utils/validations/no-spaces-validator';
 import { LoaderService } from '../../services/loader.service';

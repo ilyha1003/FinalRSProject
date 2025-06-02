@@ -2,7 +2,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ApiService } from '../../services/api.service';
-import { Product, ProductImage } from '../../utils/interfaces';
+import { Product, ProductImage } from '../../utils/interfaces/interfaces';
 import { LoaderService } from '../../services/loader.service';
 import { getFormatPrice } from '../../utils/get-format-price';
 

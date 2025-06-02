@@ -24,7 +24,7 @@ import { FormsModule } from '@angular/forms';
 import { strengthPasswordValidator } from '../../utils/validations/strength-password-validator';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { ProfileService } from '../../services/profile.service';
-import { CustomerAddress } from '../../utils/interfaces';
+import { CustomerAddress } from '../../utils/interfaces/interfaces';
 import { ProfileModalComponent } from '../../components/profile-modal/profile-modal.component';
 import { LoaderService } from '../../services/loader.service';
 import { RouterModule } from '@angular/router';

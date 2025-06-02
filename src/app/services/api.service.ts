@@ -12,13 +12,16 @@ import {
   LoginCustomer,
   NewCustomer,
   Product,
-} from '../utils/interfaces';
-import { GetProduct, ProductDiscounts } from '../utils/interface-product';
+} from '../utils/interfaces/interfaces';
+import {
+  GetProduct,
+  ProductDiscounts,
+} from '../utils/interfaces/interface-product';
 import {
   GetSearchProduct,
   SearchProduct,
-} from '../utils/interface-product-search';
-import { Category } from '../utils/interface-categories';
+} from '../utils/interfaces/interface-product-search';
+import { Category } from '../utils/interfaces/interface-categories';
 
 @Injectable({
   providedIn: 'root',
@@ -808,6 +811,55 @@ export class ApiService {
 
       return data;
     } catch (error) {
+      console.error('Error loading products:', error);
+      return undefined;
+    }
+  }
+
+  public static async searchProductsByName(
+    queryParameters: Record<string, string | string[]>,
+  ): Promise<GetSearchProduct | undefined> {
+    const actual_admin_access_token: string =
+      await ApiService.getAdminAccessToken();
+
+    const query = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(queryParameters)) {
+      if (Array.isArray(value)) {
+        for (const v of value) query.append(key, v);
+      } else {
+        query.append(key, value);
+      }
+    }
+
+    const url = `${api_url}/${project_key}/product-projections/search?${query.toString()}`;
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${actual_admin_access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 400) {
+          console.warn('Non-critical: search query rejected (400)');
+
+          return undefined;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      return data;
+    } catch (error) {
+      if (error === 400) {
+        console.warn('Non-critical: search query rejected (400)');
+
+        return undefined;
+      }
       console.error('Error loading products:', error);
       return undefined;
     }

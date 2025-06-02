@@ -1,45 +1,30 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NgClass, NgIf } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
-import { Category } from '../../utils/interface-categories';
+import { Category } from '../../utils/interfaces/interface-categories';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SearchProduct } from '../../utils/interface-product-search';
-import { MasterPrice, ProductDiscounts } from '../../utils/interface-product';
+import {
+  GetSearchProduct,
+  SearchProduct,
+} from '../../utils/interfaces/interface-product-search';
+import {
+  MasterPrice,
+  ProductDiscounts,
+} from '../../utils/interfaces/interface-product';
 import { isPositiveNumber } from '../../utils/is-positive-number';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { getShortDescription } from '../../utils/get-short-description';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-
-export interface GetMinProduct {
-  id: string;
-  name: string;
-  description: string;
-  price: PriceProduct | null;
-  img: string;
-}
-
-interface PriceProduct {
-  price: number;
-  currency: string;
-  discountedPrice?: number;
-  nameDiscount?: string;
-}
-
-interface ProductColor {
-  nameColor: string;
-  codeColor: string;
-}
-
-interface CategoriesIdSlug {
-  id: string;
-  slug: string;
-}
-
-interface Color {
-  colorName: string;
-  colorCode: string;
-}
+import { getFormatPrice } from '../../utils/get-format-price';
+import {
+  CategoriesIdSlug,
+  Color,
+  GetMinProduct,
+  inputValueObject,
+  PriceProduct,
+  ProductColor,
+} from '../../utils/interfaces/interface-catalog-page';
 
 @Component({
   selector: 'app-catalog-page',
@@ -47,7 +32,7 @@ interface Color {
   templateUrl: './catalog-page.component.html',
   styleUrl: './catalog-page.component.scss',
 })
-export class CatalogPageComponent {
+export class CatalogPageComponent implements OnInit {
   public filterForm = new FormGroup({
     minPrice: new FormControl(''),
     maxPrice: new FormControl(''),
@@ -95,7 +80,7 @@ export class CatalogPageComponent {
   ) {}
 
   private static applySortOption(
-    parameters: { offset: string; filter: string },
+    parameters: { offset?: string; filter?: string | string[] },
     sortChange: string,
   ): void {
     if (sortChange !== 'default') {
@@ -120,285 +105,32 @@ export class CatalogPageComponent {
     }
   }
 
-  public async onPriceBlur(): Promise<void> {
-    const { numberMin, numberMax, isValueMin, isValueMax } =
-      this.getParsedInputValues();
-
-    if (this.isFirstBlur(numberMin, numberMax)) return;
-
-    if (this.isSameAsPrevious(numberMin, numberMax)) return;
-
-    if (!isValueMin || !isValueMax) {
-      this.patchValidPriceValues();
-      return;
-    }
-
-    if (!this.isInValidRange(numberMin, numberMax)) {
-      this.patchValidPriceValues({ min: numberMin, max: numberMax });
-      return;
-    }
-
-    await this.loadProductsInRange(
-      numberMin * 100,
-      numberMax * 100,
-      this.offset,
-    );
-    this.setPreviousValues(numberMin, numberMax);
-  }
-
-  public async allProductButtonHandler(): Promise<void> {
-    this.router.navigate(['/catalog']);
-    this.isNoProducts = false;
-  }
-
-  public async categoriesButtonHandler(): Promise<void> {
-    const isOpenValue = !this.filterForm.get('isCatalogOpen')?.value;
-
-    this.filterForm.patchValue({
-      isCatalogOpen: isOpenValue,
-    });
-
-    this.isLoadingCategories = true;
-
-    try {
-      if (isOpenValue) {
-        this.categories = [];
-        const responseCategories = await ApiService.getCategories();
-
-        if (responseCategories) {
-          this.categories.push(...responseCategories);
-        }
-      }
-    } catch (error) {
-      console.error('categoriesButton error:', error);
-    } finally {
-      this.isLoadingCategories = false;
-    }
-  }
-
-  public async onSaleButtonHandler(): Promise<void> {
-    this.isSaleOpen = true;
-    const isOpenValue = this.filterForm.get('isCatalogOpen')?.value;
-    if (isOpenValue) {
-      this.filterForm.patchValue({
-        isCatalogOpen: false,
+  private static filterByColor(
+    products: SearchProduct[],
+    hexColor: string,
+  ): SearchProduct[] {
+    const hexToMatch = hexColor.toLowerCase();
+    return products.filter((product) => {
+      const variants = [product.masterVariant];
+      return variants.some((variant) => {
+        const colorAttribute = variant.attributes.find(
+          (atr) => atr.name === 'color',
+        );
+        const finishAttribute = variant.attributes.find(
+          (atr) => atr.name === 'finish',
+        );
+        const matchesColor = colorAttribute?.value?.['en-US']
+          .toLowerCase()
+          .includes(hexToMatch);
+        const matchesFinish = finishAttribute?.value?.['en-US']
+          .toLowerCase()
+          .includes(hexToMatch);
+        return matchesColor || matchesFinish;
       });
-    }
-    this.products = [];
-    this.isLoadingProducts = true;
-
-    try {
-      const response = await ApiService.getSearchProducts({
-        limit: '20',
-        filter: [
-          `variants.prices.discounted.discount.id:"${this.excludedId}"`,
-          'variants.prices.discounted.value.centAmount:range(0 to *)',
-        ],
-      });
-      if (response) {
-        for (const product of response.results) {
-          this.products.push(this.mapSearchProduct(product));
-        }
-      }
-      await this.patchMinMaxInputs([
-        'variants.prices.discounted.value.centAmount:range(0 to *)',
-        `variants.prices.discounted.discount.id:"${this.excludedId}"`,
-      ]);
-    } catch (error) {
-      console.error('get product error:', error);
-    } finally {
-      this.isLoadingProducts = false;
-    }
-  }
-
-  public async categoryHandler(category: string): Promise<void> {
-    this.isSaleOpen = false;
-    if (this.isNewPage) {
-      this.isLoadingProducts = true;
-    }
-    this.isLoading = true;
-
-    const objectCategory: { offset: string; filter: string; sort?: string } = {
-      offset: this.offset.toString(),
-      filter: `categories.id:"${category}"`,
-    };
-
-    CatalogPageComponent.applySortOption(
-      objectCategory,
-      this.sortChange ?? 'default',
-    );
-
-    try {
-      if (this.sortChange === 'price-asc') {
-        await this.testing(objectCategory);
-      } else {
-        const response = await ApiService.getSearchProducts(objectCategory);
-        console.log(response, 'response');
-        if (response) {
-          this.totalProduct = response.total > 20;
-
-          for (const product of response.results) {
-            this.products.push(this.mapSearchProduct(product));
-          }
-
-          if (this.products.length >= response.total) {
-            this.totalProduct = false;
-          }
-        }
-      }
-
-      if (this.isNewPage) {
-        this.getAllColors(category);
-      }
-    } catch (error) {
-      console.error('get categories error:', error);
-    } finally {
-      this.isLoadingProducts = false;
-      this.isLoading = false;
-      this.isNewPage = false;
-    }
-  }
-
-  public goToCategory(category: Category): void {
-    this.filterForm.patchValue({
-      isCatalogOpen: false,
     });
-
-    if (category.id === this.filterIdCategory) {
-      return;
-    }
-
-    this.isNewPage = true;
-    this.products = [];
-    this.isNoProducts = false;
-    this.productsSetColor.clear();
-    this.productColors = [];
-    this.offset = 0;
-
-    const categorySlug = category.slug['en-US'].toLowerCase();
-
-    this.activeFilters = this.activeFilters.filter(
-      (filter) =>
-        !this.CategoriesIdsNames.some(
-          (cat) => cat.slug.toLowerCase() === filter.toLowerCase(),
-        ),
-    );
-
-    this.router.navigate(['/catalog/category', categorySlug]);
-    this.patchMinMaxInputs(`categories.id:"${category.id}"`);
-    this.filterIdCategory = category.id;
   }
 
-  public goToOnSale(): void {
-    this.isNoProducts = false;
-    this.isNewPage = true;
-    this.filterForm.patchValue({
-      isCatalogOpen: false,
-    });
-
-    this.router.navigate(['/catalog/on-sale']);
-  }
-
-  public async getMoreProductsHandler(): Promise<void> {
-    if (this.filterIdCategory) {
-      this.offset += 20;
-
-      await this.categoryHandler(this.filterIdCategory);
-    } else {
-      this.offset += 20;
-      await this.getProducts();
-    }
-  }
-
-  public async formColorHandler({
-    colorName,
-    colorCode,
-  }: Color): Promise<void> {
-    this.checkColor = this.checkColor === colorCode ? null : colorCode;
-
-    this.filterForm.get('selectedColor')?.setValue(this.checkColor || '');
-    this.isLoadingProducts = true;
-
-    this.products = [];
-    this.updateActiveFiltersColors(this.checkColor ? colorName : null);
-    const response = await ApiService.getSearchProducts({
-      filter: `categories.id:"${this.filterIdCategory}"`,
-      limit: '50',
-    });
-    if (response) {
-      let filteredResults = response.results;
-      if (this.checkColor) {
-        const hexToMatch = this.checkColor.toLowerCase();
-        console.log(colorCode);
-        filteredResults = response.results.filter((product) => {
-          const variants = [product.masterVariant];
-          return variants.some((variant) => {
-            const colorAttribute = variant.attributes.find(
-              (atr) => atr.name === 'color',
-            );
-            const finishAttribute = variant.attributes.find(
-              (atr) => atr.name === 'finish',
-            );
-            const matchesColor = colorAttribute?.value?.['en-US']
-              .toLowerCase()
-              .includes(hexToMatch);
-            const matchesFinish = finishAttribute?.value?.['en-US']
-              .toLowerCase()
-              .includes(hexToMatch);
-
-            return matchesColor || matchesFinish;
-          });
-        });
-      }
-      for (const product of filteredResults) {
-        this.products.push(this.mapSearchProduct(product));
-      }
-      this.totalProduct = this.products.length > 20;
-      if (this.products.length >= response.total) {
-        this.totalProduct = false;
-      }
-    }
-    this.isLoadingProducts = false;
-  }
-
-  private async testing(objectCategory: {
-    offset: string;
-    filter: string;
-    sort?: string;
-  }): Promise<void> {
-    Object.assign(objectCategory, { limit: '50' });
-    try {
-      const response = await ApiService.getSearchProducts(objectCategory);
-
-      if (response) {
-        const responseSort = response.results.sort((a, b) => {
-          const priceA =
-            a.masterVariant.prices.find((p) => p.country === 'US')?.value
-              .centAmount ?? Infinity;
-          const priceB =
-            b.masterVariant.prices.find((p) => p.country === 'US')?.value
-              .centAmount ?? Infinity;
-          return priceA - priceB;
-        });
-        for (const product of responseSort) {
-          this.products.push(this.mapSearchProduct(product));
-        }
-      }
-    } catch (error) {
-      console.error('sort asc error', error);
-    }
-  }
-
-  private updateActiveFiltersColors(colorName: string | null): void {
-    this.activeFiltersColors = [];
-    if (colorName) {
-      this.activeFiltersColors.push(colorName.toLowerCase());
-    }
-  }
-
-  private async ngOnInit(): Promise<void> {
-    this.isNewPage = true;
-
+  public async ngOnInit(): Promise<void> {
     await this.sortFormSubscribe();
     await this.searchFormSubcribe();
     this.route.paramMap.subscribe(async (parameters) => {
@@ -432,18 +164,312 @@ export class CatalogPageComponent {
         await this.onSaleButtonHandler();
       } else if (nameFromRoute.length === 0) {
         await this.getProducts();
-        this.patchMinMaxInputs();
+
+        await this.patchMinMaxInputs({});
       } else if (foundCategory) {
         this.filterIdCategory = foundCategory.id;
 
         this.activeFilters.push(foundCategory.slug);
+        await this.patchMinMaxInputs({
+          filter: [`categories.id:"${this.filterIdCategory}"`],
+        });
 
         await this.categoryHandler(foundCategory.id);
-        this.patchMinMaxInputs(`categories.id:"${foundCategory.id}"`);
       } else {
         this.isNoProducts = true;
       }
     });
+  }
+
+  public async onPriceBlur(): Promise<void> {
+    const { numberMin, numberMax, isValueMin, isValueMax } =
+      this.getParsedInputValues();
+
+    const min = Math.round(numberMin * 100);
+    const max = Math.round(numberMax * 100);
+
+    if (this.isFirstBlur(numberMin, numberMax)) return;
+
+    if (this.isSameAsPrevious(numberMin, numberMax)) return;
+
+    if (!isValueMin || !isValueMax) {
+      this.patchValidPriceValues();
+      return;
+    }
+
+    if (!this.isInValidRange(numberMin, numberMax)) {
+      this.patchValidPriceValues({ min: numberMin, max: numberMax });
+      return;
+    }
+    this.isNewPage = true;
+    this.isLoadingProducts = true;
+    this.offset = 0;
+    await this.loadProductsInRange(min, max, this.offset);
+    this.isLoadingProducts = false;
+    this.setPreviousValues(numberMin, numberMax);
+  }
+
+  public async allProductButtonHandler(): Promise<void> {
+    this.router.navigate(['/catalog']);
+    this.isNoProducts = false;
+    this.isNewPage = true;
+    this.products = [];
+    this.filterIdCategory = '';
+    this.sortChange = 'default';
+    this.sortForm.get('selectedSort')?.setValue('default');
+    this.offset = 0;
+    await this.getProducts();
+  }
+
+  public async categoriesButtonHandler(): Promise<void> {
+    const isOpenValue = !this.filterForm.get('isCatalogOpen')?.value;
+
+    this.filterForm.patchValue({
+      isCatalogOpen: isOpenValue,
+    });
+
+    this.isLoadingCategories = true;
+
+    try {
+      if (isOpenValue) {
+        this.categories = [];
+        const responseCategories = await ApiService.getCategories();
+
+        if (responseCategories) {
+          for (const category of responseCategories) {
+            if (category.id !== '40ef5f03-e5f7-4234-9a4a-71e5efa0b604') {
+              this.categories.push(category);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('categoriesButton error:', error);
+    } finally {
+      this.isLoadingCategories = false;
+    }
+  }
+
+  public async onSaleButtonHandler(): Promise<void> {
+    this.isSaleOpen = true;
+    const isOpenValue = this.filterForm.get('isCatalogOpen')?.value;
+    if (isOpenValue) {
+      this.filterForm.patchValue({
+        isCatalogOpen: false,
+      });
+    }
+    this.products = [];
+    this.isLoadingProducts = true;
+
+    try {
+      const response = await ApiService.getSearchProducts({
+        limit: '20',
+        filter: [
+          `variants.prices.discounted.discount.id:"${this.excludedId}"`,
+          'variants.prices.discounted.value.centAmount:range(0 to *)',
+        ],
+      });
+      if (response) {
+        for (const product of response.results) {
+          this.products.push(this.mapSearchProduct(product));
+        }
+      }
+      await this.patchMinMaxInputs({
+        filter: [
+          'variants.prices.discounted.value.centAmount:range(0 to *)',
+          `variants.prices.discounted.discount.id:"${this.excludedId}"`,
+        ],
+      });
+    } catch (error) {
+      console.error('get product error:', error);
+    } finally {
+      this.isLoadingProducts = false;
+    }
+  }
+
+  public async categoryHandler(category: string): Promise<void> {
+    const getMinPriceRaw = this.filterForm.get('minPrice')?.value;
+    const getMaxPriceRaw = this.filterForm.get('maxPrice')?.value;
+
+    const getMinPrice = getMinPriceRaw == null ? 0 : Number(getMinPriceRaw);
+    const getMaxPrice =
+      getMaxPriceRaw == null ? Number.MAX_SAFE_INTEGER : Number(getMaxPriceRaw);
+
+    this.isSaleOpen = false;
+
+    if (this.isNewPage) {
+      this.isLoadingProducts = true;
+    }
+
+    this.isLoading = true;
+
+    const objectCategory: {
+      offset: string;
+      filter: string[] | string;
+      sort?: string;
+    } = {
+      offset: this.offset.toString(),
+      filter: [
+        `categories.id:"${category}"`,
+        `variants.price.centAmount:range(${getMinPrice * 100} to ${getMaxPrice * 100})`,
+      ],
+    };
+
+    CatalogPageComponent.applySortOption(
+      objectCategory,
+      this.sortChange ?? 'default',
+    );
+    console.log(objectCategory);
+    try {
+      await (this.sortChange === 'price-asc'
+        ? this.sortingAscCategory(objectCategory)
+        : this.forAndPushSearchProducts(objectCategory));
+
+      if (this.isNewPage) {
+        this.getAllColors(category);
+      }
+    } catch (error) {
+      console.error('get categories error:', error);
+    } finally {
+      this.isLoadingProducts = false;
+      this.isLoading = false;
+      this.isNewPage = false;
+    }
+  }
+
+  public async goToCategory(category: Category): Promise<void> {
+    this.filterForm.patchValue({
+      isCatalogOpen: false,
+    });
+
+    if (category.id === this.filterIdCategory) {
+      return;
+    }
+
+    this.isNewPage = true;
+    this.products = [];
+    this.isNoProducts = false;
+    this.productsSetColor.clear();
+    this.productColors = [];
+    this.offset = 0;
+
+    const categorySlug = category.slug['en-US'].toLowerCase();
+
+    this.activeFilters = this.activeFilters.filter(
+      (filter) =>
+        !this.CategoriesIdsNames.some(
+          (cat) => cat.slug.toLowerCase() === filter.toLowerCase(),
+        ),
+    );
+
+    this.router.navigate(['/catalog/category', categorySlug]);
+    //         await  this.patchMinMaxInputs({
+    //   filter: [`categories.id:"${this.filterIdCategory}"`],
+    // });
+    this.filterIdCategory = category.id;
+  }
+
+  public goToOnSale(): void {
+    this.isNoProducts = false;
+    this.isNewPage = true;
+    this.filterForm.patchValue({
+      isCatalogOpen: false,
+    });
+
+    this.router.navigate(['/catalog/on-sale']);
+  }
+
+  public async getMoreProductsHandler(): Promise<void> {
+    this.offset += 20;
+
+    await (this.filterIdCategory
+      ? this.categoryHandler(this.filterIdCategory)
+      : this.allProductsRange(this.offset));
+  }
+
+  public async formColorHandler({
+    colorName,
+    colorCode,
+  }: Color): Promise<void> {
+    const isUnselecting = this.checkColor === colorCode;
+
+    this.checkColor = this.checkColor === colorCode ? null : colorCode;
+
+    if (isUnselecting) {
+      this.products = [];
+      this.updateActiveFiltersColors(this.checkColor ? colorName : null);
+      await this.categoryHandler(this.filterIdCategory);
+      return;
+    }
+    this.filterForm.get('selectedColor')?.setValue(this.checkColor || '');
+    this.isLoadingProducts = true;
+    this.products = [];
+    this.updateActiveFiltersColors(this.checkColor ? colorName : null);
+    const response = await ApiService.getSearchProducts({
+      filter: `categories.id:"${this.filterIdCategory}"`,
+      limit: '50',
+    });
+    if (response) {
+      let filteredResults = response.results;
+      if (this.checkColor) {
+        filteredResults = CatalogPageComponent.filterByColor(
+          response.results,
+          this.checkColor,
+        );
+      }
+      for (const product of filteredResults) {
+        this.products.push(this.mapSearchProduct(product));
+      }
+      this.totalProduct = this.products.length > 20;
+      if (this.products.length >= response.total) {
+        this.totalProduct = false;
+      }
+    }
+    this.isLoadingProducts = false;
+  }
+
+  private async allProductsRange(offset: number): Promise<void> {
+    const { numberMin, numberMax } = this.getParsedInputValues();
+
+    const min = Math.round(numberMin * 100);
+    const max = Math.round(numberMax * 100);
+
+    this.loadProductsInRange(min, max, offset);
+  }
+
+  private async sortingAscCategory(objectCategory: {
+    offset: string;
+    filter: string | string[];
+    sort?: string;
+  }): Promise<void> {
+    Object.assign(objectCategory, { limit: '50' });
+    try {
+      const response = await ApiService.getSearchProducts(objectCategory);
+
+      if (response) {
+        const responseSort = response.results.sort((a, b) => {
+          const priceA =
+            a.masterVariant.prices.find((p) => p.country === 'US')?.value
+              .centAmount ?? Infinity;
+          const priceB =
+            b.masterVariant.prices.find((p) => p.country === 'US')?.value
+              .centAmount ?? Infinity;
+          return priceA - priceB;
+        });
+        for (const product of responseSort) {
+          this.products.push(this.mapSearchProduct(product));
+        }
+      }
+    } catch (error) {
+      console.error('sort asc error', error);
+    }
+  }
+
+  private updateActiveFiltersColors(colorName: string | null): void {
+    this.activeFiltersColors = [];
+    if (colorName) {
+      this.activeFiltersColors.push(colorName.toLowerCase());
+    }
   }
 
   private async sortFormSubscribe(): Promise<void> {
@@ -463,13 +489,13 @@ export class CatalogPageComponent {
       .valueChanges.pipe(debounceTime(300), distinctUntilChanged())
       .subscribe(async (rawSearchTerm: string | null) => {
         const searchTerm = rawSearchTerm?.trim() ?? '';
-
+        this.offset = 0;
         if (searchTerm === '') {
           await this.handleEmptySearch();
           return;
         }
 
-        if (searchTerm.length < 2) {
+        if (searchTerm.length < 3) {
           return;
         }
 
@@ -479,13 +505,17 @@ export class CatalogPageComponent {
 
   private async handleEmptySearch(): Promise<void> {
     this.products = [];
-
+    this.isNoProducts = false;
     if (this.filterIdCategory) {
       await this.categoryHandler(this.filterIdCategory);
+      await this.patchMinMaxInputs({
+        filter: [`categories.id:"${this.filterIdCategory}"`],
+      });
     } else if (this.isSaleOpen) {
       await this.onSaleButtonHandler();
     } else {
-      this.getProducts();
+      await this.getProducts();
+      await this.patchMinMaxInputs({});
     }
   }
 
@@ -512,10 +542,31 @@ export class CatalogPageComponent {
   private async searchInCategory(
     searchObject: Record<string, string | string[]>,
   ): Promise<void> {
-    this.products = [];
+    const getSortFormValue = this.sortForm.get('selectedSort')?.value;
+
+    const searchText = searchObject['text.en-US'];
+    if (typeof searchText !== 'string') return;
+
+    await this.patchMinMaxInputs({
+      filter: [`categories.id:"${this.filterIdCategory}"`],
+      name: searchText,
+    });
+
+    const { numberMin, numberMax } = this.getParsedInputValues();
+
+    Object.assign(searchObject, {
+      filter: `variants.price.centAmount:range(${numberMin * 100} to ${numberMax * 100})`,
+    });
+
     Object.assign(searchObject, {
       filter: `categories.id:"${this.filterIdCategory}"`,
     });
+    if (getSortFormValue !== 'default') {
+      CatalogPageComponent.applySortOption(
+        searchObject,
+        getSortFormValue ?? 'default',
+      );
+    }
 
     await this.forAndPushSearchProducts(searchObject);
   }
@@ -523,10 +574,18 @@ export class CatalogPageComponent {
   private async searchInDiscount(
     searchObject: Record<string, string | string[]>,
   ): Promise<void> {
+    const searchText = searchObject['text.en-US'];
+    if (typeof searchText !== 'string') return;
+
+    await this.patchMinMaxInputs({ name: searchText });
+
+    const { numberMin, numberMax } = this.getParsedInputValues();
+
     Object.assign(searchObject, {
       filter: [
         `variants.prices.discounted.discount.id:"${this.excludedId}"`,
         'variants.prices.discounted.value.centAmount:range(0 to *)',
+        `variants.price.centAmount:range(${numberMin * 100} to ${numberMax * 100})`,
       ],
     });
 
@@ -536,25 +595,35 @@ export class CatalogPageComponent {
   private async searchGeneral(
     searchObject: Record<string, string | string[]>,
   ): Promise<void> {
-    const searchProduct = await ApiService.getSearchProducts(searchObject);
-    if (searchProduct) {
-      this.products = [];
-      for (const product of searchProduct.results) {
-        this.products.push(this.mapSearchProduct(product));
-      }
-    }
+    const searchText = searchObject['text.en-US'];
+    if (typeof searchText !== 'string') return;
+
+    await this.patchMinMaxInputs({ name: searchText });
+
+    const { numberMin, numberMax } = this.getParsedInputValues();
+
+    Object.assign(searchObject, {
+      filter: `variants.price.centAmount:range(${numberMin * 100} to ${numberMax * 100})`,
+    });
+
+    await this.forAndPushSearchProducts(searchObject);
   }
 
   private async forAndPushSearchProducts(
     object: Record<string, string | string[]>,
   ): Promise<void> {
-    const searchProduct = await ApiService.getSearchProducts(object);
+    const searchProduct = await ApiService.searchProductsByName(object);
 
     if (searchProduct) {
       this.products = [];
+      this.totalProduct = searchProduct.total > 20;
+
       for (const product of searchProduct.results) {
         this.products.push(this.mapSearchProduct(product));
       }
+
+      this.totalProduct = this.products.length < searchProduct.total;
+      this.isNoProducts = searchProduct.total === 0;
     }
   }
 
@@ -588,7 +657,6 @@ export class CatalogPageComponent {
     this.isNewPage = false;
     this.isLoading = true;
 
-    console.log(this.isSaleOpen, 'getAllProduct');
     try {
       const responseProducts = await ApiService.getProducts(this.offset);
 
@@ -650,12 +718,9 @@ export class CatalogPageComponent {
       return null;
     }
 
-    const currency =
-      distributionPrice.value.currencyCode === 'USD'
-        ? '$'
-        : distributionPrice.value.currencyCode;
+    const currency = '';
 
-    const price = distributionPrice.value.centAmount / 100;
+    const price = getFormatPrice(distributionPrice.value.centAmount / 100);
 
     if (distributionPrice.discounted) {
       const discount = this.productsDiscount.find(
@@ -664,8 +729,9 @@ export class CatalogPageComponent {
 
       const nameDiscount = `-${discount?.name['en-US'].slice(0, 3)}`;
 
-      const discountedPrice =
-        distributionPrice.discounted.value.centAmount / 100;
+      const discountedPrice = getFormatPrice(
+        distributionPrice.discounted.value.centAmount / 100,
+      );
       return { price, currency, discountedPrice, nameDiscount };
     }
 
@@ -673,60 +739,98 @@ export class CatalogPageComponent {
   }
 
   private async patchMinMaxInputs(
-    filter: string | string[] = '',
+    filtersObject: inputValueObject,
   ): Promise<void> {
-    if (filter) {
-      this.getMinMaxPrice(filter);
-    } else {
-      this.getMinMaxPrice('');
+    const sortingMin = 'price asc';
+    const sortingMax = 'price desc';
+
+    const maxObjectPrice: Record<string, string | string[]> = {
+      limit: '1',
+    };
+
+    const minObjectPrice: Record<string, string | string[]> = {
+      limit: '1',
+    };
+
+    if (filtersObject.name) {
+      Object.assign(maxObjectPrice, {
+        fuzzy: 'true',
+        fuzzyLevel: '1',
+        ['text.en-US']: filtersObject.name,
+      });
+      Object.assign(minObjectPrice, {
+        fuzzy: 'true',
+        fuzzyLevel: '1',
+        ['text.en-US']: filtersObject.name,
+      });
     }
-  }
 
-  private async getMinMaxPrice(filterString: string | string[]): Promise<void> {
-    const objectSearchMin: Record<string, string | string[]> = {
-      sort: 'price asc',
-      limit: '1',
-    };
-    const objectSearchMax: Record<string, string | string[]> = {
-      sort: 'price desc',
-      limit: '1',
-    };
+    Object.assign(minObjectPrice, { sort: sortingMin });
+    Object.assign(maxObjectPrice, { sort: sortingMax });
 
-    if (filterString) {
-      Object.assign(objectSearchMin, { filter: filterString });
-      Object.assign(objectSearchMax, { filter: filterString });
+    if (
+      Array.isArray(filtersObject.filter) &&
+      filtersObject.filter.length > 0
+    ) {
+      minObjectPrice['filter'] = filtersObject.filter;
+      maxObjectPrice['filter'] = filtersObject.filter;
     }
 
     try {
-      const getMin = await ApiService.getSearchProducts(objectSearchMin);
-      const getMax = await ApiService.getSearchProducts(objectSearchMax);
-
-      console.log(getMin);
-      console.log(getMax);
+      const getMin = await ApiService.getSearchProducts(minObjectPrice);
+      const getMax = await ApiService.getSearchProducts(maxObjectPrice);
 
       if (getMin && getMax) {
-        const minPriceUS = getMin?.results?.[0].masterVariant.prices.find(
-          (price) => price.country === 'US',
-        );
-        const maxPriceUS = getMax?.results?.[0].masterVariant.prices.find(
-          (price) => price.country === 'US',
-        );
-
-        if (minPriceUS && maxPriceUS) {
-          this.minValue = minPriceUS?.value.centAmount / 100;
-          this.maxValue = maxPriceUS?.value.centAmount / 100;
-
-          this.prevNumberMin = minPriceUS?.value.centAmount / 100;
-          this.prevNumberMax = maxPriceUS?.value.centAmount / 100;
-        }
+        this.updateValueInput(getMin, getMax);
       }
+    } catch (error) {
+      console.error('getMinPrice error:', error);
+    }
+  }
+
+  private updateValueInput(
+    getMin: GetSearchProduct,
+    getMax: GetSearchProduct,
+  ): void {
+    const minResult = getMin?.results?.[0];
+    const maxResult = getMax?.results?.[0];
+
+    if (!minResult || !maxResult) {
+      this.filterForm.patchValue({
+        minPrice: '',
+        maxPrice: '',
+      });
+      return;
+    }
+
+    const minPriceUS = minResult.masterVariant.prices.find(
+      (price) => price.country === 'US',
+    );
+    const maxPriceUS = maxResult.masterVariant.prices.find(
+      (price) => price.country === 'US',
+    );
+
+    if (minPriceUS && maxPriceUS) {
+      const actualMin =
+        minPriceUS.discounted?.value.centAmount ?? minPriceUS.value.centAmount;
+      const actualMax =
+        maxPriceUS.discounted?.value.centAmount ?? maxPriceUS.value.centAmount;
+
+      this.minValue = actualMin / 100;
+      this.maxValue = actualMax / 100;
+
+      this.prevNumberMin = this.minValue;
+      this.prevNumberMax = this.maxValue;
 
       this.filterForm.patchValue({
-        minPrice: this.minValue?.toString() ?? '',
-        maxPrice: this.maxValue?.toString() ?? '',
+        minPrice: this.minValue.toString(),
+        maxPrice: this.maxValue.toString(),
       });
-    } catch (error) {
-      console.error('Error get price max and min:', error);
+    } else {
+      this.filterForm.patchValue({
+        minPrice: '',
+        maxPrice: '',
+      });
     }
   }
 
@@ -749,31 +853,47 @@ export class CatalogPageComponent {
     maxCent: number,
     offset: number,
   ): Promise<void> {
-    this.products = [];
-
+    const getSearchFormValue = this.filterForm.get('search')?.value?.trim();
+    const getSortFormValue = this.sortForm.get('selectedSort')?.value;
+    if (this.isNewPage) {
+      this.products = [];
+    }
+    this.isNewPage = false;
     const filters = [
       `variants.price.centAmount:range(${minCent} to ${maxCent})`,
     ];
-
     if (this.filterIdCategory) {
       filters.push(`categories.id:"${this.filterIdCategory}"`);
     }
-
     if (this.isSaleOpen) {
       filters.push(
         `variants.prices.discounted.discount.id:"${this.excludedId}"`,
       );
     }
-
-    const range = await ApiService.getSearchProducts({
+    const searchObject: Record<string, string | string[]> = {
       offset: offset.toString(),
       limit: '20',
       filter: filters,
-    });
+    };
+    if (getSortFormValue !== 'default') {
+      CatalogPageComponent.applySortOption(
+        searchObject,
+        getSortFormValue ?? 'default',
+      );
+    }
+    if (getSearchFormValue && getSearchFormValue.length >= 3) {
+      searchObject['text.en-US'] = getSearchFormValue;
+    }
 
+    console.log(searchObject);
+    const range = await ApiService.getSearchProducts(searchObject);
     if (range) {
+      this.totalProduct = range.total > 20;
       for (const product of range.results) {
         this.products.push(this.mapSearchProduct(product));
+      }
+      if (this.products.length >= range.total) {
+        this.totalProduct = false;
       }
     }
   }
