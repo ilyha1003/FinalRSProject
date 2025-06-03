@@ -13,7 +13,7 @@
             formControlName="minPrice"
             (blur)="onPriceBlur()"
             [ngClass]="{
-              'price-input_inactive': isNoProducts,
+              'price-input_inactive': isNoProducts || isColor,
             }"
           />
           <input
@@ -21,7 +21,7 @@
             formControlName="maxPrice"
             (blur)="onPriceBlur()"
             [ngClass]="{
-              'price-input_inactive': isNoProducts,
+              'price-input_inactive': isNoProducts || isColor,
             }"
           />
         </div>
@@ -31,7 +31,7 @@
           (click)="allProductButtonHandler()"
           class="button button__price button__price_all"
         >
-          All products
+          Reset filters
         </button>
         <button
           (click)="categoriesButtonHandler()"
