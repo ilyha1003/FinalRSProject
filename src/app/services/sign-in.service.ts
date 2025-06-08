@@ -36,6 +36,7 @@ export class SignInService {
     LocalStorageService.removeCustomerId();
     LocalStorageService.removeCustomerAccessToken();
     LocalStorageService.removeLoginState();
+    LocalStorageService.removeCustomerEmail();
     this._isLogin$.next(false);
   }
 
