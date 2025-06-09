@@ -24,11 +24,13 @@ export class SignInService {
     customer_id: string,
     customer_access_token: string,
     customer_email: string,
+    cart_id: string,
   ): void {
     LocalStorageService.setCustomerId(customer_id);
     LocalStorageService.setCustomerAccessToken(customer_access_token);
-    LocalStorageService.setLoginState('true');
     LocalStorageService.setCustomerEmail(customer_email);
+    LocalStorageService.setCustomerCartID(cart_id);
+    LocalStorageService.setLoginState('true');
     this._isLogin$.next(true);
   }
 
@@ -37,6 +39,7 @@ export class SignInService {
     LocalStorageService.removeCustomerAccessToken();
     LocalStorageService.removeLoginState();
     LocalStorageService.removeCustomerEmail();
+    LocalStorageService.removeCustomerCartID();
     this._isLogin$.next(false);
   }
 

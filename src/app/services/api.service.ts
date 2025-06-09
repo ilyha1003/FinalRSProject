@@ -410,7 +410,7 @@ export class ApiService {
       await ApiService.getAdminAccessToken();
 
     const cart_currency = {
-      currency: 'EUR',
+      currency: 'USD',
     };
 
     try {
