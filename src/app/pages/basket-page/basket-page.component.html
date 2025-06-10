@@ -1,12 +1,44 @@
-<div
-  style="
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 15px;
-  "
->
-  <h2 style="font-size: 3rem">Basket-page</h2>
-  <img src="/assets/work.png" style="width: 30vw" alt="work-in-progress" />
+<div class="flex-basket__wrapper">
+  <div class="basket__wrapper">
+    <div class="basket__container">
+      <h1>Cart</h1>
+
+      <div *ngIf="isCartEmpty && isLogin" class="empty-cart__field">
+        <div class="basket-empty__message">
+          <p>
+            Your cart is empty now. Go to&nbsp;<a href="#/catalog">Catalog</a>
+          </p>
+        </div>
+        <img class="empty-cart__image" src="/assets/images/no-found.png" />
+      </div>
+
+      <div *ngIf="!isLogin" class="empty-cart__field">
+        <div class="basket-empty__message">
+          <p>
+            To add items to your cart you need to&nbsp;
+            <a href="#/login">Login</a>
+          </p>
+        </div>
+        <img class="empty-cart__image" src="/assets/images/no-found.png" />
+      </div>
+
+      <div *ngIf="isLogin && !isCartEmpty" class="cart-content-field">
+        <ul class="cart-product__list"></ul>
+        <div class="price-field">
+          <p>Total price:</p>
+          <p>100.00$</p>
+        </div>
+        <button (click)="addItemToCart()" class="clear-cart__button">
+          Clear cart
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
+
+<app-error-modal
+  *ngIf="isModalShow"
+  [message]="modalErrorMessage"
+  [header]="modalHeader"
+  (closeModalEvent)="closeModal()"
+></app-error-modal>

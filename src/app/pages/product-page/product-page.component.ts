@@ -55,12 +55,14 @@ export class ProductPageComponent implements OnInit {
 
   public get price(): string | null {
     let price = this.product?.masterData?.current?.masterVariant?.prices.find(
-      (p) => p.country === 'US' && p.key?.endsWith('_dist'),
+      (p) =>
+        ProductPageComponent.isPriseContainsUSDCheck(p.key) &&
+        p.key?.endsWith('_dist'),
     )?.value;
 
     if (!price) {
       price = this.product?.masterData?.current?.masterVariant?.prices.find(
-        (p) => p.country === 'US',
+        (p) => ProductPageComponent.isPriseContainsUSDCheck(p.key),
       )?.value;
     }
 
@@ -69,18 +71,18 @@ export class ProductPageComponent implements OnInit {
 
   public get discountedPrice(): string | null {
     const price = this.product?.masterData?.current?.masterVariant?.prices.find(
-      (p) => p.country === 'US',
+      (p) => ProductPageComponent.isPriseContainsUSDCheck(p.key),
     )?.discounted?.value;
     return price ? getFormatPrice(price.centAmount / 100) : null;
   }
 
   public get discount(): number | null {
     const priceDiscount =
-      this.product?.masterData?.current?.masterVariant?.prices.find(
-        (p) => p.country === 'US',
+      this.product?.masterData?.current?.masterVariant?.prices.find((p) =>
+        ProductPageComponent.isPriseContainsUSDCheck(p.key),
       )?.discounted?.value;
     const price = this.product?.masterData?.current?.masterVariant?.prices.find(
-      (p) => p.country === 'US',
+      (p) => ProductPageComponent.isPriseContainsUSDCheck(p.key),
     )?.value;
     if (price && priceDiscount) {
       const percent =
@@ -89,6 +91,13 @@ export class ProductPageComponent implements OnInit {
       return Math.round(percent);
     }
     return null;
+  }
+
+  private static isPriseContainsUSDCheck(input: string): boolean {
+    if (!input || typeof input !== 'string') {
+      return false;
+    }
+    return input.includes('USD');
   }
 
   @HostListener('document:touchstart', ['$event'])

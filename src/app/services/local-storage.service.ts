@@ -56,4 +56,16 @@ export class LocalStorageService {
   public static removeLoginState(): void {
     localStorage.removeItem('loginState');
   }
+
+  public static setCustomerCartID(cart_id: string): void {
+    localStorage.setItem('customerCartId', JSON.stringify(cart_id));
+  }
+
+  public static getCustomerCartID(): string {
+    return JSON.parse(localStorage.getItem('customerCartId') || '[]');
+  }
+
+  public static removeCustomerCartID(): void {
+    localStorage.removeItem('customerCartId');
+  }
 }

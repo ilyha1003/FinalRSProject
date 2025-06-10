@@ -1,0 +1,45 @@
+p {
+  margin: 0;
+}
+
+.flex-basket__wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.basket__wrapper {
+  width: 100%;
+  max-width: 1200px;
+}
+
+.basket__container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-cart__field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-cart__image {
+  max-width: 100%;
+  object-fit: cover;
+}
+
+.basket-empty__message p {
+  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.cart-content-field {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}

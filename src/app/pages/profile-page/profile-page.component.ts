@@ -183,9 +183,6 @@ export class ProfilePageComponent {
       this.fillShippingSelect();
       this.fillBillingSelect();
 
-      this.fillShippingInputsValues(this.selectedShippingAddressId);
-      this.fillBillingInputsValues(this.selectedBillingAddressId);
-
       if (this.isShippingCreationMode) {
         this.enableShippingForm();
         this.markShippingFormAsUntouched();

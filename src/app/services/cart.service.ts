@@ -1,0 +1,133 @@
+import { Injectable } from '@angular/core';
+import { api_url, project_key } from './confidential-data';
+import { ApiService } from './api.service';
+import { Cart } from '../utils/interfaces/interface-cart-page';
+import { LocalStorageService } from './local-storage.service';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CartService {
+  constructor() {}
+
+  public static async getCustomerCartByCustomerId(
+    customer_id: string,
+  ): Promise<Cart | null> {
+    const actual_admin_access_token: string =
+      await ApiService.getAdminAccessToken();
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/carts/customer-id=${customer_id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${actual_admin_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const customer_data: Cart = await response.json();
+      return customer_data;
+    } catch (error) {
+      console.error('Error load custumer id:', error);
+      return null;
+    }
+  }
+
+  public static async getCustomerCartIdByCustomerId(
+    customer_id: string,
+  ): Promise<string | null> {
+    const cart = await CartService.getCustomerCartByCustomerId(customer_id);
+    return cart === null ? null : cart.id;
+  }
+
+  public static async getCustomerCartLineItemsLength(
+    customer_id: string,
+  ): Promise<number> {
+    const cart = await CartService.getCustomerCartByCustomerId(customer_id);
+    return cart ? cart.lineItems.length : 0;
+  }
+
+  public static async getCartVersionByCartId(cart_id: string): Promise<number> {
+    let cart_version: number = 0;
+    const customer_access_token: string =
+      LocalStorageService.getCustomerAccessToken();
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/carts/${cart_id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${customer_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      cart_version = data.version;
+    } catch (error) {
+      console.log(error);
+    }
+
+    return cart_version;
+  }
+
+  public static async addLineItem(
+    cart_id: string,
+    product_id: string,
+  ): Promise<string> {
+    const actual_cart_version: number =
+      await CartService.getCartVersionByCartId(cart_id);
+    const customer_access_token: string =
+      LocalStorageService.getCustomerAccessToken();
+    let request_error_message: string = '';
+
+    const fetch_body = {
+      version: actual_cart_version,
+      actions: [
+        {
+          action: 'addLineItem',
+          productId: product_id,
+          variantId: 1,
+          quantity: 1,
+        },
+      ],
+    };
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/carts/${cart_id}`,
+        {
+          method: 'POST',
+          body: JSON.stringify(fetch_body),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${customer_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        request_error_message = 'error';
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+    } catch (error) {
+      console.log(error);
+      return 'error';
+    }
+
+    return request_error_message;
+  }
+}

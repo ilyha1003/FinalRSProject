@@ -138,6 +138,13 @@ export class CatalogPageComponent implements OnInit {
     });
   }
 
+  private static isPriseContainsUSDCheck(input: string): boolean {
+    if (!input || typeof input !== 'string') {
+      return false;
+    }
+    return input.includes('USD');
+  }
+
   public async ngOnInit(): Promise<void> {
     await this.sortFormSubscribe();
     await this.searchFormSubcribe();
@@ -486,11 +493,13 @@ export class CatalogPageComponent implements OnInit {
       if (response) {
         const responseSort = response.results.sort((a, b) => {
           const priceA =
-            a.masterVariant.prices.find((p) => p.country === 'US')?.value
-              .centAmount ?? Infinity;
+            a.masterVariant.prices.find((p) =>
+              CatalogPageComponent.isPriseContainsUSDCheck(p.key),
+            )?.value.centAmount ?? Infinity;
           const priceB =
-            b.masterVariant.prices.find((p) => p.country === 'US')?.value
-              .centAmount ?? Infinity;
+            b.masterVariant.prices.find((p) =>
+              CatalogPageComponent.isPriseContainsUSDCheck(p.key),
+            )?.value.centAmount ?? Infinity;
           return priceA - priceB;
         });
         for (const product of responseSort) {
@@ -773,15 +782,17 @@ export class CatalogPageComponent implements OnInit {
   }
 
   private calculatePrice(product: MasterPrice[]): PriceProduct | null {
-    const country = 'US';
-
     let distributionPrice = product.find(
-      (price) => price.country === country && price.key?.endsWith('_dist'),
+      (price) =>
+        CatalogPageComponent.isPriseContainsUSDCheck(price.key) &&
+        price.key?.endsWith('_dist'),
     );
 
     if (!distributionPrice) {
       distributionPrice = product.find(
-        (price) => price.country === country && !price.channel,
+        (price) =>
+          CatalogPageComponent.isPriseContainsUSDCheck(price.key) &&
+          !price.channel,
       );
     }
 
@@ -874,11 +885,11 @@ export class CatalogPageComponent implements OnInit {
       return;
     }
 
-    const minPriceUS = minResult.masterVariant.prices.find(
-      (price) => price.country === 'US',
+    const minPriceUS = minResult.masterVariant.prices.find((price) =>
+      CatalogPageComponent.isPriseContainsUSDCheck(price.key),
     );
-    const maxPriceUS = maxResult.masterVariant.prices.find(
-      (price) => price.country === 'US',
+    const maxPriceUS = maxResult.masterVariant.prices.find((price) =>
+      CatalogPageComponent.isPriseContainsUSDCheck(price.key),
     );
 
     if (minPriceUS && maxPriceUS) {

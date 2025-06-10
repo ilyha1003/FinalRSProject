@@ -17,6 +17,7 @@ import { ApiService } from '../../services/api.service';
 import { FormModalComponent } from '../../components/form-modal/form-modal.component';
 import { LoaderService } from '../../services/loader.service';
 import { customEmailValidator } from '../../utils/validations/email-custom-validator';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-login-page',
@@ -97,12 +98,16 @@ export class LoginPageComponent {
             valueForm.email,
             valueForm.password,
           );
-
-          this.signInService.login(
-            customer_id,
-            customer_access_token,
-            valueForm.email,
-          );
+          const customer_cart_id =
+            await CartService.getCustomerCartIdByCustomerId(customer_id);
+          if (customer_cart_id) {
+            this.signInService.login(
+              customer_id,
+              customer_access_token,
+              valueForm.email,
+              customer_cart_id,
+            );
+          }
 
           this.profileForm.reset();
           this.goToMainPage();
