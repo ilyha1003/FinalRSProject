@@ -165,3 +165,14 @@ export interface TokenAfterDeletingAccount {
   new_access_token: string;
   request_error_message: string;
 }
+
+// interface for about page
+
+export interface TeamMember {
+  name: string;
+  role: string;
+  biographies: string[];
+  github: string;
+  photoUrl: string;
+  contributions: string[];
+}
