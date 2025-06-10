@@ -83,4 +83,51 @@ export class CartService {
 
     return cart_version;
   }
+
+  public static async addLineItem(
+    cart_id: string,
+    product_id: string,
+  ): Promise<string> {
+    const actual_cart_version: number =
+      await CartService.getCartVersionByCartId(cart_id);
+    const customer_access_token: string =
+      LocalStorageService.getCustomerAccessToken();
+    let request_error_message: string = '';
+
+    const fetch_body = {
+      version: actual_cart_version,
+      actions: [
+        {
+          action: 'addLineItem',
+          productId: product_id,
+          variantId: 1,
+          quantity: 1,
+        },
+      ],
+    };
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/carts/${cart_id}`,
+        {
+          method: 'POST',
+          body: JSON.stringify(fetch_body),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${customer_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        request_error_message = 'error';
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+    } catch (error) {
+      console.log(error);
+      return 'error';
+    }
+
+    return request_error_message;
+  }
 }

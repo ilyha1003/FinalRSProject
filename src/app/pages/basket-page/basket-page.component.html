@@ -28,8 +28,17 @@
           <p>Total price:</p>
           <p>100.00$</p>
         </div>
-        <button class="clear-cart__button">Clear cart</button>
+        <button (click)="addItemToCart()" class="clear-cart__button">
+          Clear cart
+        </button>
       </div>
     </div>
   </div>
 </div>
+
+<app-error-modal
+  *ngIf="isModalShow"
+  [message]="modalErrorMessage"
+  [header]="modalHeader"
+  (closeModalEvent)="closeModal()"
+></app-error-modal>
