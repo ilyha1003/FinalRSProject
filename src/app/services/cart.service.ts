@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { api_url, project_key } from './confidential-data';
 import { ApiService } from './api.service';
 import { Cart } from '../utils/interfaces/interface-cart-page';
+import { LocalStorageService } from './local-storage.service';
 
 @Injectable({
   providedIn: 'root',
@@ -51,5 +52,35 @@ export class CartService {
   ): Promise<number> {
     const cart = await CartService.getCustomerCartByCustomerId(customer_id);
     return cart ? cart.lineItems.length : 0;
+  }
+
+  public static async getCartVersionByCartId(cart_id: string): Promise<number> {
+    let cart_version: number = 0;
+    const customer_access_token: string =
+      LocalStorageService.getCustomerAccessToken();
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/carts/${cart_id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${customer_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      cart_version = data.version;
+    } catch (error) {
+      console.log(error);
+    }
+
+    return cart_version;
   }
 }
