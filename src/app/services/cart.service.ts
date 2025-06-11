@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { api_url, project_key } from './confidential-data';
 import { ApiService } from './api.service';
-import { Cart } from '../utils/interfaces/interface-cart-page';
+import { Cart, LineItem } from '../utils/interfaces/interface-cart-page';
 import { LocalStorageService } from './local-storage.service';
 
 @Injectable({
@@ -52,6 +52,33 @@ export class CartService {
   ): Promise<number> {
     const cart = await CartService.getCustomerCartByCustomerId(customer_id);
     return cart ? cart.lineItems.length : 0;
+  }
+
+  public static async getCustomerCartLineItems(
+    customer_id: string,
+  ): Promise<LineItem[]> {
+    const cart = await CartService.getCustomerCartByCustomerId(customer_id);
+    return cart ? cart.lineItems : [];
+  }
+
+  public static async getCustomerCartTotalPrice(
+    customer_id: string,
+  ): Promise<number> {
+    const cart = await CartService.getCustomerCartByCustomerId(customer_id);
+    return cart ? cart.totalPrice.centAmount : 0;
+  }
+
+  public static async getTotalItemsQuantity(
+    customer_id: string,
+  ): Promise<number> {
+    const cart = await CartService.getCustomerCartByCustomerId(customer_id);
+    let totalQuantity: number = 0;
+    if (cart) {
+      for (const item of cart.lineItems) {
+        totalQuantity += item.quantity;
+      }
+    }
+    return totalQuantity;
   }
 
   public static async getCartVersionByCartId(cart_id: string): Promise<number> {

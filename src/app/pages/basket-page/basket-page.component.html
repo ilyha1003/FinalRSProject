@@ -23,10 +23,37 @@
       </div>
 
       <div *ngIf="isLogin && !isCartEmpty" class="cart-content-field">
-        <ul class="cart-product__list"></ul>
-        <div class="price-field">
-          <p>Total price:</p>
-          <p>100.00$</p>
+        <ul class="cart-product__list">
+          @for (item of lineItems; track item.id) {
+            <div class="product__field">
+              <div class="product-image__field">
+                <img
+                  class="product__image"
+                  src="{{ item.variant.images[0].url }}"
+                  alt="product image"
+                />
+              </div>
+              <div class="product-name__field">
+                <p class="product-name">{{ item.name['en-US'] }}</p>
+              </div>
+              <div class="product-quantity__field">
+                <p>Quantity:&nbsp;</p>
+                <p>{{ item.quantity }}</p>
+              </div>
+              <div class="product-price__field"></div>
+            </div>
+          }
+        </ul>
+        <div class="result-field">
+          <p class="result-header">Result</p>
+          <div class="quantity">
+            <p>Products quantity:&nbsp;</p>
+            <p>{{ totalProductsQuantity }}</p>
+          </div>
+          <div class="price">
+            <p>Total price:&nbsp;</p>
+            <p>{{ totalPrice }}</p>
+          </div>
         </div>
         <button (click)="addItemToCart()" class="clear-cart__button">
           Clear cart

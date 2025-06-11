@@ -6,6 +6,7 @@ import { CartService } from '../../services/cart.service';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { LoaderService } from '../../services/loader.service';
 import { FormModalComponent } from '../../components/form-modal/form-modal.component';
+import { LineItem } from '../../utils/interfaces/interface-cart-page';
 
 @Component({
   selector: 'app-basket-page',
@@ -17,8 +18,14 @@ export class BasketPageComponent {
   public isCartEmpty: boolean = true;
   public isLogin: boolean = false;
   public isModalShow: boolean = false;
+
   public modalErrorMessage: string = '';
   public modalHeader: string = '';
+  public totalPrice: string = '$0';
+
+  public totalProductsQuantity: number = 0;
+
+  public lineItems: LineItem[] = [];
 
   private subscription!: Subscription;
 
@@ -32,6 +39,24 @@ export class BasketPageComponent {
     const cartLineItemsLength =
       await CartService.getCustomerCartLineItemsLength(customer_id);
     return cartLineItemsLength > 0 ? false : true;
+  }
+
+  public async updateLineItems(): Promise<void> {
+    const customer_id = LocalStorageService.getCustomerId();
+    const lineItems = await CartService.getCustomerCartLineItems(customer_id);
+    this.lineItems = lineItems.length > 0 ? lineItems : [];
+  }
+
+  public async updateTotalPrice(): Promise<void> {
+    const customer_id = LocalStorageService.getCustomerId();
+    const totalPrice = await CartService.getCustomerCartTotalPrice(customer_id);
+    this.totalPrice = `$${totalPrice}`;
+  }
+
+  public async updateTotalQuantity(): Promise<void> {
+    const customer_id = LocalStorageService.getCustomerId();
+    this.totalProductsQuantity =
+      await CartService.getTotalItemsQuantity(customer_id);
   }
 
   public async addItemToCart(): Promise<void> {
@@ -51,6 +76,14 @@ export class BasketPageComponent {
   }
 
   public async ngOnInit(): Promise<void> {
+    this.loaderService.show();
+    if (LocalStorageService.getLoginState()) {
+      await this.updateLineItems();
+      await this.updateTotalPrice();
+      await this.updateTotalQuantity();
+      console.log(this.lineItems);
+      console.log(this.lineItems[0].name['en-Us']);
+    }
     this.isCartEmpty = (await BasketPageComponent.isCartEmptyCheck())
       ? true
       : false;
@@ -59,6 +92,7 @@ export class BasketPageComponent {
         this.isLogin = isLoggedIn;
       },
     );
+    this.loaderService.hide();
   }
 
   public openModal(message: string, header: string): void {
