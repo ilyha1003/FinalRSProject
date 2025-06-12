@@ -25,7 +25,7 @@
       <div *ngIf="isLogin && !isCartEmpty" class="cart-content-field">
         <ul class="cart-product__list">
           @for (item of lineItems; track item.id) {
-            <div class="product__field">
+            <li class="cart-product-list__item">
               <div class="product-image__field">
                 <img
                   class="product__image"
@@ -35,13 +35,42 @@
               </div>
               <div class="product-name__field">
                 <p class="product-name">{{ item.name['en-US'] }}</p>
+                <p class="product-initial-price">{{ item.price.value.usd }}</p>
               </div>
               <div class="product-quantity__field">
-                <p>Quantity:&nbsp;</p>
-                <p>{{ item.quantity }}</p>
+                <button
+                  class="product-quantity__button button-minus"
+                  (click)="decreaseProductQuantity(item.id)"
+                >
+                  -
+                </button>
+                <p class="product-quantity">{{ item.quantity }}</p>
+                <button
+                  class="product-quantity__button button-plus"
+                  (click)="increaseProductQuantity(item.productId)"
+                >
+                  +
+                </button>
               </div>
-              <div class="product-price__field"></div>
-            </div>
+              <div class="product-price__field">
+                {{ item.price.value.totalUsd }}
+              </div>
+              <button
+                class="delete__button"
+                (click)="deleteWholeProduct(item.quantity, item.id)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="25"
+                  height="25"
+                  viewBox="0 0 64 64"
+                >
+                  <path
+                    d="M28 6a4 4 0 0 0-4 4v2h-.4L10 14v3h44v-3l-13.6-2H40v-2a4 4 0 0 0-4-4h-8zm0 4h8v2h-8v-2zm-16 9 2.7 33.32A4 4 0 0 0 18.7 56H45.3a4 4 0 0 0 3.99-3.68L51.92 20 12 19zm8 7a2 2 0 0 1 2 2v23h-3l-1-23c0-1.1.9-2 2-2zm12 0a3 3 0 0 1 3 3v22h-6V29a3 3 0 0 1 3-3zm12 0a2 2 0 0 1 2 2l-1 23h-3V28c0-1.1.9-2 2-2z"
+                  />
+                </svg>
+              </button>
+            </li>
           }
         </ul>
         <div class="result-field">
@@ -55,7 +84,7 @@
             <p>{{ totalPrice }}</p>
           </div>
         </div>
-        <button (click)="addItemToCart()" class="clear-cart__button">
+        <button (click)="clearCart()" class="clear-cart__button">
           Clear cart
         </button>
       </div>

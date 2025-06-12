@@ -10,6 +10,7 @@ export interface LineItem {
   quantity: number;
   name: Record<string, string>;
   variant: ProductVariant;
+  price: ProductPrice;
 }
 
 export interface ProductName {
@@ -26,4 +27,14 @@ export interface ProductVariant {
 
 export interface ProductImages {
   url: string;
+}
+
+export interface ProductPrice {
+  value: ProductValue;
+}
+
+export interface ProductValue {
+  centAmount: number;
+  usd: string;
+  totalUsd: string;
 }

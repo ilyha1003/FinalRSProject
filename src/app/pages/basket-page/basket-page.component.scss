@@ -1,5 +1,7 @@
-p {
+p,
+ul {
   margin: 0;
+  padding: 0;
 }
 
 .flex-basket__wrapper {
@@ -41,6 +43,7 @@ p {
 .cart-content-field {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 20px;
 }
 
@@ -51,9 +54,14 @@ p {
   width: 100%;
 }
 
-.product__field {
+.cart-product-list__item {
   display: flex;
   align-items: center;
+  gap: 20px;
+  background-color: var(--color-white);
+  border-radius: 10px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
 }
 
 .product-image__field {
@@ -65,6 +73,48 @@ p {
   height: 100%;
   width: 100%;
   object-fit: contain;
+}
+
+.product-name__field {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.product-name {
+  width: 300px;
+}
+
+.product-quantity__field {
+  display: flex;
+  gap: 20px;
+  align-items: c;
+}
+
+.product-quantity {
+  font-size: 20px;
+}
+
+.product-quantity__button {
+  padding: 4px 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.button-minus {
+  padding: 4px 10px;
+}
+
+.delete__button {
+  background-color: var(--color-white);
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  &:hover {
+    svg {
+      scale: 1.15;
+    }
+  }
 }
 
 .result-field {
@@ -88,6 +138,7 @@ p {
   background-color: var(--color-primary);
   cursor: pointer;
   transition: all 0.3s ease;
+  max-width: 300px;
 }
 
 .price,
