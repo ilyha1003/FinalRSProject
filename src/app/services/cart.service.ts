@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { api_url, project_key } from './confidential-data';
 import { ApiService } from './api.service';
-import { Cart } from '../utils/interfaces/interface-cart-page';
+import { Cart, LineItem } from '../utils/interfaces/interface-cart-page';
 import { LocalStorageService } from './local-storage.service';
 
 @Injectable({
@@ -54,6 +54,33 @@ export class CartService {
     return cart ? cart.lineItems.length : 0;
   }
 
+  public static async getCustomerCartLineItems(
+    customer_id: string,
+  ): Promise<LineItem[]> {
+    const cart = await CartService.getCustomerCartByCustomerId(customer_id);
+    return cart ? cart.lineItems : [];
+  }
+
+  public static async getCustomerCartTotalPrice(
+    customer_id: string,
+  ): Promise<number> {
+    const cart = await CartService.getCustomerCartByCustomerId(customer_id);
+    return cart ? cart.totalPrice.centAmount : 0;
+  }
+
+  public static async getTotalItemsQuantity(
+    customer_id: string,
+  ): Promise<number> {
+    const cart = await CartService.getCustomerCartByCustomerId(customer_id);
+    let totalQuantity: number = 0;
+    if (cart) {
+      for (const item of cart.lineItems) {
+        totalQuantity += item.quantity;
+      }
+    }
+    return totalQuantity;
+  }
+
   public static async getCartVersionByCartId(cart_id: string): Promise<number> {
     let cart_version: number = 0;
     const customer_access_token: string =
@@ -101,6 +128,52 @@ export class CartService {
           action: 'addLineItem',
           productId: product_id,
           variantId: 1,
+          quantity: 1,
+        },
+      ],
+    };
+
+    try {
+      const response = await fetch(
+        `${api_url}/${project_key}/carts/${cart_id}`,
+        {
+          method: 'POST',
+          body: JSON.stringify(fetch_body),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${customer_access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        request_error_message = 'error';
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+    } catch (error) {
+      console.log(error);
+      return 'error';
+    }
+
+    return request_error_message;
+  }
+
+  public static async removeLineItem(
+    cart_id: string,
+    line_item_id: string,
+  ): Promise<string> {
+    const actual_cart_version: number =
+      await CartService.getCartVersionByCartId(cart_id);
+    const customer_access_token: string =
+      LocalStorageService.getCustomerAccessToken();
+    let request_error_message: string = '';
+
+    const fetch_body = {
+      version: actual_cart_version,
+      actions: [
+        {
+          action: 'removeLineItem',
+          lineItemId: line_item_id,
           quantity: 1,
         },
       ],
