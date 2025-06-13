@@ -3,12 +3,21 @@ import { api_url, project_key } from './confidential-data';
 import { ApiService } from './api.service';
 import { Cart, LineItem } from '../utils/interfaces/interface-cart-page';
 import { LocalStorageService } from './local-storage.service';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CartService {
-  constructor() {}
+  public cartCountSubject = new BehaviorSubject<number>(0);
+  public cartCount$ = this.cartCountSubject.asObservable();
+
+  constructor() {
+    const customerId = LocalStorageService.getCustomerId();
+    if (customerId) {
+      this.updateCartCount(customerId);
+    }
+  }
 
   public static async getCustomerCartByCustomerId(
     customer_id: string,
@@ -202,5 +211,21 @@ export class CartService {
     }
 
     return request_error_message;
+  }
+
+  public static async getTotalQuantity(customer_id: string): Promise<number> {
+    const cart = await CartService.getCustomerCartByCustomerId(customer_id);
+    let result = 0;
+
+    if (cart?.totalLineItemQuantity) {
+      result = cart?.totalLineItemQuantity;
+    }
+
+    return result;
+  }
+
+  public async updateCartCount(customer_id: string): Promise<void> {
+    const count = await CartService.getTotalQuantity(customer_id);
+    this.cartCountSubject.next(count);
   }
 }

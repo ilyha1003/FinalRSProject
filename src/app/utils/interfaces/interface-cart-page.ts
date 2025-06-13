@@ -2,6 +2,7 @@ export interface Cart {
   id: string;
   lineItems: LineItem[];
   totalPrice: TotalPrice;
+  totalLineItemQuantity?: number;
 }
 
 export interface LineItem {
