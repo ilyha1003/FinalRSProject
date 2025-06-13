@@ -14,8 +14,8 @@
         }
         <button class="product__mini-images-nav product__mini-images-nav_down" *ngIf="productImages.length > 1" (click)="nextImage()"> &#9660;</button>
       </div>
-      <div class="product__main-image" (click)="openImageModal(selectedImageIndex)">
-        <img class="product__main-img" [src]="currentImageUrl" alt="{{ productName }}">
+      <div class="product__main-image">
+        <img class="product__main-img" [src]="currentImageUrl" alt="{{ productName }}" (click)="openImageModal(selectedImageIndex)">
       </div>
     </div>
 
@@ -28,7 +28,15 @@
         <span class="product__original-price-without-discont" *ngIf="!discountedPrice">{{ price }}</span>
         <span class="product__percent-discount" *ngIf="discountedPrice">{{ discount }}%</span>
       </div>
-      <button class="button product__button-add-to-cart">Add to cart</button>
+
+      <button class="button product__button-add-to-cart" [disabled]="isProductInCart" (click)="addToCart(productId)">
+        {{ isProductInCart ? 'Added to cart' : 'Add to cart' }}
+      </button>
+
+      <button class="button product__button-add-to-cart" *ngIf="isProductInCart" (click)="deleteFromCart(productId)">
+        Delete from cart
+      </button>
+
     </div>
   </div>
 </div>

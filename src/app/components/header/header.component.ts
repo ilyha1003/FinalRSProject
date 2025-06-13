@@ -12,6 +12,7 @@ import { LocalStorageService } from '../../services/local-storage.service';
 import { Subscription } from 'rxjs';
 import { SignInService } from '../../services/sign-in.service';
 import { ApiService } from '../../services/api.service';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-header',
@@ -25,7 +26,7 @@ export class HeaderComponent implements OnInit {
   public showHeader = true;
   public showProfileMenu = false;
   public isMobile = false;
-  public basketItemCount = 0;
+  public basketItemCount: number = 0;
   public firstName = '';
 
   private subscription!: Subscription;
@@ -33,6 +34,7 @@ export class HeaderComponent implements OnInit {
   constructor(
     private router: Router,
     private signInService: SignInService,
+    private cartService: CartService,
   ) {}
 
   @HostListener('window:resize')
@@ -44,6 +46,12 @@ export class HeaderComponent implements OnInit {
   }
 
   public async ngOnInit(): Promise<void> {
+    const customer_id = LocalStorageService.getCustomerId();
+    this.cartService.updateCartCount(customer_id);
+    this.cartService.cartCount$.subscribe((count) => {
+      this.basketItemCount = count;
+    });
+
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
