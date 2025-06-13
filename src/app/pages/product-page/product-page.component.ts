@@ -203,19 +203,7 @@ export class ProductPageComponent implements OnInit {
       this.productImages.length;
   }
 
-  private handleSwipe(): void {
-    const swipeDistance = this.touchEndX - this.touchStartX;
-
-    if (swipeDistance < -50) {
-      this.nextImage();
-    }
-
-    if (swipeDistance > 50) {
-      this.prevImage();
-    }
-  }
-
-  private async addToCart(productId: string | null): Promise<void> {
+  public async addToCart(productId: string | null): Promise<void> {
     const isLogin = LocalStorageService.getLoginState();
 
     if (isLogin === 'true') {
@@ -233,7 +221,7 @@ export class ProductPageComponent implements OnInit {
     }
   }
 
-  private async deleteFromCart(productId: string | null): Promise<void> {
+  public async deleteFromCart(productId: string | null): Promise<void> {
     this.loaderService.show();
     const cart_id: string = LocalStorageService.getCustomerCartID();
     const customer_id = LocalStorageService.getCustomerId();
@@ -254,5 +242,17 @@ export class ProductPageComponent implements OnInit {
     this.isProductInCart = false;
     this.loaderService.hide();
     this.cartService.updateCartCount(customer_id);
+  }
+
+  private handleSwipe(): void {
+    const swipeDistance = this.touchEndX - this.touchStartX;
+
+    if (swipeDistance < -50) {
+      this.nextImage();
+    }
+
+    if (swipeDistance > 50) {
+      this.prevImage();
+    }
   }
 }
