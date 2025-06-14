@@ -18,12 +18,7 @@ export class CartService {
   public cartCountSubject = new BehaviorSubject<number>(0);
   public cartCount$ = this.cartCountSubject.asObservable();
 
-  constructor() {
-    const customerId = LocalStorageService.getCustomerId();
-    if (customerId) {
-      this.updateCartCount(customerId);
-    }
-  }
+  constructor() {}
 
   public static async getCustomerCartByCustomerId(
     customer_id: string,

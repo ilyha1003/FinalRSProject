@@ -15,7 +15,7 @@
       <a class="header__link" routerLink="/about">About Us</a>
     </nav>
 
-    <div class="header__buttons" *ngIf="!isLogin">
+    <div class="header__buttons" *ngIf="!(isLogin | async)">
       <button
         class="button header__button header__button_login"
         (click)="buttonLoginHandler()"
@@ -30,7 +30,7 @@
       </button>
     </div>
 
-    <div class="header__profile-wrapper" *ngIf="isLogin">
+    <div class="header__profile-wrapper" *ngIf="isLogin | async">
       <div class="header__link-wrapper">
         <a
           class="header__link-profile"

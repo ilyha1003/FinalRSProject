@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { LocalStorageService } from './local-storage.service';
+import { CartService } from './cart.service';
 
 @Injectable({
   providedIn: 'root',
@@ -10,7 +11,7 @@ export class SignInService {
     SignInService.getLoginStatusFromLocalStorage(),
   );
 
-  constructor() {}
+  constructor(private cartService: CartService) {}
 
   public get isLogin$(): Observable<boolean> {
     return this._isLogin$.asObservable();
@@ -31,6 +32,8 @@ export class SignInService {
     LocalStorageService.setCustomerEmail(customer_email);
     LocalStorageService.setCustomerCartID(cart_id);
     LocalStorageService.setLoginState('true');
+
+    this.cartService.updateCartCount(customer_id);
     this._isLogin$.next(true);
   }
 

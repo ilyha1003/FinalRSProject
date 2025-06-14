@@ -174,9 +174,11 @@ export class ProductPageComponent implements OnInit {
       this.loaderService.hide();
     }
 
-    this.isProductInCart = await ProductPageComponent.isProductInCartCheck(
-      this.productId,
-    );
+    if (LocalStorageService.getLoginState() === 'true') {
+      this.isProductInCart = await ProductPageComponent.isProductInCartCheck(
+        this.productId,
+      );
+    }
   }
 
   public nextMiniImage(index: number): void {
