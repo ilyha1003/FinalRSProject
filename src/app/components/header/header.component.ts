@@ -78,6 +78,15 @@ export class HeaderComponent implements OnInit {
     );
 
     this.isMobile = window.innerWidth <= 768;
+
+    this.cartService.cartCount$.subscribe((count) => {
+      this.basketItemCount = count;
+    });
+    // await this.getCoundProductsQuantity();
+  }
+
+  public ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 
   public buttonLoginHandler(): void {
@@ -121,6 +130,26 @@ export class HeaderComponent implements OnInit {
     this.showProfileMenu = false;
     this.router.navigate(['/']);
   }
+
+  // private async getCoundProductsQuantity(): Promise<void> {
+  //   const getIdCustomer = LocalStorageService.getCustomerId();
+
+  //   if (getIdCustomer.length > 0) {
+  //     try {
+  //       const responsive =
+  //         await CartService.getCustomerCartByCustomerId(getIdCustomer);
+
+  //       if (responsive) {
+  //         const totalQuantity = responsive.lineItems.reduce((sum, item) => {
+  //           return sum + (item.quantity ?? 0);
+  //         }, 0);
+
+  //       }
+  //     } catch (error) {
+  //       console.error(`getCoundProductsQuantity error: ${error}`);
+  //     }
+  //   }
+  // }
 
   private adjustDropdownPosition(): void {
     if (!this.showProfileMenu || !this.dropdown) return;

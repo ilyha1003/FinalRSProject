@@ -1,7 +1,7 @@
 .product {
   width: 100%;
   max-width: 230px;
-  height: 380px;
+  height: 410px;
   margin: 0;
   border-radius: 20px;
   cursor: pointer;
@@ -37,7 +37,7 @@
 
 .product__name {
   margin-top: 0;
-  margin-bottom: 5px;
+  margin-bottom: 0.2rem;
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -46,6 +46,8 @@
   font-style: normal;
   font-weight: 400;
   margin: 0;
+  margin-bottom: 0.2rem;
+  min-height: 57px;
 }
 
 .product__price {
@@ -72,5 +74,37 @@
 @media (any-hover: hover) {
   .product:hover .product__img {
     transform: scale(1);
+  }
+}
+
+.button__product {
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: none;
+  background-color: var(--color-black);
+  color: var(--color-white);
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+
+.button_in-cart {
+  pointer-events: none;
+  cursor: none;
+  background-color: grey;
+}
+
+.button_loading {
+  animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
   }
 }

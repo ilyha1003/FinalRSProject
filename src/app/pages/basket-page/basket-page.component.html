@@ -11,7 +11,6 @@
         </div>
         <img class="empty-cart__image" src="/assets/images/no-found.png" />
       </div>
-
       <div *ngIf="!isLogin" class="empty-cart__field">
         <div class="basket-empty__message">
           <p>
@@ -23,6 +22,41 @@
       </div>
 
       <div *ngIf="isLogin && !isCartEmpty" class="cart-content-field">
+        <form
+          [formGroup]="codeDiscountForm"
+          (ngSubmit)="addCodeDiscountHandler()"
+          class="form__basket"
+        >
+          <div class="basket__input-wrapper">
+            <input
+              class="basket__input-code-discount"
+              [ngClass]="{
+                input__code_invalid: !isValid,
+              }"
+              formControlName="codeDiscount"
+            />
+            <button type="submit" class="button button__apply-code">
+              Apply code
+            </button>
+          </div>
+          <p *ngIf="codeDiscountError">
+            Code is not valid for the current order total
+          </p>
+          <p *ngIf="codeDiscountUsed">This code used</p>
+        </form>
+        <ul>
+          <p>Active Codes:</p>
+          @for (code of codes; track code.id) {
+            <li class="li__basket">
+              <p class="li__name-code">{{ code.name }}</p>
+              <button
+                id="{{ code.id }}"
+                class="button button__basket-code"
+                (click)="deleteCodeDiscountHandler(code)"
+              ></button>
+            </li>
+          }
+        </ul>
         <ul class="cart-product__list">
           @for (item of lineItems; track item.id) {
             <li class="cart-product-list__item">

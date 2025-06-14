@@ -20,7 +20,11 @@ export const teamMembers: TeamMember[] = [
   {
     name: 'Vlad',
     role: 'Frontend Developer',
-    biographies: ['Sankt-Peterburg, Russia'],
+    biographies: [
+      'Sankt-Peterburg, Russia',
+      'Date of birth: 14.01.1990',
+      'Place of work: Self-employed Plasterer and Painter',
+    ],
     github: 'https://github.com/lowraince',
     photoUrl: '/assets/images/vlad.jpeg',
     contributions: [

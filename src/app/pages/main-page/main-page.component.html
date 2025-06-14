@@ -1,12 +1,20 @@
-<div
-  style="
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 15px;
-  "
->
-  <h2 style="font-size: 3rem">Main-page</h2>
-  <img src="/assets/work.png" style="width: 30vw" alt="work-in-progress" />
+<div class="main__wrapper">
+  <p class="promo-code-text">
+    For customers who order over $1000, use promo code
+    <span class="promo-code" (click)="copyCode('SAVE5')"
+      >SAVE5
+      <p *ngIf="copied" class="copied-msg">Promo code copied!</p></span
+    >
+    to get a $5 discount.
+  </p>
+  <div class="main__categories-wrapper">
+    @for (item of categories; track $index) {
+      <a (click)="goToCategory(item.slug['en-US'])">
+        {{ item.name['en-US'] }}
+      </a>
+    }
+  </div>
+  <a (click)="goToCategory('on-sale')" class="main__discount-img">
+    <img class="discount-img" src="/assets/images/6546546.png" />
+  </a>
 </div>

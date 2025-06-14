@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
 import { api_url, project_key } from './confidential-data';
 import { ApiService } from './api.service';
-import { Cart, LineItem } from '../utils/interfaces/interface-cart-page';
+import {
+  CardDiscountById,
+  Cart,
+  DiscountCodeOld,
+  DiscountCodesOld,
+  LineItem,
+} from '../utils/interfaces/interface-cart-page';
 import { LocalStorageService } from './local-storage.service';
 import { BehaviorSubject } from 'rxjs';
 
@@ -211,6 +217,171 @@ export class CartService {
     }
 
     return request_error_message;
+  }
+
+  public static async getDiscountCode(
+    discountCode: string,
+  ): Promise<DiscountCodesOld> {
+    const customer_access_token: string =
+      LocalStorageService.getCustomerAccessToken();
+
+    try {
+      const encodedCode = encodeURIComponent(`code="${discountCode}"`);
+      const url = `${api_url}/${project_key}/discount-codes?where=${encodedCode}`;
+
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${customer_access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Discount code error ${error}`);
+      throw error;
+    }
+  }
+
+  public static async postDiscountCode(
+    cartId: string,
+    discountCodeName: string,
+  ): Promise<Cart> {
+    const customer_access_token: string =
+      LocalStorageService.getCustomerAccessToken();
+
+    try {
+      const url = `${api_url}/${project_key}/carts/${cartId}`;
+      const getCartVersion = await CartService.getCartVersionByCartId(cartId);
+      const bodyResponse = {
+        version: getCartVersion,
+        actions: [
+          {
+            action: 'addDiscountCode',
+            code: discountCodeName,
+          },
+        ],
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${customer_access_token}`,
+        },
+
+        body: JSON.stringify(bodyResponse),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`post Discount Code error ${error}`);
+      throw error;
+    }
+  }
+
+  public static async getDiscountCodeById(
+    codeId: string,
+  ): Promise<DiscountCodeOld> {
+    const customer_access_token: string =
+      LocalStorageService.getCustomerAccessToken();
+    try {
+      const url = `${api_url}/${project_key}/discount-codes/${codeId}`;
+
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${customer_access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Discount code error ${error}`);
+      throw error;
+    }
+  }
+
+  public static async removeDiscountCode(
+    cartId: string,
+    discountCodeId: string,
+  ): Promise<Cart> {
+    const customer_access_token: string =
+      LocalStorageService.getCustomerAccessToken();
+    try {
+      const url = `${api_url}/${project_key}/carts/${cartId}`;
+      const getCartVersion = await CartService.getCartVersionByCartId(cartId);
+
+      const bodyResponse = {
+        version: getCartVersion,
+        actions: [
+          {
+            action: 'removeDiscountCode',
+            discountCode: {
+              typeId: 'discount-code',
+              id: discountCodeId,
+            },
+          },
+        ],
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${customer_access_token}`,
+        },
+
+        body: JSON.stringify(bodyResponse),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`post Discount Code error ${error}`);
+      throw error;
+    }
+  }
+
+  public static async getCartDiscountById(
+    codeId: string,
+  ): Promise<CardDiscountById> {
+    const customer_access_token: string =
+      LocalStorageService.getCustomerAccessToken();
+    try {
+      const url = `${api_url}/${project_key}/cart-discounts/${codeId}`;
+
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${customer_access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Discount code error ${error}`);
+      throw error;
+    }
   }
 
   public static async getTotalQuantity(customer_id: string): Promise<number> {
