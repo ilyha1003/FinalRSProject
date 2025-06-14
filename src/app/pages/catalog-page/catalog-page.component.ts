@@ -24,6 +24,8 @@ import {
   PriceProduct,
   ProductColor,
 } from '../../utils/interfaces/interface-catalog-page';
+import { LocalStorageService } from '../../services/local-storage.service';
+import { CartService } from '../../services/cart.service';
 
 export interface GetMinProduct {
   id: string;
@@ -31,6 +33,7 @@ export interface GetMinProduct {
   description: string;
   price: PriceProduct | null;
   img: string;
+  isInCart?: boolean;
 }
 
 @Component({
@@ -71,6 +74,7 @@ export class CatalogPageComponent implements OnInit {
   public activeFiltersColors: string[] = [];
   public isColor = false;
 
+  private cartProducts: string[] = [];
   private CategoriesIdsNames: CategoriesIdSlug[] = [];
   private productsDiscount: ProductDiscounts[] = [];
   private offset = 0;
@@ -148,6 +152,7 @@ export class CatalogPageComponent implements OnInit {
   public async ngOnInit(): Promise<void> {
     await this.sortFormSubscribe();
     await this.searchFormSubcribe();
+    await this.getCartProducts();
     this.route.paramMap.subscribe(async (parameters) => {
       const nameFromRoute = parameters.get('name') ?? '';
 
@@ -155,7 +160,6 @@ export class CatalogPageComponent implements OnInit {
         nameFromRoute?.split(' ').length > 1
           ? nameFromRoute?.split(' ').join('-')
           : nameFromRoute;
-
       const responseCategories = await ApiService.getCategories();
       if (responseCategories) {
         this.CategoriesIdsNames = responseCategories.map((element) => ({
@@ -178,9 +182,9 @@ export class CatalogPageComponent implements OnInit {
         this.isSaleOpen = true;
         await this.onSaleButtonHandler();
       } else if (nameFromRoute.length === 0) {
-        await this.getProducts();
-
+        this.sortForm.get('selectedSort')?.setValue('price-asc');
         await this.patchMinMaxInputs({});
+        await this.allProductsRange(this.offset);
       } else if (foundCategory) {
         this.filterIdCategory = foundCategory.id;
 
@@ -286,7 +290,9 @@ export class CatalogPageComponent implements OnInit {
       });
       if (response) {
         for (const product of response.results) {
-          this.products.push(this.mapSearchProduct(product));
+          const mappedProduct = this.mapSearchProduct(product);
+          mappedProduct.isInCart = this.isProductInCart(product.id);
+          this.products.push(mappedProduct);
         }
       }
       await this.patchMinMaxInputs({
@@ -421,16 +427,37 @@ export class CatalogPageComponent implements OnInit {
     await this.loadFilteredProducts();
   }
 
+  public isProductInCart(productId: string): boolean {
+    return this.cartProducts.includes(productId);
+  }
+
+  private async getCartProducts(): Promise<void> {
+    const getIdCustomer = LocalStorageService.getCustomerId();
+
+    if (getIdCustomer.length > 0) {
+      try {
+        const responsive =
+          await CartService.getCustomerCartByCustomerId(getIdCustomer);
+
+        if (responsive) {
+          for (const cartProduct of responsive.lineItems) {
+            this.cartProducts.push(cartProduct.productId);
+          }
+        }
+      } catch (error) {
+        console.error(`Get cart products: ${error}`);
+      }
+    }
+  }
+
   private async loadFilteredProducts(): Promise<void> {
     this.isColor = true;
     const getFormMinPrice = this.filterForm.get('minPrice')?.value;
     const getFormMaxPrice = this.filterForm.get('maxPrice')?.value;
     const getFormSearchValue = this.filterForm.get('search')?.value;
     const getSortFormValue = this.sortForm.get('selectedSort')?.value;
-
     const min = Math.round(Number(getFormMinPrice) * 100);
     const max = Math.round(Number(getFormMaxPrice) * 100);
-
     const searchObject: Record<string, string | string[]> = {
       limit: '100',
       fuzzy: 'true',
@@ -461,7 +488,9 @@ export class CatalogPageComponent implements OnInit {
         );
       }
       for (const product of filteredResults) {
-        this.products.push(this.mapSearchProduct(product));
+        const mappedProduct = this.mapSearchProduct(product);
+        mappedProduct.isInCart = this.isProductInCart(product.id);
+        this.products.push(mappedProduct);
       }
       this.totalProduct = this.products.length > 20;
       if (this.products.length >= response.total) {
@@ -654,7 +683,9 @@ export class CatalogPageComponent implements OnInit {
       filter: `variants.price.centAmount:range(${numberMin * 100} to ${numberMax * 100})`,
     });
 
+    this.isNewPage = true;
     await this.forAndPushSearchProducts(searchObject);
+    this.isNewPage = false;
   }
 
   private async forAndPushSearchProducts(
@@ -670,7 +701,9 @@ export class CatalogPageComponent implements OnInit {
       this.totalProduct = searchProduct.total > 20;
 
       for (const product of searchProduct.results) {
-        this.products.push(this.mapSearchProduct(product));
+        const mappedProduct = this.mapSearchProduct(product);
+        mappedProduct.isInCart = this.isProductInCart(product.id);
+        this.products.push(mappedProduct);
       }
 
       this.totalProduct = this.products.length < searchProduct.total;
@@ -712,7 +745,7 @@ export class CatalogPageComponent implements OnInit {
       await ApiService.getSearchProducts(searchObject);
 
     if (!responsePriceProduct) return;
-    console.log(searchObject);
+
     this.productsSetColor.clear();
     this.productColors = [];
 
@@ -774,7 +807,7 @@ export class CatalogPageComponent implements OnInit {
   private mapSearchProduct(product: SearchProduct): GetMinProduct {
     return {
       id: product.id,
-      name: product.name['en-US'],
+      name: getShortDescription(product.name['en-US'], 30),
       description: getShortDescription(product.description['en-US'], 60),
       price: this.calculatePrice(product.masterVariant.prices),
       img: product.masterVariant.images[0].url,
@@ -968,16 +1001,21 @@ export class CatalogPageComponent implements OnInit {
       searchObject['text.en-US'] = getSearchFormValue;
     }
 
-    console.log(searchObject);
     const range = await ApiService.getSearchProducts(searchObject);
     if (range) {
-      this.totalProduct = range.total > 20;
-      for (const product of range.results) {
-        this.products.push(this.mapSearchProduct(product));
-      }
-      if (this.products.length >= range.total) {
-        this.totalProduct = false;
-      }
+      this.addLoadRange(range);
+    }
+  }
+
+  private addLoadRange(range: GetSearchProduct): void {
+    this.totalProduct = range.total > 20;
+    for (const product of range.results) {
+      const mappedProduct = this.mapSearchProduct(product);
+      mappedProduct.isInCart = this.isProductInCart(product.id);
+      this.products.push(mappedProduct);
+    }
+    if (this.products.length >= range.total) {
+      this.totalProduct = false;
     }
   }
 

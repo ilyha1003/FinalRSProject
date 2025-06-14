@@ -37,5 +37,31 @@
     <p class="product__description">
       {{ product.description }}
     </p>
+    @if (onLoginState) {
+      <button
+        class="button button__product"
+        [ngClass]="{
+          'button_in-cart': product.isInCart,
+          button_loading: isLoading,
+        }"
+        [disabled]="isLoading"
+        (click)="buttonAddHandler($event, product)"
+      >
+        <ng-container *ngIf="!isLoading; else loadingTpl">
+          {{ product.isInCart ? 'Added to Cart' : 'Add to Cart' }}
+        </ng-container>
+        <ng-template #loadingTpl>
+          <span>Loading...</span>
+        </ng-template>
+      </button>
+    } @else {
+      <button
+        class="button button__product"
+        (click)="$event.stopPropagation()"
+        routerLink="/basket"
+      >
+        Go to Cart
+      </button>
+    }
   </figcaption>
 </figure>

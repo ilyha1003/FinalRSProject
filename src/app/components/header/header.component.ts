@@ -12,6 +12,8 @@ import { LocalStorageService } from '../../services/local-storage.service';
 import { Subscription } from 'rxjs';
 import { SignInService } from '../../services/sign-in.service';
 import { ApiService } from '../../services/api.service';
+import { CartService } from '../../services/cart.service';
+import { CartCounterService } from '../../services/cart-counter.service';
 
 @Component({
   selector: 'app-header',
@@ -33,6 +35,7 @@ export class HeaderComponent implements OnInit {
   constructor(
     private router: Router,
     private signInService: SignInService,
+    private cartCounterService: CartCounterService,
   ) {}
 
   @HostListener('window:resize')
@@ -70,6 +73,15 @@ export class HeaderComponent implements OnInit {
     );
 
     this.isMobile = window.innerWidth <= 768;
+
+    this.cartCounterService.cartCount.subscribe((count) => {
+      this.basketItemCount = count;
+    });
+    await this.getCoundProductsQuantity();
+  }
+
+  public ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 
   public buttonLoginHandler(): void {
@@ -112,6 +124,27 @@ export class HeaderComponent implements OnInit {
     this.signInService.logout();
     this.showProfileMenu = false;
     this.router.navigate(['/']);
+  }
+
+  private async getCoundProductsQuantity(): Promise<void> {
+    const getIdCustomer = LocalStorageService.getCustomerId();
+
+    if (getIdCustomer.length > 0) {
+      try {
+        const responsive =
+          await CartService.getCustomerCartByCustomerId(getIdCustomer);
+
+        if (responsive) {
+          const totalQuantity = responsive.lineItems.reduce((sum, item) => {
+            return sum + (item.quantity ?? 0);
+          }, 0);
+
+          this.cartCounterService.updateCount(totalQuantity);
+        }
+      } catch (error) {
+        console.error(`getCoundProductsQuantity error: ${error}`);
+      }
+    }
   }
 
   private adjustDropdownPosition(): void {
