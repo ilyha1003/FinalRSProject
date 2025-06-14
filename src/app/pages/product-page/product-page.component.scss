@@ -139,7 +139,7 @@
   padding: 0.8rem 1.5rem;
   border: none;
   border-radius: 15px;
-  cursor: pointer;
+
   font-size: 1rem;
   font-weight: 700;
 
@@ -148,7 +148,12 @@
       background-color: var(--color-gray);
     }
   }
+}
 
+.product__button-add-to-cart[disabled] {
+  background-color: var(--color-gray);
+  color: var(--color-text-intro);
+  cursor: default;
 }
 
 .product__modal-window {

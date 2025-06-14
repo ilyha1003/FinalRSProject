@@ -1,10 +1,12 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { Product, ProductImage } from '../../utils/interfaces/interfaces';
 import { LoaderService } from '../../services/loader.service';
 import { getFormatPrice } from '../../utils/get-format-price';
+import { CartService } from '../../services/cart.service';
+import { LocalStorageService } from '../../services/local-storage.service';
 
 @Component({
   selector: 'app-product-page',
@@ -17,6 +19,7 @@ export class ProductPageComponent implements OnInit {
   public productId: string | null = '';
   public product!: Product | undefined;
 
+  public isProductInCart: boolean = false;
   public selectedImageIndex = 0;
   public isModalOpen = false;
   public images = this.product?.masterData?.current?.masterVariant?.images;
@@ -24,8 +27,10 @@ export class ProductPageComponent implements OnInit {
   private touchEndX = 0;
 
   constructor(
+    private router: Router,
     private route: ActivatedRoute,
     private loaderService: LoaderService,
+    private cartService: CartService,
   ) {}
 
   public get isDiscountPrice(): boolean {
@@ -100,6 +105,16 @@ export class ProductPageComponent implements OnInit {
     return input.includes('USD');
   }
 
+  private static async isProductInCartCheck(
+    productId: string | null,
+  ): Promise<boolean> {
+    const customer_id = LocalStorageService.getCustomerId();
+    const cartLineItems =
+      await CartService.getCustomerCartLineItems(customer_id);
+    const result = cartLineItems.some((item) => item.productId === productId);
+    return result;
+  }
+
   @HostListener('document:touchstart', ['$event'])
   public onTouchStart(event: TouchEvent): void {
     if (!this.isModalOpen) return;
@@ -158,6 +173,10 @@ export class ProductPageComponent implements OnInit {
     } finally {
       this.loaderService.hide();
     }
+
+    this.isProductInCart = await ProductPageComponent.isProductInCartCheck(
+      this.productId,
+    );
   }
 
   public nextMiniImage(index: number): void {
@@ -182,6 +201,47 @@ export class ProductPageComponent implements OnInit {
     this.selectedImageIndex =
       (this.selectedImageIndex - 1 + this.productImages.length) %
       this.productImages.length;
+  }
+
+  public async addToCart(productId: string | null): Promise<void> {
+    const isLogin = LocalStorageService.getLoginState();
+
+    if (isLogin === 'true') {
+      this.loaderService.show();
+      const cart_id: string = LocalStorageService.getCustomerCartID();
+      const customer_id: string = LocalStorageService.getCustomerId();
+      if (productId) {
+        await CartService.addLineItem(cart_id, productId);
+      }
+      this.loaderService.hide();
+      this.isProductInCart = true;
+      this.cartService.updateCartCount(customer_id);
+    } else {
+      this.router.navigate(['basket']);
+    }
+  }
+
+  public async deleteFromCart(productId: string | null): Promise<void> {
+    this.loaderService.show();
+    const cart_id: string = LocalStorageService.getCustomerCartID();
+    const customer_id = LocalStorageService.getCustomerId();
+    const cartLineItems =
+      await CartService.getCustomerCartLineItems(customer_id);
+    const cartLineItem = cartLineItems.find(
+      (item) => item.productId === productId,
+    );
+    const quantity = cartLineItem?.quantity;
+    const id = cartLineItem?.id;
+
+    if (quantity && id) {
+      for (let index = 0; index < quantity; index++) {
+        await CartService.removeLineItem(cart_id, id);
+      }
+    }
+
+    this.isProductInCart = false;
+    this.loaderService.hide();
+    this.cartService.updateCartCount(customer_id);
   }
 
   private handleSwipe(): void {
