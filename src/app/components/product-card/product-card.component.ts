@@ -4,7 +4,6 @@ import { NgClass, NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { CartService } from '../../services/cart.service';
-import { CartCounterService } from '../../services/cart-counter.service';
 
 @Component({
   selector: 'app-product-card',
@@ -17,7 +16,7 @@ export class ProductCardComponent implements OnInit {
   public onLoginState = false;
   public isLoading = false;
 
-  constructor(private cartCounterService: CartCounterService) {}
+  constructor(private cartService: CartService) {}
 
   public async buttonAddHandler(
     event: Event,
@@ -33,15 +32,7 @@ export class ProductCardComponent implements OnInit {
         await CartService.addLineItem(getCartId, product.id);
         product.isInCart = true;
 
-        const responsive =
-          await CartService.getCustomerCartByCustomerId(getIdCustomer);
-
-        if (responsive) {
-          const totalQuantity = responsive.lineItems.reduce((sum, item) => {
-            return sum + (item.quantity ?? 0);
-          }, 0);
-          this.cartCounterService.updateCount(totalQuantity);
-        }
+        this.cartService.updateCartCount(getIdCustomer);
       } catch (error) {
         console.error(`Button addHandler: ${error}`);
       } finally {

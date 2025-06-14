@@ -152,7 +152,9 @@ export class CatalogPageComponent implements OnInit {
   public async ngOnInit(): Promise<void> {
     await this.sortFormSubscribe();
     await this.searchFormSubcribe();
-    await this.getCartProducts();
+    if (LocalStorageService.getLoginState() === 'true') {
+      await this.getCartProducts();
+    }
     this.route.paramMap.subscribe(async (parameters) => {
       const nameFromRoute = parameters.get('name') ?? '';
 
@@ -167,16 +169,13 @@ export class CatalogPageComponent implements OnInit {
           slug: element.slug['en-US'],
         }));
       }
-
       const foundCategory = this.CategoriesIdsNames.find(
         (object) => object.slug === isNameMoreLength,
       );
-
       const getDiscount = await ApiService.getProductDiscounts();
       if (getDiscount) {
         this.productsDiscount.push(...getDiscount);
       }
-
       if (nameFromRoute === 'on-sale') {
         this.activeFilters.push(nameFromRoute);
         this.isSaleOpen = true;

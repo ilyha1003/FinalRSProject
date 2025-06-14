@@ -9,20 +9,21 @@ import { Router, NavigationEnd, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { LocalStorageService } from '../../services/local-storage.service';
-import { Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { SignInService } from '../../services/sign-in.service';
 import { ApiService } from '../../services/api.service';
 import { CartService } from '../../services/cart.service';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-header',
-  imports: [NgIf, RouterLink],
+  imports: [NgIf, RouterLink, AsyncPipe],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
 })
 export class HeaderComponent implements OnInit {
   @ViewChild('dropdown') public dropdown!: ElementRef;
-  public isLogin = false;
+  public isLogin = new BehaviorSubject<boolean>(false);
   public showHeader = true;
   public showProfileMenu = false;
   public isMobile = false;
@@ -46,10 +47,15 @@ export class HeaderComponent implements OnInit {
   }
 
   public async ngOnInit(): Promise<void> {
-    const customer_id = LocalStorageService.getCustomerId();
-    this.cartService.updateCartCount(customer_id);
+    if (LocalStorageService.getLoginState() === 'true') {
+      const customer_id = LocalStorageService.getCustomerId();
+      await this.cartService.updateCartCount(customer_id);
+    }
+
     this.cartService.cartCount$.subscribe((count) => {
-      this.basketItemCount = count;
+      if (LocalStorageService.getLoginState()) {
+        this.basketItemCount = count;
+      }
     });
 
     this.router.events
@@ -65,10 +71,11 @@ export class HeaderComponent implements OnInit {
 
     this.subscription = this.signInService.isLogin$.subscribe(
       async (isLoggedIn) => {
-        this.isLogin = isLoggedIn;
+        this.isLogin.next(isLoggedIn);
 
         if (!isLoggedIn) {
           this.firstName = '';
+          this.basketItemCount = 0;
         }
 
         if (isLoggedIn) {
@@ -79,9 +86,6 @@ export class HeaderComponent implements OnInit {
 
     this.isMobile = window.innerWidth <= 768;
 
-    this.cartService.cartCount$.subscribe((count) => {
-      this.basketItemCount = count;
-    });
     // await this.getCoundProductsQuantity();
   }
 
@@ -130,26 +134,6 @@ export class HeaderComponent implements OnInit {
     this.showProfileMenu = false;
     this.router.navigate(['/']);
   }
-
-  // private async getCoundProductsQuantity(): Promise<void> {
-  //   const getIdCustomer = LocalStorageService.getCustomerId();
-
-  //   if (getIdCustomer.length > 0) {
-  //     try {
-  //       const responsive =
-  //         await CartService.getCustomerCartByCustomerId(getIdCustomer);
-
-  //       if (responsive) {
-  //         const totalQuantity = responsive.lineItems.reduce((sum, item) => {
-  //           return sum + (item.quantity ?? 0);
-  //         }, 0);
-
-  //       }
-  //     } catch (error) {
-  //       console.error(`getCoundProductsQuantity error: ${error}`);
-  //     }
-  //   }
-  // }
 
   private adjustDropdownPosition(): void {
     if (!this.showProfileMenu || !this.dropdown) return;

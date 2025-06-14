@@ -48,7 +48,7 @@ export class BasketPageComponent {
   constructor(
     private signInService: SignInService,
     private loaderService: LoaderService,
-    // private cartCounterService: CartCounterService,
+    private cartService: CartService,
   ) {}
   public static convertProductPrice(price: number): string {
     return getFormatPrice(price);
@@ -186,15 +186,19 @@ export class BasketPageComponent {
     this.loaderService.hide();
   }
 
-  public async increaseProductQuantity(product_id: string): Promise<void> {
-    this.loaderService.show();
-    const cart_id: string = LocalStorageService.getCustomerCartID();
-    await CartService.addLineItem(cart_id, product_id);
+  public async updateCart(): Promise<void> {
     await this.updateLineItems();
     await this.updateTotalPrice();
     await this.updateTotalQuantity();
     await this.updateActiveDiscountCode();
-    // await this.updateTotalQuantityForHeader();
+    await this.cartService.updateCartCount(LocalStorageService.getCustomerId());
+  }
+
+  public async increaseProductQuantity(product_id: string): Promise<void> {
+    this.loaderService.show();
+    const cart_id: string = LocalStorageService.getCustomerCartID();
+    await CartService.addLineItem(cart_id, product_id);
+    await this.updateCart();
     this.loaderService.hide();
   }
 
@@ -202,12 +206,8 @@ export class BasketPageComponent {
     this.loaderService.show();
     const cart_id: string = LocalStorageService.getCustomerCartID();
     await CartService.removeLineItem(cart_id, line_item_id);
-    await this.updateLineItems();
-    await this.updateTotalPrice();
-    await this.updateTotalQuantity();
+    await this.updateCart();
     await this.setCartState();
-    await this.updateActiveDiscountCode();
-    // await this.updateTotalQuantityForHeader();
     this.loaderService.hide();
   }
 
@@ -220,12 +220,8 @@ export class BasketPageComponent {
     for (let index = 0; index < quantity; index++) {
       await CartService.removeLineItem(cart_id, line_item_id);
     }
-    await this.updateLineItems();
-    await this.updateTotalPrice();
-    await this.updateTotalQuantity();
+    await this.updateCart();
     await this.setCartState();
-    await this.updateActiveDiscountCode();
-    // await this.updateTotalQuantityForHeader();
     this.loaderService.hide();
   }
 
@@ -238,25 +234,22 @@ export class BasketPageComponent {
 
   public async ngOnInit(): Promise<void> {
     this.loaderService.show();
-    if (LocalStorageService.getLoginState()) {
-      await this.updateLineItems();
-      await this.updateTotalPrice();
-      await this.updateTotalQuantity();
-      await this.updateActiveDiscountCode();
+    if (LocalStorageService.getLoginState() === 'true') {
+      await this.updateCart();
+      this.codeDiscountForm.get('codeDiscount')?.valueChanges.subscribe(() => {
+        this.isValid = true;
+      });
+      this.isCartEmpty = (await BasketPageComponent.isCartEmptyCheck())
+        ? true
+        : false;
     }
-    this.isCartEmpty = (await BasketPageComponent.isCartEmptyCheck())
-      ? true
-      : false;
+
     this.subscription = this.signInService.isLogin$.subscribe(
       async (isLoggedIn) => {
         this.isLogin = isLoggedIn;
       },
     );
     this.loaderService.hide();
-
-    this.codeDiscountForm.get('codeDiscount')?.valueChanges.subscribe(() => {
-      this.isValid = true;
-    });
   }
 
   public async updateActiveDiscountCode(): Promise<void> {
@@ -369,23 +362,4 @@ export class BasketPageComponent {
     this.codeDiscountUsed = true;
     setTimeout(() => (this.codeDiscountUsed = false), 2000);
   }
-
-  // private async updateTotalQuantityForHeader(): Promise<void> {
-  //   const getIdCustomer = LocalStorageService.getCustomerId();
-
-  //   try {
-  //     const responsive =
-  //       await CartService.getCustomerCartByCustomerId(getIdCustomer);
-
-  //     if (responsive) {
-  //       const totalQuantity = responsive.lineItems.reduce((sum, item) => {
-  //         return sum + (item.quantity ?? 0);
-  //       }, 0);
-
-  //       this.cartCounterService.updateCount(totalQuantity);
-  //     }
-  //   } catch (error) {
-  //     console.error('update total quantity error:', error);
-  //   }
-  // }
 }
