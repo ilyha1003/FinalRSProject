@@ -4,7 +4,7 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 Our application is an online store. This project is educational and was created as part of the Frontend development course at RS SCHOOL. However, if desired, this project can be further developed into a fully functional commercial online store.
 
-The application is powered by [commerce API](https://commercetools.com/), a leading provider of commerce solutions for B2C and B2B enterprises.
+The application is powered by [commerce API](https://docs.commercetools.com/api), a leading provider of commerce solutions for B2C and B2B enterprises.
 
 ## Development server
 
