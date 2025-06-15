@@ -22,43 +22,6 @@
       </div>
 
       <div *ngIf="isLogin && !isCartEmpty" class="cart-content-field">
-        <form
-          [formGroup]="codeDiscountForm"
-          (ngSubmit)="addCodeDiscountHandler()"
-          class="form__basket"
-        >
-          <div class="basket__input-wrapper">
-            <input
-              class="basket__input-code-discount"
-              [ngClass]="{
-                input__code_invalid: !isValid || codeDiscountError,
-                input__code_used: codeDiscountUsed,
-                input__code_success: codeActivatedMessage,
-              }"
-              formControlName="codeDiscount"
-            />
-            <button type="submit" class="button button__apply-code">
-              Apply code
-            </button>
-          </div>
-          <p *ngIf="!isValid">Code not found</p>
-          <p *ngIf="codeDiscountUsed">Code already applied</p>
-          <p *ngIf="codeDiscountError">Code not valid for order</p>
-          <p *ngIf="codeActivatedMessage">{{ codeActivatedMessage }}</p>
-        </form>
-        <ul>
-          <p>Active Codes:</p>
-          @for (code of codes; track code.id) {
-            <li class="li__basket">
-              <p class="li__name-code">{{ code.name }}</p>
-              <button
-                id="{{ code.id }}"
-                class="button button__basket-code"
-                (click)="deleteCodeDiscountHandler(code)"
-              ></button>
-            </li>
-          }
-        </ul>
         <ul class="cart-product__list">
           @for (item of lineItems; track item.id) {
             <li class="cart-product-list__item">
@@ -71,7 +34,21 @@
               </div>
               <div class="product-name__field">
                 <p class="product-name">{{ item.name['en-US'] }}</p>
-                <p class="product-initial-price">{{ item.price.value.usd }}</p>
+                <div class="product-prices">
+                  <p
+                    class="product-initial-price"
+                    [class.product-old-price]="item.price.discounted"
+                  >
+                    {{ item.price.value.usd }}
+                  </p>
+                  <p class="product-initial-price product-discounted-price">
+                    {{
+                      item.price.discounted
+                        ? item.price.discounted.value.usd
+                        : ''
+                    }}
+                  </p>
+                </div>
               </div>
               <div class="product-quantity__field">
                 <button
@@ -110,19 +87,64 @@
           }
         </ul>
         <div class="result-field">
-          <p class="result-header">Result</p>
-          <div class="quantity">
-            <p>Products quantity:&nbsp;</p>
-            <p>{{ totalProductsQuantity }}</p>
-          </div>
-          <div class="price">
-            <p>Total price:&nbsp;</p>
-            <p>{{ totalPrice }}</p>
+          <div class="result-content">
+            <p class="result-header">Result</p>
+            <form
+              [formGroup]="codeDiscountForm"
+              (ngSubmit)="addCodeDiscountHandler()"
+              class="form__basket"
+            >
+              <div class="basket__input-wrapper">
+                <input
+                  class="basket__input-code-discount"
+                  [ngClass]="{
+                    input__code_invalid: !isValid || codeDiscountError,
+                    input__code_used: codeDiscountUsed,
+                    input__code_success: codeActivatedMessage,
+                  }"
+                  formControlName="codeDiscount"
+                />
+                <button type="submit" class="button button__apply-code">
+                  Apply code
+                </button>
+              </div>
+              <p *ngIf="!isValid">Code not found</p>
+              <p *ngIf="codeDiscountUsed">Code already applied</p>
+              <p *ngIf="codeDiscountError">Code not valid for order</p>
+              <p *ngIf="codeActivatedMessage">{{ codeActivatedMessage }}</p>
+            </form>
+            <ul>
+              <p>Active Codes:</p>
+              @for (code of codes; track code.id) {
+                <li class="li__basket">
+                  <p class="li__name-code">{{ code.name }}</p>
+                  <button
+                    id="{{ code.id }}"
+                    class="button button__basket-code"
+                    (click)="deleteCodeDiscountHandler(code)"
+                  ></button>
+                </li>
+              }
+            </ul>
+            <div class="quantity__field">
+              <p>Products quantity:&nbsp;</p>
+              <p>{{ totalProductsQuantity }}&nbsp;pcs.</p>
+            </div>
+            <div class="price__field">
+              <p class="price-header">Total price:&nbsp;</p>
+              <p class="price" [class.old-total-price]="codes.length">
+                {{ totalPriceBeforeDiscount }}
+              </p>
+            </div>
+            <div *ngIf="codes.length" class="discounted-price__field">
+              <p class="discounted-price-header">Discounted price:&nbsp;</p>
+              <p class="discounted-price">{{ totalPrice }}</p>
+            </div>
+            <button (click)="clearCart()" class="clear-cart__button">
+              Clear cart
+            </button>
           </div>
         </div>
-        <button (click)="clearCart()" class="clear-cart__button">
-          Clear cart
-        </button>
       </div>
     </div>
   </div>

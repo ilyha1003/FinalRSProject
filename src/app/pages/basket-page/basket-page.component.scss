@@ -42,8 +42,7 @@ ul {
 
 .cart-content-field {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: relative;
   gap: 20px;
 }
 
@@ -82,7 +81,7 @@ ul {
 }
 
 .product-name {
-  width: 300px;
+  width: 200px;
 }
 
 .product-quantity__field {
@@ -117,12 +116,27 @@ ul {
   }
 }
 
+.product-price__field {
+  width: 80px;
+}
+
 .result-field {
   display: flex;
+  position: relative;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.result-content {
+  display: flex;
+  background-color: var(--color-white);
+  border-radius: 10px;
+  padding: 10px;
   flex-direction: column;
+  position: sticky;
   gap: 10px;
-  align-items: center;
-  width: 300px;
+  height: max-content;
+  top: 20px;
 }
 
 .result-header {
@@ -141,11 +155,22 @@ ul {
   max-width: 300px;
 }
 
-.price,
-.quantity {
+.price__field,
+.quantity__field,
+.discounted-price__field {
   display: flex;
   width: 100%;
   justify-content: space-between;
+}
+
+.discounted-price {
+  color: var(--sale);
+}
+
+.old-total-price {
+  text-decoration: line-through;
+  color: var(--color-black);
+  opacity: 0.5;
 }
 
 .basket__input-wrapper {
@@ -234,4 +259,25 @@ ul {
 
 .button__basket-code::after {
   transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.product-discounted-price {
+  color: var(--sale);
+}
+
+.product-old-price {
+  text-decoration: line-through;
+  font-size: 0.9rem;
+  color: var(--color-black);
+  opacity: 0.5;
+}
+
+@media screen and (max-width: 960px) {
+  .cart-content-field {
+    flex-direction: column;
+  }
+
+  .result-field {
+    justify-content: center;
+  }
 }

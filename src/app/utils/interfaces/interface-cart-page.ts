@@ -41,12 +41,17 @@ export interface ProductImages {
 
 export interface ProductPrice {
   value: ProductValue;
+  discounted: DiscountedProductPrice;
 }
 
 export interface ProductValue {
   centAmount: number;
   usd: string;
   totalUsd: string;
+}
+
+export interface DiscountedProductPrice {
+  value: ProductValue;
 }
 
 export interface DiscountCodesOld {
