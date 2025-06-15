@@ -91,6 +91,21 @@ export class CartService {
     return totalQuantity;
   }
 
+  public static async getTotalLineItemsPriceBeforeDiscount(
+    customer_id: string,
+  ): Promise<number> {
+    const cart = await CartService.getCustomerCartByCustomerId(customer_id);
+    let resultPrise: number = 0;
+    if (cart) {
+      for (const item of cart.lineItems) {
+        resultPrise += item.price.discounted
+          ? item.price.discounted.value.centAmount * item.quantity
+          : item.price.value.centAmount * item.quantity;
+      }
+    }
+    return resultPrise;
+  }
+
   public static async getCartVersionByCartId(cart_id: string): Promise<number> {
     let cart_version: number = 0;
     const customer_access_token: string =

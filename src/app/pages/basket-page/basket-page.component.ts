@@ -24,14 +24,15 @@ export class BasketPageComponent {
   public isCartEmpty: boolean = true;
   public isLogin: boolean = false;
   public isModalShow: boolean = false;
-  public codeActivatedMessage = '';
+  public codeDiscountError = false;
+  public codeDiscountUsed = false;
 
   public modalErrorMessage: string = '';
   public modalHeader: string = '';
   public totalPrice: string = '$0';
-  public codeDiscountError = false;
-  public codeDiscountUsed = false;
+  public totalPriceBeforeDiscount: string = '$0';
   public totalProductsQuantity: number = 0;
+  public codeActivatedMessage = '';
 
   public lineItems: LineItem[] = [];
 
@@ -50,9 +51,6 @@ export class BasketPageComponent {
     private loaderService: LoaderService,
     private cartService: CartService,
   ) {}
-  public static convertProductPrice(price: number): string {
-    return getFormatPrice(price);
-  }
 
   public static async isCartEmptyCheck(): Promise<boolean> {
     const customer_id = LocalStorageService.getCustomerId();
@@ -75,7 +73,6 @@ export class BasketPageComponent {
       const responseCode = await CartService.getDiscountCode(discountCode);
 
       if (responseCode.total === 0) {
-        console.log('Код не найден');
         this.isValid = false;
         return;
       }
@@ -124,6 +121,7 @@ export class BasketPageComponent {
         this.showActiveMessage();
         await this.createActiveDiscountCodes(responseCart);
         await this.updateTotalPrice();
+        await this.updateTotalPriceBeforeDiscount();
         codeControl?.setValue('');
       }
     } catch (error) {
@@ -138,7 +136,6 @@ export class BasketPageComponent {
     const getIdCart = LocalStorageService.getCustomerCartID();
     try {
       await CartService.removeDiscountCode(getIdCart, objectCode.id);
-      console.log(objectCode.id);
       const index = this.codes.findIndex(
         (object) => object.name === objectCode.name,
       );
@@ -147,6 +144,7 @@ export class BasketPageComponent {
         this.codes.splice(index, 1);
       }
       await this.updateTotalPrice();
+      await this.updateTotalPriceBeforeDiscount();
     } catch (error) {
       console.error('deleteCodeDiscountHandler error', error);
     }
@@ -155,15 +153,26 @@ export class BasketPageComponent {
   public async updateLineItems(): Promise<void> {
     const customer_id = LocalStorageService.getCustomerId();
     const lineItems = await CartService.getCustomerCartLineItems(customer_id);
+    console.log(await CartService.getCustomerCartByCustomerId(customer_id));
+
     this.lineItems = lineItems.length > 0 ? lineItems : [];
     await this.generateUsdLineItemsPrice();
     await this.generateTotalUsdLineItemsPrice();
+    await this.generateUsdDiscountedLineItemsPrice();
+    await this.generateTotalUsdDiscountedLineItemsPrice();
+  }
+
+  public async updateTotalPriceBeforeDiscount(): Promise<void> {
+    const customer_id = LocalStorageService.getCustomerId();
+    const totalPrice =
+      await CartService.getTotalLineItemsPriceBeforeDiscount(customer_id);
+    this.totalPriceBeforeDiscount = `${getFormatPrice(totalPrice / 100)}`;
   }
 
   public async updateTotalPrice(): Promise<void> {
     const customer_id = LocalStorageService.getCustomerId();
     const totalPrice = await CartService.getCustomerCartTotalPrice(customer_id);
-    this.totalPrice = `$${totalPrice}`;
+    this.totalPrice = `${getFormatPrice(totalPrice / 100)}`;
   }
 
   public async updateTotalQuantity(): Promise<void> {
@@ -175,7 +184,7 @@ export class BasketPageComponent {
   public async generateUsdLineItemsPrice(): Promise<void> {
     for (const lineItem of this.lineItems) {
       lineItem.price.value.usd = getFormatPrice(
-        lineItem.price.value.centAmount,
+        lineItem.price.value.centAmount / 100,
       );
     }
   }
@@ -183,8 +192,29 @@ export class BasketPageComponent {
   public async generateTotalUsdLineItemsPrice(): Promise<void> {
     for (const lineItem of this.lineItems) {
       lineItem.price.value.totalUsd = getFormatPrice(
-        lineItem.price.value.centAmount * lineItem.quantity,
+        (lineItem.price.value.centAmount * lineItem.quantity) / 100,
       );
+    }
+  }
+
+  public async generateUsdDiscountedLineItemsPrice(): Promise<void> {
+    for (const lineItem of this.lineItems) {
+      if (lineItem.price.discounted) {
+        lineItem.price.discounted.value.usd = getFormatPrice(
+          lineItem.price.discounted.value.centAmount / 100,
+        );
+      }
+    }
+  }
+
+  public async generateTotalUsdDiscountedLineItemsPrice(): Promise<void> {
+    for (const lineItem of this.lineItems) {
+      if (lineItem.price.discounted) {
+        lineItem.price.value.totalUsd = getFormatPrice(
+          (lineItem.price.discounted.value.centAmount * lineItem.quantity) /
+            100,
+        );
+      }
     }
   }
 
@@ -206,6 +236,7 @@ export class BasketPageComponent {
 
   public async updateCart(): Promise<void> {
     await this.updateLineItems();
+    await this.updateTotalPriceBeforeDiscount();
     await this.updateTotalPrice();
     await this.updateTotalQuantity();
     await this.updateActiveDiscountCode();
@@ -301,7 +332,6 @@ export class BasketPageComponent {
     const appliedCodes = cart.discountCodes?.filter(
       (dc) => dc.state === 'DoesNotMatchCart',
     );
-    console.log('deleteWork');
     try {
       for (const code of appliedCodes) {
         const getDiscountCode = await CartService.getDiscountCodeById(
@@ -318,6 +348,7 @@ export class BasketPageComponent {
           this.codes.splice(index, 1);
         }
         await this.updateTotalPrice();
+        await this.updateTotalPriceBeforeDiscount();
       }
     } catch (error) {
       console.error('deleteDiscountCodes error', error);
