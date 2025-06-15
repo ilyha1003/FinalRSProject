@@ -88,7 +88,7 @@
         </ul>
         <div class="result-field">
           <div class="result-content">
-            <p class="result-header">Result</p>
+            <h2 class="result-header">Result:</h2>
             <form
               [formGroup]="codeDiscountForm"
               (ngSubmit)="addCodeDiscountHandler()"
@@ -108,13 +108,21 @@
                   Apply code
                 </button>
               </div>
-              <p *ngIf="!isValid">Code not found</p>
-              <p *ngIf="codeDiscountUsed">Code already applied</p>
-              <p *ngIf="codeDiscountError">Code not valid for order</p>
-              <p *ngIf="codeActivatedMessage">{{ codeActivatedMessage }}</p>
+              <p class="basket__input-message" *ngIf="!isValid">
+                Code not found
+              </p>
+              <p class="basket__input-message" *ngIf="codeDiscountUsed">
+                Code already applied
+              </p>
+              <p class="basket__input-message" *ngIf="codeDiscountError">
+                Code not valid for order
+              </p>
+              <p class="basket__input-message" *ngIf="codeActivatedMessage">
+                {{ codeActivatedMessage }}
+              </p>
             </form>
             <ul>
-              <p>Active Codes:</p>
+              <h3 class="basket__active-h3">Active Codes:</h3>
               @for (code of codes; track code.id) {
                 <li class="li__basket">
                   <p class="li__name-code">{{ code.name }}</p>

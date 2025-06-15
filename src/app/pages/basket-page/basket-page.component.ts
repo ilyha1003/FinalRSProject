@@ -65,7 +65,7 @@ export class BasketPageComponent {
 
   public async addCodeDiscountHandler(): Promise<void> {
     const codeControl = this.codeDiscountForm.get('codeDiscount');
-    const discountCode = codeControl?.value?.trim() ?? '';
+    const discountCode = codeControl?.value;
 
     if (!discountCode) return;
 
@@ -73,7 +73,7 @@ export class BasketPageComponent {
       const responseCode = await CartService.getDiscountCode(discountCode);
 
       if (responseCode.total === 0) {
-        this.isValid = false;
+        this.showDiscountNotFound();
         return;
       }
 
@@ -91,10 +91,9 @@ export class BasketPageComponent {
       await this.addCodeDiscount(responseCode);
 
       this.codeDiscountForm.reset();
-      this.isValid = true;
     } catch (error) {
       console.error('Add code Error', error);
-      this.isValid = false;
+      this.showDiscountNotFound();
     }
   }
 
@@ -285,9 +284,7 @@ export class BasketPageComponent {
     this.loaderService.show();
     if (LocalStorageService.getLoginState() === 'true') {
       await this.updateCart();
-      this.codeDiscountForm.get('codeDiscount')?.valueChanges.subscribe(() => {
-        this.isValid = true;
-      });
+
       this.isCartEmpty = (await BasketPageComponent.isCartEmptyCheck())
         ? true
         : false;
@@ -412,5 +409,10 @@ export class BasketPageComponent {
   private showDiscountError(): void {
     this.codeDiscountError = true;
     setTimeout(() => (this.codeDiscountError = false), 2000);
+  }
+
+  private showDiscountNotFound(): void {
+    this.isValid = false;
+    setTimeout(() => (this.isValid = true), 2000);
   }
 }
