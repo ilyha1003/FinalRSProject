@@ -1,11 +1,31 @@
 <div class="main__wrapper">
   <p class="promo-code-text">
-    For customers who order over $1000, use promo code
-    <span class="promo-code" (click)="copyCode('SAVE5')"
-      >SAVE5
-      <p *ngIf="copied" class="copied-msg">Promo code copied!</p></span
-    >
-    to get a $5 discount.
+    New customers get&nbsp;<strong>15% off</strong>&nbsp;- use promo code:
+    <span class="main__promo-code">
+      WELCOME_15
+      <button
+        class="button button__promo-main"
+        (click)="copyCode('WELCOME_15')"
+      >
+        <span *ngIf="copiedCodes['WELCOME_15']" class="copied-msg">
+          Promo code copied!
+        </span>
+        <span class="main__promo-copy"></span>
+      </button>
+    </span>
+  </p>
+
+  <p class="promo-code-text">
+    Get $5 off on orders over $1000 with promo code:
+    <span class="main__promo-code">
+      SAVE5
+      <button class="button button__promo-main" (click)="copyCode('SAVE5')">
+        <span *ngIf="copiedCodes['SAVE5']" class="copied-msg">
+          Promo code copied!
+        </span>
+        <span class="main__promo-copy"></span>
+      </button>
+    </span>
   </p>
   <div class="main__categories-wrapper">
     @for (item of categories; track $index) {

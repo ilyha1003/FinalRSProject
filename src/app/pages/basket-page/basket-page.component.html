@@ -31,7 +31,9 @@
             <input
               class="basket__input-code-discount"
               [ngClass]="{
-                input__code_invalid: !isValid,
+                input__code_invalid: !isValid || codeDiscountError,
+                input__code_used: codeDiscountUsed,
+                input__code_success: codeActivatedMessage,
               }"
               formControlName="codeDiscount"
             />
@@ -39,10 +41,10 @@
               Apply code
             </button>
           </div>
-          <p *ngIf="codeDiscountError">
-            Code is not valid for the current order total
-          </p>
-          <p *ngIf="codeDiscountUsed">This code used</p>
+          <p *ngIf="!isValid">Code not found</p>
+          <p *ngIf="codeDiscountUsed">Code already applied</p>
+          <p *ngIf="codeDiscountError">Code not valid for order</p>
+          <p *ngIf="codeActivatedMessage">{{ codeActivatedMessage }}</p>
         </form>
         <ul>
           <p>Active Codes:</p>

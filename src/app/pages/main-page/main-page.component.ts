@@ -12,7 +12,7 @@ import { NgIf } from '@angular/common';
 })
 export class MainPageComponent implements OnInit {
   public categories: Category[] = [];
-  public copied = false;
+  public copiedCodes: { [code: string]: boolean } = {};
 
   constructor(private router: Router) {}
 
@@ -20,8 +20,8 @@ export class MainPageComponent implements OnInit {
     navigator.clipboard
       .writeText(code)
       .then(() => {
-        this.copied = true;
-        setTimeout(() => (this.copied = false), 2000);
+        this.copiedCodes[code] = true;
+        setTimeout(() => (this.copiedCodes[code] = false), 2000);
       })
       .catch((error) => {
         console.error('Could not copy text:', error);

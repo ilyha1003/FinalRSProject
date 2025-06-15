@@ -13,7 +13,6 @@ import {
 } from '../../utils/interfaces/interface-cart-page';
 import { getFormatPrice } from '../../utils/get-format-price';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-// import { CartCounterService } from '../../services/cart-counter.service';
 
 @Component({
   selector: 'app-basket-page',
@@ -25,6 +24,7 @@ export class BasketPageComponent {
   public isCartEmpty: boolean = true;
   public isLogin: boolean = false;
   public isModalShow: boolean = false;
+  public codeActivatedMessage = '';
 
   public modalErrorMessage: string = '';
   public modalHeader: string = '';
@@ -67,7 +67,9 @@ export class BasketPageComponent {
 
   public async addCodeDiscountHandler(): Promise<void> {
     const codeControl = this.codeDiscountForm.get('codeDiscount');
-    const discountCode = codeControl?.value ?? '';
+    const discountCode = codeControl?.value?.trim() ?? '';
+
+    if (!discountCode) return;
 
     try {
       const responseCode = await CartService.getDiscountCode(discountCode);
@@ -76,11 +78,26 @@ export class BasketPageComponent {
         console.log('Код не найден');
         this.isValid = false;
         return;
-      } else {
-        this.addCodeDiscount(responseCode);
       }
+
+      const codeValue = responseCode.results[0].code;
+
+      const alreadyExists = this.codes.some(
+        (element) => element.name === codeValue,
+      );
+
+      if (alreadyExists) {
+        this.showSomeInvalid();
+        return;
+      }
+
+      await this.addCodeDiscount(responseCode);
+
+      this.codeDiscountForm.reset();
+      this.isValid = true;
     } catch (error) {
       console.error('Add code Error', error);
+      this.isValid = false;
     }
   }
 
@@ -104,7 +121,8 @@ export class BasketPageComponent {
         await this.showDiscountInvalidAndRemoveCode(responseCart);
         return;
       } else if (targetCode?.state === 'MatchesCart') {
-        await this.createActiveDiscountCodes(responseCart, 'button');
+        this.showActiveMessage();
+        await this.createActiveDiscountCodes(responseCart);
         await this.updateTotalPrice();
         codeControl?.setValue('');
       }
@@ -260,9 +278,8 @@ export class BasketPageComponent {
         const responsive =
           await CartService.getCustomerCartByCustomerId(getIdCustomer);
         if (responsive) {
-          console.log(responsive);
           await this.deleteNotMatchDiscountCodes(responsive);
-          await this.createActiveDiscountCodes(responsive, 'other');
+          await this.createActiveDiscountCodes(responsive);
         }
       } catch (error) {
         console.error(`updateActiveDiscountCode error: ${error}`);
@@ -307,28 +324,22 @@ export class BasketPageComponent {
     }
   }
 
-  private async createActiveDiscountCodes(
-    cart: Cart,
-    source: 'button' | 'other',
-  ): Promise<void> {
+  private async createActiveDiscountCodes(cart: Cart): Promise<void> {
     const appliedCodes = cart.discountCodes?.filter(
       (dc) => dc.state === 'MatchesCart',
     );
-    console.log('createWork');
+
     for (const code of appliedCodes) {
       const respDiscountCode = await CartService.getDiscountCodeById(
         code.discountCode.id,
       );
 
-      const hasCode = this.codes.find(
-        (element) => element.id === code.discountCode.id,
+      const codeAlreadyAdded = this.codes.some(
+        (element) => element.name === respDiscountCode.code,
       );
 
-      if (hasCode) {
-        if (source === 'button') {
-          this.showSomeInvalid();
-        }
-        return;
+      if (codeAlreadyAdded) {
+        continue;
       }
 
       this.codes.push({
@@ -343,23 +354,32 @@ export class BasketPageComponent {
   ): Promise<void> {
     const getIdCart = LocalStorageService.getCustomerCartID();
 
-    const respDiscountCode = await CartService.getDiscountCodeById(
-      responseCart.discountCodes[0].discountCode.id,
+    const targetCode = responseCart.discountCodes.find(
+      (element) =>
+        element.discountCode.id === 'c81ae308-80bb-4b6a-a00d-afe32c43b298',
     );
 
-    const respCartDiscount = await CartService.getCartDiscountById(
-      respDiscountCode.cartDiscounts[0].id,
-    );
-
-    if (respCartDiscount.cartPredicate === 'totalPrice.centAmount > 100000') {
-      await CartService.removeDiscountCode(getIdCart, respDiscountCode.id);
-      this.codeDiscountError = true;
-      setTimeout(() => (this.codeDiscountError = false), 2000);
+    if (targetCode) {
+      this.showDiscountError();
+      await CartService.removeDiscountCode(
+        getIdCart,
+        'c81ae308-80bb-4b6a-a00d-afe32c43b298',
+      );
     }
+  }
+
+  private showActiveMessage(): void {
+    this.codeActivatedMessage = `Code successfully applied`;
+    setTimeout(() => (this.codeActivatedMessage = ''), 2000);
   }
 
   private showSomeInvalid(): void {
     this.codeDiscountUsed = true;
     setTimeout(() => (this.codeDiscountUsed = false), 2000);
+  }
+
+  private showDiscountError(): void {
+    this.codeDiscountError = true;
+    setTimeout(() => (this.codeDiscountError = false), 2000);
   }
 }

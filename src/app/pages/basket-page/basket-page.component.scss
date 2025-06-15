@@ -172,7 +172,18 @@ ul {
 }
 
 .input__code_invalid {
-  background-color: red;
+  border: 2px solid red;
+  background-color: #ffe5e5;
+}
+
+.input__code_used {
+  border: 2px solid orange;
+  background-color: #fff3e0;
+}
+
+.input__code_success {
+  border: 2px solid green;
+  background-color: #e6ffed;
 }
 
 .li__basket {

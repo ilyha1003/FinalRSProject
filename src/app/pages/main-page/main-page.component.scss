@@ -49,10 +49,23 @@
 }
 
 .promo-code-text {
+  display: flex;
+  align-items: center;
   background-color: white;
   padding: 0.5rem;
-  border: none;
   border-radius: 5px;
+  gap: 0.5rem;
+}
+
+.main__promo-code {
+  display: flex;
+  align-items: center;
+  position: relative;
+  gap: 0.2rem;
+  background-color: var(--color-bg-white);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  font-weight: 700;
 }
 
 .promo-code {
@@ -60,6 +73,25 @@
   position: relative;
   font-weight: 700;
   text-decoration: underline;
+  padding: 0 0.5rem;
+}
+
+.button__promo-main {
+  display: flex;
+  position: relative;
+  align-items: anchor-center;
+  border: none;
+  padding: 0.3rem;
+  border-radius: 6px;
+}
+
+.main__promo-copy {
+  display: inline-block;
+  background-image: url(../../../../public/assets/images/copy.svg);
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 2px;
 }
 
 .promo-code:hover {
@@ -68,14 +100,15 @@
 
 .copied-msg {
   position: absolute;
-  width: max-content;
-  top: -40px;
-  left: -32px;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
   color: white;
   background-color: black;
-  padding: 0.2rem;
-  border: none;
+  padding: 0.2rem 0.4rem;
   border-radius: 5px;
   font-size: 0.9rem;
   font-weight: 400;
+  z-index: 10;
+  white-space: nowrap;
 }
