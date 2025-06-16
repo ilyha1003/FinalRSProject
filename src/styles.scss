@@ -1,0 +1,143 @@
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        theme-type: light,
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+:root {
+  --color-primary: #00ced1;
+  --color-bg: #000000;
+  --color-bg-white: #f1f0f5;
+  --color-bg-2: #494949;
+  --color-bg-modal: rgba(0, 0, 0, 0.9);
+  --color-bg-array: rgba(0, 0, 0, 0.5);
+  --color-shadow-card: rgba(0, 0, 0, 0.1);
+  --color-bg-card: #f9f9f9;
+  --color-text: #ffffff;
+  --color-text-intro: #555555;
+  --color-text-role: #777777;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-gray: grey;
+  --color-description: #555;
+  --color-checked: rgb(203, 250, 148);
+  --sale: rgb(241, 17, 126);
+  --color-price-transparent: #aaa;
+  --color-discount: #e74c3c;
+}
+
+body {
+  margin: 0;
+}
+
+app-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-white);
+}
+
+router-outlet {
+  flex: 1;
+}
+
+app-product-page,
+app-main-page,
+app-about-page,
+app-basket-page {
+  flex: 2000;
+}
+
+input {
+  padding: 4px;
+}
+
+.scroll-lock {
+  overflow-y: hidden;
+}
+
+.form-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.button {
+  transition: all 0.3s ease-in;
+  cursor: pointer;
+
+  &:hover {
+    background-color: gray;
+  }
+}
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
+
+.loader {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  position: relative;
+  animation: rotate 1s linear infinite;
+}
+
+.loader::before {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  inset: 0px;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  animation: prixClipFix 2s linear infinite;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes prixClipFix {
+  0% {
+    clip-path: polygon(50% 50%, 0 0, 0 0, 0 0, 0 0, 0 0);
+  }
+  25% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 0, 100% 0, 100% 0);
+  }
+  50% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 100% 100%, 100% 100%);
+  }
+  75% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 0);
+  }
+}
+
+app-profile-page {
+  display: flex;
+  flex: 2000;
+  justify-content: center;
+  padding: 1rem 1rem;
+  margin: 0 auto;
+}

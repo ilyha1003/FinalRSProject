@@ -1,0 +1,44 @@
+<div class="about-us">
+  <h1 class="about-us__title">About Us</h1>
+  <p class="about-us__intro">
+    We are a team of developers who successfully completed the project of creating the online store Kupika. Thanks to a clear role and close interaction, our team was able to create a high-quality and convenient application.
+  </p>
+
+  <div class="about-us__team">
+    @for (member of teamMembers; track member.name) {
+      <div class="about-us__card">
+        <img class="about-us__photo" [src]="member.photoUrl" [alt]="'Photo of ' + member.name" loading="lazy">
+        <h2 class="about-us__name">{{ member.name }}</h2>
+        <p class="about-us__role">{{ member.role }}</p>
+        @for (biographie of member.biographies; track biographie) {
+          <p class="about-us__bio">{{ biographie }}</p>
+        }
+        <ul class="about-us__contributions">
+          @for (contribution of member.contributions; track contribution) {
+            <li>{{ contribution }}</li>
+          }
+        </ul>
+        <div class="about-us__links">
+          <img class="about-us__logo-github" src="/assets/images/github.svg" alt="Logo github">
+          <a class="about-us__github-link" [href]="member.github" target="_blank">GitHub Profile</a>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="about-us__collaboration">
+    <h2 class="about-us__title">How we worked together</h2>
+    <p class="about-us__intro">
+      Our team collaborated effectively using Agile methodology, regular meetings, and clear assignment of tasks.
+      We used Yougile to track tasks and GitHub to collaborate on code.
+      This allowed us to quickly find solutions, maintain high code quality, and complete project milestones on time.
+    </p>
+  </div>
+
+  <div class="about-us__rs">
+    <p class="about-us__intro">Thank you very much for the training RS School</p>
+    <a class="about-us__rs-link" href="https://rs.school" target="_blank">
+      <img class="about-us__rs-logo" src="/assets/images/logo-rs.svg" alt="Logo RS School">
+    </a>
+  </div>
+</div>

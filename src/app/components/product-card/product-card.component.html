@@ -1,0 +1,67 @@
+<figure
+  class="product"
+  id="{{ product.id }}"
+  routerLink="/product/{{ product.id }}"
+>
+  <span class="badge"></span>
+  <div class="product__image-wrapper">
+    <img
+      class="product__img"
+      src="{{ product.img }}"
+      alt="{{ product.name }}"
+    />
+  </div>
+  <figcaption class="product__text-container">
+    <p
+      class="product__price"
+      [ngClass]="{
+        product__price_discount: product.price?.discountedPrice,
+      }"
+    >
+      <span class="price" *ngIf="product.price?.discountedPrice"
+        >{{ product.price?.discountedPrice }}{{ product.price?.currency }}
+      </span>
+      <span
+        [ngClass]="{
+          price__text_discount: product.price?.discountedPrice,
+        }"
+        >{{ product.price?.price }}{{ product.price?.currency }}</span
+      >
+      <span class="badge" *ngIf="product.price?.discountedPrice">{{
+        product.price?.nameDiscount
+      }}</span>
+    </p>
+    <p class="product__name">
+      {{ product.name }}
+    </p>
+    <p class="product__description">
+      {{ product.description }}
+    </p>
+    @if (onLoginState) {
+      <button
+        class="button button__product"
+        [ngClass]="{
+          'button_in-cart': product.isInCart,
+          button_loading: isLoading,
+        }"
+        [disabled]="isLoading"
+        (click)="buttonAddHandler($event, product)"
+      >
+        <ng-container *ngIf="!isLoading; else loadingTpl">
+          {{ product.isInCart ? 'Added to Cart' : 'Add to Cart' }}
+        </ng-container>
+        <ng-template #loadingTpl>
+          <span>Loading...</span>
+        </ng-template>
+      </button>
+    } @else {
+      <button
+        class="button button__product"
+        (click)="$event.stopPropagation()"
+        routerLink="/basket"
+      >
+        Go to Cart
+      </button>
+    }
+  </figcaption>
+</figure>

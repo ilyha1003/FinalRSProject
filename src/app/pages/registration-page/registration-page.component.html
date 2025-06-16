@@ -1,0 +1,366 @@
+<div class="form-wrapper">
+  <form [formGroup]="profileForm" class="registration__form">
+    <h2 class="registration__title">Create your account</h2>
+    @for (field of inputFields; track field.label) {
+      <div class="registration__field-input">
+        <p class="registration__input-name">{{ field.label }}:</p>
+        <div class="registration__input-container">
+          <input
+            [type]="field.type"
+            class="registration__input"
+            [attr.autocomplete]="'off'"
+            [formControlName]="field.controlName"
+            [ngClass]="{
+              input_error: hasError(profileForm, field.controlName),
+            }"
+          />
+          <div
+            class="error-messages"
+            *ngIf="hasError(profileForm, field.controlName)"
+            [ngClass]="{
+              'error-messages_shifted': passwordErrorCount === 2,
+              'error-messages_shifted-2': passwordErrorCount === 3,
+            }"
+          >
+            <span
+              *ngIf="
+                field.controlName === 'firstName' &&
+                profileForm.get('firstName')?.hasError('pattern')
+              "
+            >
+              Letters only, no digits or symbols
+            </span>
+            <span
+              *ngIf="
+                field.controlName === 'lastName' &&
+                profileForm.get('lastName')?.hasError('pattern')
+              "
+            >
+              Letters only, no digits or symbols
+            </span>
+            <span
+              *ngIf="
+                (field.controlName === 'firstName' ||
+                  field.controlName === 'lastName') &&
+                profileForm.get(field.controlName)?.hasError('maxlength')
+              "
+            >
+              Must be at most 12 characters
+            </span>
+            <span
+              *ngIf="profileForm.get(field.controlName)?.hasError('required')"
+            >
+              {{ field.label }} is required.
+            </span>
+            <span
+              *ngIf="
+                field.controlName === 'email' &&
+                (profileForm.get('email')?.hasError('email') ||
+                  profileForm.get('email')?.hasError('customEmailValidator'))
+              "
+            >
+              Please enter a valid email.
+            </span>
+            <span
+              *ngIf="
+                field.controlName === 'password' &&
+                profileForm.get('password')?.hasError('minlength')
+              "
+            >
+              Must be at least 8 characters.
+            </span>
+            <span
+              *ngIf="
+                field.controlName === 'password' &&
+                profileForm.get('password')?.errors?.['passwordStrength']
+              "
+            >
+              Mix upper, lower case and digit.
+            </span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="registration__field-input">
+      <p class="registration__input-name">Date of birth:</p>
+      <div class="registration__input-container">
+        <input
+          type="date"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="birthDate"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'birthDate'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              hasError(profileForm, 'birthDate') &&
+              profileForm.get('birthDate')?.hasError('required')
+            "
+          >
+            Date of birth is required.
+          </span>
+          <span
+            *ngIf="profileForm.get('birthDate')?.errors?.['birthDateValidator']"
+          >
+            You must be at least 16 years old.
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="registration__countries">
+      <p class="registration__input-name">Country:</p>
+      <div class="registration__select-container">
+        <select class="input__country" id="country" formControlName="country">
+          <option value="">Select a country</option>
+          @for (country of countries; track country.code) {
+            <option [value]="country.code">{{ country.name }}</option>
+          }
+        </select>
+        <div class="error-messages">
+          <span
+            *ngIf="
+              profileForm.get('country')?.touched &&
+              profileForm.get('country')?.hasError('required')
+            "
+          >
+            Country is required.
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="registration__field-input">
+      <p class="registration__input-name">City:</p>
+      <div class="registration__input-container">
+        <input
+          type="text"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="city"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'city'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              hasError(profileForm, 'city') &&
+              profileForm.get('city')?.hasError('required')
+            "
+          >
+            City is required.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'city') &&
+              profileForm.get('city')?.hasError('pattern')
+            "
+          >
+            City must contain only letters.
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="registration__field-input">
+      <p class="registration__input-name">Postal code:</p>
+      <div class="registration__input-container">
+        <input
+          type="text"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="postalCode"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'postalCode'),
+          }"
+        />
+        <div
+          class="error-messages"
+          [ngClass]="{
+            'error-messages_shifted': postalCodeErrorCount === 2,
+            'error-messages_shifted-2': postalCodeErrorCount === 3,
+          }"
+        >
+          <span
+            *ngIf="
+              hasError(profileForm, 'postalCode') &&
+              profileForm.get('postalCode')?.hasError('required')
+            "
+          >
+            Postal code is required.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'postalCode') &&
+              profileForm.get('postalCode')?.errors?.['invalidPostalCode']
+            "
+          >
+            Postal code must match the format:
+            {{ profileForm.get('postalCode')?.errors?.['invalidPostalCode'] }}
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'postalCode') &&
+              profileForm.get('postalCode')?.errors?.['noSpacesOnly']
+            "
+          >
+            Cannot be only spaces
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="registration__field-input">
+      <p class="registration__input-name">Address:</p>
+      <div class="registration__input-container">
+        <input
+          type="text"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="address"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'address'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              hasError(profileForm, 'address') &&
+              profileForm.get('address')?.hasError('required')
+            "
+          >
+            Address is required.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'address') &&
+              profileForm.get('address')?.errors?.['noSpacesOnly']
+            "
+          >
+            Cannot be only spaces
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="registration__field-input">
+      <p class="registration__input-name">Shipping address:</p>
+      <div class="registration__input-container">
+        <input
+          type="text"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="shippingAddress"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'shippingAddress'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              hasError(profileForm, 'shippingAddress') &&
+              profileForm.get('shippingAddress')?.hasError('required')
+            "
+          >
+            Address is required.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'shippingAddress') &&
+              profileForm.get('shippingAddress')?.errors?.['noSpacesOnly']
+            "
+          >
+            Cannot be only spaces
+          </span>
+        </div>
+        <div class="registration__checkbox">
+          <input
+            type="checkbox"
+            id="checkbox__shipping-address"
+            class="checkbox__shipping-address"
+            formControlName="isDefaultAddress"
+            (change)="checkboxShippingHandler()"
+          />
+          <label for="checkbox__shipping-address" class="checkbox__text"
+            >Set as default address</label
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="registration__field-input">
+      <p class="registration__input-name">Billing address:</p>
+      <div class="registration__input-container">
+        <input
+          type="text"
+          class="registration__input"
+          [attr.autocomplete]="'off'"
+          formControlName="billingAddress"
+          [ngClass]="{
+            input_error: hasError(profileForm, 'billingAddress'),
+          }"
+        />
+        <div class="error-messages">
+          <span
+            *ngIf="
+              hasError(profileForm, 'billingAddress') &&
+              profileForm.get('billingAddress')?.hasError('required')
+            "
+          >
+            Address is required.
+          </span>
+          <span
+            *ngIf="
+              hasError(profileForm, 'billingAddress') &&
+              profileForm.get('billingAddress')?.errors?.['noSpacesOnly']
+            "
+          >
+            Cannot be only spaces
+          </span>
+        </div>
+        <div class="registration__checkbox">
+          <input
+            type="checkbox"
+            id="checkbox__billing-address"
+            class="checkbox__billing-address"
+            formControlName="isSameAddress"
+            (change)="checkboxBillingHandler()"
+          />
+          <label for="checkbox__billing-address" class="checkbox__text"
+            >Same as shipping address</label
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="registration__buttons">
+      <button
+        type="button"
+        class="button registration__button"
+        (click)="goToMainPage()"
+      >
+        Back
+      </button>
+      <button
+        type="submit"
+        class="button registration__button registration_submit"
+        (click)="submitButtonHandler($event)"
+      >
+        Registration
+      </button>
+    </div>
+    <p class="registration__question-paragraph">
+      Do you already have an account?
+      <a class="registration__link" [routerLink]="'/login'">Login</a>
+    </p>
+  </form>
+</div>
+
+<app-error-modal
+  *ngIf="isModalShow"
+  [message]="modalErrorMessage"
+  [header]="modalHeader"
+  (closeModalEvent)="closeModal()"
+></app-error-modal>
