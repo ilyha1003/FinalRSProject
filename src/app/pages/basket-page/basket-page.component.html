@@ -25,15 +25,23 @@
         <ul class="cart-product__list">
           @for (item of lineItems; track item.id) {
             <li class="cart-product-list__item">
-              <div class="product-image__field">
+              <a
+                href="#/product/{{ item.productId }}"
+                class="product-image__field"
+              >
                 <img
                   class="product__image"
                   src="{{ item.variant.images[0].url }}"
                   alt="product image"
                 />
-              </div>
+              </a>
               <div class="product-name__field">
-                <p class="product-name">{{ item.name['en-US'] }}</p>
+                <a
+                  class="product-name__link"
+                  href="#/product/{{ item.productId }}"
+                >
+                  <p class="product-name">{{ item.name['en-US'] }}</p>
+                </a>
                 <div class="product-prices">
                   <p
                     class="product-initial-price"
@@ -148,7 +156,14 @@
               <p class="discounted-price-header">Discounted price:&nbsp;</p>
               <p class="discounted-price">{{ totalPrice }}</p>
             </div>
-            <button (click)="clearCart()" class="clear-cart__button">
+            <button
+              (click)="
+                openConfirmationModal(
+                  'Are you sure you want to clear your cart?'
+                )
+              "
+              class="clear-cart__button"
+            >
               Clear cart
             </button>
           </div>
@@ -164,3 +179,10 @@
   [header]="modalHeader"
   (closeModalEvent)="closeModal()"
 ></app-error-modal>
+
+<app-confirmation-modal
+  *ngIf="isConfirmationModalShow"
+  [message]="confirmationModalMessage"
+  (closeModalEvent)="closeConfirmationModal()"
+  (confirmModalEvent)="confirmButtonHandler()"
+></app-confirmation-modal>

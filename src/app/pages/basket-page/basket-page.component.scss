@@ -298,14 +298,6 @@ ul {
   }
 }
 
-// .button__basket-code::before {
-//   transform: translate(-50%, -50%) rotate(45deg);
-// }
-
-// .button__basket-code::after {
-//   transform: translate(-50%, -50%) rotate(-45deg);
-// }
-
 .product-discounted-price {
   color: var(--sale);
 }
@@ -315,6 +307,11 @@ ul {
   font-size: 0.9rem;
   color: var(--color-black);
   opacity: 0.5;
+}
+
+.product-name__link {
+  text-decoration: none;
+  color: var(--color-black);
 }
 
 @media screen and (max-width: 960px) {

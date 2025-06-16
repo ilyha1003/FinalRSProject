@@ -6,6 +6,7 @@ import { CartService } from '../../services/cart.service';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { LoaderService } from '../../services/loader.service';
 import { FormModalComponent } from '../../components/form-modal/form-modal.component';
+import { ConfirmationModalComponent } from '../../components/confirmation-modal/confirmation-modal.component';
 import {
   Cart,
   DiscountCodesOld,
@@ -16,7 +17,13 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-basket-page',
-  imports: [NgIf, FormModalComponent, ReactiveFormsModule, NgClass],
+  imports: [
+    NgIf,
+    FormModalComponent,
+    ConfirmationModalComponent,
+    ReactiveFormsModule,
+    NgClass,
+  ],
   templateUrl: './basket-page.component.html',
   styleUrl: './basket-page.component.scss',
 })
@@ -24,9 +31,11 @@ export class BasketPageComponent {
   public isCartEmpty: boolean = true;
   public isLogin: boolean = false;
   public isModalShow: boolean = false;
+  public isConfirmationModalShow: boolean = false;
   public codeDiscountError = false;
   public codeDiscountUsed = false;
 
+  public confirmationModalMessage: string = '';
   public modalErrorMessage: string = '';
   public modalHeader: string = '';
   public totalPrice: string = '$0';
@@ -57,6 +66,10 @@ export class BasketPageComponent {
     const cartLineItemsLength =
       await CartService.getCustomerCartLineItemsLength(customer_id);
     return cartLineItemsLength > 0 ? false : true;
+  }
+
+  public static lockScroll(): void {
+    document.body.classList.add('scroll-lock');
   }
 
   public async setCartState(): Promise<void> {
@@ -152,9 +165,8 @@ export class BasketPageComponent {
   public async updateLineItems(): Promise<void> {
     const customer_id = LocalStorageService.getCustomerId();
     const lineItems = await CartService.getCustomerCartLineItems(customer_id);
-    console.log(await CartService.getCustomerCartByCustomerId(customer_id));
-
     this.lineItems = lineItems.length > 0 ? lineItems : [];
+
     await this.generateUsdLineItemsPrice();
     await this.generateTotalUsdLineItemsPrice();
     await this.generateUsdDiscountedLineItemsPrice();
@@ -245,7 +257,13 @@ export class BasketPageComponent {
   public async increaseProductQuantity(product_id: string): Promise<void> {
     this.loaderService.show();
     const cart_id: string = LocalStorageService.getCustomerCartID();
-    await CartService.addLineItem(cart_id, product_id);
+    const request_error_message = await CartService.addLineItem(
+      cart_id,
+      product_id,
+    );
+    if (request_error_message) {
+      this.openModal('Something went wrong. Try again later', '❗ Error ❗');
+    }
     await this.updateCart();
     this.loaderService.hide();
   }
@@ -253,7 +271,13 @@ export class BasketPageComponent {
   public async decreaseProductQuantity(line_item_id: string): Promise<void> {
     this.loaderService.show();
     const cart_id: string = LocalStorageService.getCustomerCartID();
-    await CartService.removeLineItem(cart_id, line_item_id);
+    const request_error_message = await CartService.removeLineItem(
+      cart_id,
+      line_item_id,
+    );
+    if (request_error_message) {
+      this.openModal('Something went wrong. Try again later', '❗ Error ❗');
+    }
     await this.updateCart();
     await this.setCartState();
     this.loaderService.hide();
@@ -323,6 +347,21 @@ export class BasketPageComponent {
 
   public closeModal(): void {
     this.isModalShow = false;
+  }
+
+  public openConfirmationModal(message: string): void {
+    BasketPageComponent.lockScroll();
+    this.confirmationModalMessage = message;
+    this.isConfirmationModalShow = true;
+  }
+
+  public closeConfirmationModal(): void {
+    this.isConfirmationModalShow = false;
+  }
+
+  public async confirmButtonHandler(): Promise<void> {
+    this.closeConfirmationModal();
+    await this.clearCart();
   }
 
   private async deleteNotMatchDiscountCodes(cart: Cart): Promise<void> {
