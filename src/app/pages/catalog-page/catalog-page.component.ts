@@ -13,7 +13,10 @@ import {
   ProductDiscounts,
 } from '../../utils/interfaces/interface-product';
 import { isPositiveNumber } from '../../utils/is-positive-number';
-import { ProductCardComponent } from '../../components/product-card/product-card.component';
+import {
+  ModalEventEmitter,
+  ProductCardComponent,
+} from '../../components/product-card/product-card.component';
 import { getShortDescription } from '../../utils/get-short-description';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { getFormatPrice } from '../../utils/get-format-price';
@@ -26,6 +29,7 @@ import {
 } from '../../utils/interfaces/interface-catalog-page';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { CartService } from '../../services/cart.service';
+import { FormModalComponent } from '../../components/form-modal/form-modal.component';
 
 export interface GetMinProduct {
   id: string;
@@ -38,7 +42,13 @@ export interface GetMinProduct {
 
 @Component({
   selector: 'app-catalog-page',
-  imports: [NgIf, NgClass, ReactiveFormsModule, ProductCardComponent],
+  imports: [
+    NgIf,
+    NgClass,
+    ReactiveFormsModule,
+    ProductCardComponent,
+    FormModalComponent,
+  ],
   templateUrl: './catalog-page.component.html',
   styleUrl: './catalog-page.component.scss',
 })
@@ -55,7 +65,9 @@ export class CatalogPageComponent implements OnInit {
   public sortForm = new FormGroup({
     selectedSort: new FormControl('default'),
   });
-
+  public modalErrorMessage: string = '';
+  public modalHeader: string = '';
+  public isModalShow: boolean = false;
   public products: GetMinProduct[] = [];
   public categories: Category[] = [];
   public isLoadingCategories: boolean = false;
@@ -90,6 +102,10 @@ export class CatalogPageComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
   ) {}
+
+  public static lockScroll(): void {
+    document.body.classList.add('scroll-lock');
+  }
 
   private static applySortOption(
     parameters: { offset?: string; filter?: string | string[] },
@@ -147,6 +163,22 @@ export class CatalogPageComponent implements OnInit {
       return false;
     }
     return input.includes('USD');
+  }
+
+  public showModalWindow(errorData: ModalEventEmitter): void {
+    CatalogPageComponent.lockScroll();
+    this.isModalShow = errorData.isModalShow;
+    this.openModal(errorData.modalErrorMessage, errorData.modalHeader);
+  }
+
+  public openModal(message: string, header: string): void {
+    this.modalErrorMessage = message;
+    this.modalHeader = header;
+    this.isModalShow = true;
+  }
+
+  public closeModal(): void {
+    this.isModalShow = false;
   }
 
   public async ngOnInit(): Promise<void> {

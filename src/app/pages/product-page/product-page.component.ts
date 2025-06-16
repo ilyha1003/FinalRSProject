@@ -7,17 +7,21 @@ import { LoaderService } from '../../services/loader.service';
 import { getFormatPrice } from '../../utils/get-format-price';
 import { CartService } from '../../services/cart.service';
 import { LocalStorageService } from '../../services/local-storage.service';
+import { FormModalComponent } from '../../components/form-modal/form-modal.component';
 
 @Component({
   selector: 'app-product-page',
   templateUrl: './product-page.component.html',
   styleUrl: './product-page.component.scss',
   standalone: true,
-  imports: [CommonModule, RouterModule, NgIf],
+  imports: [CommonModule, RouterModule, NgIf, FormModalComponent],
 })
 export class ProductPageComponent implements OnInit {
   public productId: string | null = '';
   public product!: Product | undefined;
+  public isModalShow: boolean = false;
+  public modalErrorMessage: string = '';
+  public modalHeader: string = '';
 
   public isProductInCart: boolean = false;
   public selectedImageIndex = 0;
@@ -98,6 +102,10 @@ export class ProductPageComponent implements OnInit {
     return null;
   }
 
+  public static lockScroll(): void {
+    document.body.classList.add('scroll-lock');
+  }
+
   private static isPriseContainsUSDCheck(input: string): boolean {
     if (!input || typeof input !== 'string') {
       return false;
@@ -160,6 +168,16 @@ export class ProductPageComponent implements OnInit {
     }
   }
 
+  public openModal(message: string, header: string): void {
+    this.modalErrorMessage = message;
+    this.modalHeader = header;
+    this.isModalShow = true;
+  }
+
+  public closeModal(): void {
+    this.isModalShow = false;
+  }
+
   public async ngOnInit(): Promise<void> {
     this.productId = this.route.snapshot.paramMap.get('id');
 
@@ -213,7 +231,17 @@ export class ProductPageComponent implements OnInit {
       const cart_id: string = LocalStorageService.getCustomerCartID();
       const customer_id: string = LocalStorageService.getCustomerId();
       if (productId) {
-        await CartService.addLineItem(cart_id, productId);
+        const request_error_message = await CartService.addLineItem(
+          cart_id,
+          productId,
+        );
+        if (request_error_message) {
+          ProductPageComponent.lockScroll();
+          this.openModal(
+            'Something went wrong. Try again later',
+            '❗ Error ❗',
+          );
+        }
       }
       this.loaderService.hide();
       this.isProductInCart = true;
@@ -229,6 +257,11 @@ export class ProductPageComponent implements OnInit {
     const customer_id = LocalStorageService.getCustomerId();
     const cartLineItems =
       await CartService.getCustomerCartLineItems(customer_id);
+
+    if (cartLineItems.length === 0) {
+      ProductPageComponent.lockScroll();
+      this.openModal('Something went wrong. Try again later', '❗ Error ❗');
+    }
     const cartLineItem = cartLineItems.find(
       (item) => item.productId === productId,
     );

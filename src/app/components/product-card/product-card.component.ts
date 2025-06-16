@@ -1,9 +1,15 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, Output, OnInit, EventEmitter } from '@angular/core';
 import { GetMinProduct } from '../../pages/catalog-page/catalog-page.component';
 import { NgClass, NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { CartService } from '../../services/cart.service';
+
+export interface ModalEventEmitter {
+  isModalShow: boolean;
+  modalErrorMessage: string;
+  modalHeader: string;
+}
 
 @Component({
   selector: 'app-product-card',
@@ -13,10 +19,15 @@ import { CartService } from '../../services/cart.service';
 })
 export class ProductCardComponent implements OnInit {
   @Input() public product!: GetMinProduct;
+  @Output() public onError = new EventEmitter<ModalEventEmitter>();
   public onLoginState = false;
   public isLoading = false;
 
   constructor(private cartService: CartService) {}
+
+  public static lockScroll(): void {
+    document.body.classList.add('scroll-lock');
+  }
 
   public async buttonAddHandler(
     event: Event,
@@ -29,7 +40,19 @@ export class ProductCardComponent implements OnInit {
     if (getCartId.length > 0) {
       this.isLoading = true;
       try {
-        await CartService.addLineItem(getCartId, product.id);
+        const request_error_message = await CartService.addLineItem(
+          getCartId,
+          product.id,
+        );
+
+        console.log(request_error_message);
+        if (request_error_message) {
+          this.onError.emit({
+            isModalShow: true,
+            modalErrorMessage: 'Something went wrong. Try again later',
+            modalHeader: '❗ Error ❗',
+          });
+        }
         product.isInCart = true;
 
         this.cartService.updateCartCount(getIdCustomer);

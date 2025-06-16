@@ -187,7 +187,10 @@
         </h2>
       } @else {
         @for (product of products; track product.id) {
-          <app-product-card [product]="product"></app-product-card>
+          <app-product-card
+            [product]="product"
+            (onError)="showModalWindow($event)"
+          ></app-product-card>
         }
       }
     }
@@ -208,3 +211,10 @@
     </button>
   </div>
 </section>
+
+<app-error-modal
+  *ngIf="isModalShow"
+  [message]="modalErrorMessage"
+  [header]="modalHeader"
+  (closeModalEvent)="closeModal()"
+></app-error-modal>

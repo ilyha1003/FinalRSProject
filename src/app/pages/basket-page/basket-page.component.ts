@@ -262,6 +262,7 @@ export class BasketPageComponent {
       product_id,
     );
     if (request_error_message) {
+      BasketPageComponent.lockScroll();
       this.openModal('Something went wrong. Try again later', '❗ Error ❗');
     }
     await this.updateCart();
@@ -276,6 +277,7 @@ export class BasketPageComponent {
       line_item_id,
     );
     if (request_error_message) {
+      BasketPageComponent.lockScroll();
       this.openModal('Something went wrong. Try again later', '❗ Error ❗');
     }
     await this.updateCart();
@@ -290,7 +292,16 @@ export class BasketPageComponent {
     this.loaderService.show();
     const cart_id: string = LocalStorageService.getCustomerCartID();
     for (let index = 0; index < quantity; index++) {
-      await CartService.removeLineItem(cart_id, line_item_id);
+      const request_error_message = await CartService.removeLineItem(
+        cart_id,
+        line_item_id,
+      );
+      if (request_error_message) {
+        BasketPageComponent.lockScroll();
+        this.openModal('Something went wrong. Try again later', '❗ Error ❗');
+        this.loaderService.hide();
+        return;
+      }
     }
     await this.updateCart();
     await this.setCartState();
